@@ -521,14 +521,16 @@ if (typeof describe == 'function') {
           testServer.on('data', (data) => resolve(data));
           testServer.on('error', reject);
         }).then((result) => {
-          
+
           expect(result).toEqual({
             statusCode: 204
           });
-          
+
           expect(
             fs.readFileSync(path.join(__dirname, 'fixtures', 'logo_jaystack.png'))
-          ).toEqual(fs.readFileSync(path.join(__dirname, 'fixtures', 'tmp.png')));
+          ).toEqual(
+            fs.readFileSync(path.join(__dirname, 'fixtures', 'tmp.png'))
+          );
 
           if (fs.existsSync(path.join(__dirname, 'fixtures', 'tmp.png'))) {
             fs.unlinkSync(path.join(__dirname, 'fixtures', 'tmp.png'));
@@ -555,7 +557,7 @@ if (typeof describe == 'function') {
         if (fs.existsSync(path.join(__dirname, 'fixtures', 'tmp.png'))) {
           fs.unlinkSync(path.join(__dirname, 'fixtures', 'tmp.png'));
         }
-        
+
       }));
 
       it('should return 204 after POST Data2 using generator function that yields stream', () => {
