@@ -7,7 +7,7 @@ const toObjectID = _id => _id && !(_id instanceof ObjectID) ? ObjectID.createFro
     term: "UI.DisplayName",
     string: "Products"
 })
-export class Product{
+export class Product {
     @Edm.Key
     @Edm.Computed
     @Edm.String
@@ -19,20 +19,20 @@ export class Product{
         term: "UI.ControlHint",
         string: "ReadOnly"
     })
-    _id:ObjectID
+    _id: ObjectID
 
     @Edm.String
     @Edm.Required
     @Edm.Convert(toObjectID)
-    CategoryId:ObjectID
+    CategoryId: ObjectID
 
     @Edm.ForeignKey("CategoryId")
     @Edm.EntityType(Edm.ForwardRef(() => Category))
     @Edm.Partner("Products")
-    Category:Category
+    Category: Category
 
     @Edm.Boolean
-    Discontinued:boolean
+    Discontinued: boolean
 
     @Edm.String
     @Edm.Annotate({
@@ -42,7 +42,7 @@ export class Product{
         term: "UI.ControlHint",
         string: "ShortText"
     })
-    Name:string
+    Name: string
 
     @Edm.String
     @Edm.Annotate({
@@ -52,7 +52,7 @@ export class Product{
         term: "UI.ControlHint",
         string: "ShortText"
     })
-    QuantityPerUnit:string
+    QuantityPerUnit: string
 
     @Edm.Decimal
     @Edm.Annotate({
@@ -62,7 +62,7 @@ export class Product{
         term: "UI.ControlHint",
         string: "Decimal"
     })
-    UnitPrice:number
+    UnitPrice: number
 }
 
 @Edm.OpenType
@@ -70,7 +70,7 @@ export class Product{
     term: "UI.DisplayName",
     string: "Categories"
 })
-export class Category{
+export class Category {
     @Edm.Key
     @Edm.Computed
     @Edm.String
@@ -79,34 +79,34 @@ export class Category{
         term: "UI.DisplayName",
         string: "Category identifier"
     },
-    {
-        term: "UI.ControlHint",
-        string: "ReadOnly"
-    })
-    _id:ObjectID
+        {
+            term: "UI.ControlHint",
+            string: "ReadOnly"
+        })
+    _id: ObjectID
 
     @Edm.String
-    Description:string
+    Description: string
 
     @Edm.String
     @Edm.Annotate({
         term: "UI.DisplayName",
         string: "Category name"
     },
-    {
-        term: "UI.ControlHint",
-        string: "ShortText"
-    })
-    Name:string
+        {
+            term: "UI.ControlHint",
+            string: "ShortText"
+        })
+    Name: string
 
     @Edm.ForeignKey("CategoryId")
     @Edm.Collection(Edm.EntityType(Product))
     @Edm.Partner("Category")
-    Products:Product[]
+    Products: Product[]
 
     @Edm.Collection(Edm.String)
     @Edm.Function
-    echo(){
+    echo() {
         return ["echotest"];
     }
 }
