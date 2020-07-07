@@ -471,10 +471,11 @@ if (typeof describe == 'function') {
           });
       });
     });
-    let d = describe
+
+    let d = describe.skip
   
-    if (platform() == "win32") {
-      d = describe.skip
+    if (platform() == "linux") {
+      d = describe
     }
     
     d('Stream properties', () => {

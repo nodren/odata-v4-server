@@ -598,10 +598,10 @@ describe('OData HTTP', () => {
     });
   })));
 
-  let d = describe
+  let d = describe.skip
   
-  if (platform() == "win32") {
-    d = describe.skip
+  if (platform() == "linux") {
+    d = describe
   }
 
   describe('Stream properties', () => {
