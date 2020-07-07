@@ -4,11 +4,10 @@ import { PassThrough } from 'stream';
 import { ObjectID } from 'mongodb';
 import * as fs from 'fs';
 import * as path from 'path';
-import { randomInt } from '../lib/utils';
+import { randomPort } from './utils/randomPort'
 
 const beautify = require('xml-beautifier');
 
-const randomPort = () => randomInt(20000, 50000)
 
 const serverCache = [];
 if (typeof afterAll == 'function') {

@@ -11,8 +11,7 @@ import { processQueries, doOrderby, doSkip, doTop } from './utils/queryOptions';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as streamBuffers from 'stream-buffers';
-import { randomInt } from '../lib/utils';
-
+import { randomPort } from './utils/randomPort'
 
 const extend = require('extend');
 const categories = require('./model/categories').slice();
@@ -22,8 +21,6 @@ const products2 = require('./model/products').slice();
 
 const serverCache = [];
 
-
-const randomPort = () => randomInt(20000, 50000)
 
 if (typeof afterAll == 'function') {
   afterAll(() => {
