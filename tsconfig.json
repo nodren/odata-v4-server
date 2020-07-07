@@ -4,7 +4,7 @@
     "module": "commonjs",
     "declaration": true,
     "experimentalDecorators": true,
-    "outDir": "build",
+    "outDir": "lib",
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noImplicitAny": false,
@@ -12,7 +12,14 @@
     "noImplicitThis": true,
     "noEmitHelpers": true,
     "importHelpers": true,
-    "sourceMap": true
+    "sourceMap": true,
+    "allowJs": true,
+    "charset": "utf-8",
+    "lib": [
+      "ES2015",
+      "ES2016",
+      "ES2017"
+    ]
   },
   "exclude": [
     "node_modules",

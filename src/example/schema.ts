@@ -1,201 +1,201 @@
 export = {
-  "version": "4.0",
-  "dataServices": {
-    "schema": [
+  'version': '4.0',
+  'dataServices': {
+    'schema': [
       {
-        "namespace": "Northwind",
-        "entityType": [
+        'namespace': 'Northwind',
+        'entityType': [
           {
-            "name": "Product",
-            "key":  [
+            'name': 'Product',
+            'key':  [
               {
-                "propertyRef": [
+                'propertyRef': [
                   {
-                    "name": "_id"
+                    'name': '_id'
                   }
                 ]
               }
             ],
-            "property": [
+            'property': [
               {
-                "name": "QuantityPerUnit",
-                "type": "Edm.String",
-                "nullable": "false"
+                'name': 'QuantityPerUnit',
+                'type': 'Edm.String',
+                'nullable': 'false'
               },
               {
-                "name": "UnitPrice",
-                "type": "Edm.Decimal",
-                "nullable": "false"
+                'name': 'UnitPrice',
+                'type': 'Edm.Decimal',
+                'nullable': 'false'
               },
               {
-                "name": "_id",
-                "type": "Edm.String",
-                "nullable": "false"
+                'name': '_id',
+                'type': 'Edm.String',
+                'nullable': 'false'
               },
               {
-                "name": "Name",
-                "type": "Edm.String",
-                "nullable": "false"
+                'name': 'Name',
+                'type': 'Edm.String',
+                'nullable': 'false'
               },
               {
-                "name": "CategoryId",
-                "type": "Edm.String",
-                "nullable": "false"
+                'name': 'CategoryId',
+                'type': 'Edm.String',
+                'nullable': 'false'
               },
               {
-                "name": "Discontinued",
-                "type": "Edm.Boolean",
-                "nullable": "false"
+                'name': 'Discontinued',
+                'type': 'Edm.Boolean',
+                'nullable': 'false'
               }
             ]
           },
           {
-            "name": "Category",
-            "key":  [
+            'name': 'Category',
+            'key':  [
               {
-                "propertyRef": [
+                'propertyRef': [
                   {
-                    "name": "_id"
+                    'name': '_id'
                   }
                 ]
               }
             ],
-            "property": [
+            'property': [
               {
-                "name": "Description",
-                "type": "Edm.String",
-                "nullable": "false"
+                'name': 'Description',
+                'type': 'Edm.String',
+                'nullable': 'false'
               },
               {
-                "name": "_id",
-                "type": "Edm.String",
-                "nullable": "false"
+                'name': '_id',
+                'type': 'Edm.String',
+                'nullable': 'false'
               },
               {
-                "name": "Name",
-                "type": "Edm.String",
-                "nullable": "false"
+                'name': 'Name',
+                'type': 'Edm.String',
+                'nullable': 'false'
               }
             ]
           }
         ],
-        "annotations": [
+        'annotations': [
           {
-            "target": "Northwind.Product/_id",
-            "annotation": [
+            'target': 'Northwind.Product/_id',
+            'annotation': [
               {
-                "term": "UI.DisplayName",
-                "string": "Product identifier"
+                'term': 'UI.DisplayName',
+                'string': 'Product identifier'
               },
               {
-                "term": "UI.ControlHint",
-                "string": "ReadOnly"
+                'term': 'UI.ControlHint',
+                'string': 'ReadOnly'
               }
             ]
           },
           {
-            "target": "Northwind.Category/_id",
-            "annotation": [
+            'target': 'Northwind.Category/_id',
+            'annotation': [
               {
-                "term": "UI.DisplayName",
-                "string": "Category identifier"
+                'term': 'UI.DisplayName',
+                'string': 'Category identifier'
               },
               {
-                "term": "UI.ControlHint",
-                "string": "ReadOnly"
+                'term': 'UI.ControlHint',
+                'string': 'ReadOnly'
               }
             ]
           },
           {
-            "target": "Northwind.Category",
-            "annotation": [
+            'target': 'Northwind.Category',
+            'annotation': [
               {
-                "term": "UI.DisplayName",
-                "string": "Categories"
+                'term': 'UI.DisplayName',
+                'string': 'Categories'
               }
             ]
           },
           {
-            "target": "Northwind.Category/Name",
-            "annotation": [
+            'target': 'Northwind.Category/Name',
+            'annotation': [
               {
-                "term": "UI.DisplayName",
-                "string": "Category name"
+                'term': 'UI.DisplayName',
+                'string': 'Category name'
               },
               {
-                "term": "UI.ControlHint",
-                "string": "ShortText"
+                'term': 'UI.ControlHint',
+                'string': 'ShortText'
               }
             ]
           },
           {
-            "target": "Northwind.Product",
-            "annotation": [
+            'target': 'Northwind.Product',
+            'annotation': [
               {
-                "term": "UI.DisplayName",
-                "string": "Products"
+                'term': 'UI.DisplayName',
+                'string': 'Products'
               }
             ]
           },
           {
-            "target": "Northwind.Product/Name",
-            "annotation": [
+            'target': 'Northwind.Product/Name',
+            'annotation': [
               {
-                "term": "UI.DisplayName",
-                "string": "Product title"
+                'term': 'UI.DisplayName',
+                'string': 'Product title'
               },
               {
-                "term": "UI.ControlHint",
-                "string": "ShortText"
+                'term': 'UI.ControlHint',
+                'string': 'ShortText'
               }
             ]
           },
           {
-            "target": "Northwind.Product/QuantityPerUnit",
-            "annotation": [
+            'target': 'Northwind.Product/QuantityPerUnit',
+            'annotation': [
               {
-                "term": "UI.DisplayName",
-                "string": "Product English name"
+                'term': 'UI.DisplayName',
+                'string': 'Product English name'
               },
               {
-                "term": "UI.ControlHint",
-                "string": "ShortText"
+                'term': 'UI.ControlHint',
+                'string': 'ShortText'
               }
             ]
           },
           {
-            "target": "Northwind.Product/UnitPrice",
-            "annotation": [
+            'target': 'Northwind.Product/UnitPrice',
+            'annotation': [
               {
-                "term": "UI.DisplayName",
-                "string": "Unit price of product"
+                'term': 'UI.DisplayName',
+                'string': 'Unit price of product'
               },
               {
-                "term": "UI.ControlHint",
-                "string": "Decimal"
+                'term': 'UI.ControlHint',
+                'string': 'Decimal'
               }
             ]
-          },
+          }
         ]
       },
       {
-        "namespace": "JayStack",
-        "action": {
-          "name": "initDb"
+        'namespace': 'JayStack',
+        'action': {
+          'name': 'initDb'
         },
-        "entityContainer": {
-          "name": "NorthwindContext",
-          "entitySet": [{
-            "name": "Products",
-            "entityType": "Northwind.Product"
+        'entityContainer': {
+          'name': 'NorthwindContext',
+          'entitySet': [{
+            'name': 'Products',
+            'entityType': 'Northwind.Product'
           },
           {
-            "name": "Categories",
-            "entityType": "Northwind.Category"
+            'name': 'Categories',
+            'entityType': 'Northwind.Category'
           }],
-          "actionImport": {
-            "name": "initDb",
-            "action": "JayStack.initDb"
+          'actionImport': {
+            'name': 'initDb',
+            'action': 'JayStack.initDb'
           }
         }
       }
