@@ -5,3 +5,7 @@ docs
 .nyc_output
 *.log*
 .vscode
+lib/example
+lib/test
+src/example
+src/test

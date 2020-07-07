@@ -41,7 +41,7 @@
     "odata-v4-service-metadata": "^0.1.6",
     "qs": "^6.9.4",
     "reflect-metadata": "^0.1.13",
-    "tslib": "^1.9.3"
+    "tslib": "^2.0.0"
   },
   "devDependencies": {
     "@types/benchmark": "^1.0.33",
