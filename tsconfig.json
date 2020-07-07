@@ -21,6 +21,9 @@
       "ES2017"
     ]
   },
+  "include": [
+    "src/lib"
+  ],
   "exclude": [
     "node_modules",
     "build"

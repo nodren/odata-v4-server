@@ -5,7 +5,7 @@
   "main": "lib/index.js",
   "typings": "lib/index",
   "scripts": {
-    "prebuild": "rimraf build",
+    "prebuild": "rimraf lib",
     "build": "tsc",
     "lint": "eslint src/**/*.ts --fix",
     "test": "jest",
@@ -48,7 +48,6 @@
     "@types/benchmark": "^1.0.33",
     "@types/event-stream": "^3.3.34",
     "@types/jsonstream": "^0.8.30",
-    "@types/mocha": "^5.2.5",
     "@types/mongodb": "^3.1.1",
     "@types/request": "^2.48.5",
     "@types/request-promise": "^4.1.42",
