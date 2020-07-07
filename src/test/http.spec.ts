@@ -78,12 +78,16 @@ createTest.only = createTestFactory(it.only);
 
 describe('OData HTTP', () => {
 
-  serverCacheArray.push(TestServer.create(3002));
-  serverCache.set(TestServer, 3002);
-  testFactory(createTest);
+  beforeAll(() => {
+    serverCacheArray.push(TestServer.create(3002));
+    serverCache.set(TestServer, 3002);
+    testFactory(createTest);
 
-  serverCacheArray.push(MetaTestServer.create(3003, 'localhost'));
-  serverCache.set(MetaTestServer, 3003);
+    serverCacheArray.push(MetaTestServer.create(3003, 'localhost'));
+    serverCache.set(MetaTestServer, 3003);
+  })
+
+
 
   describe('accept header', () => {
     it("should return entityset result with 'application/json;odata.metadata=full' header", () => request.get(`http://localhost:3002/EntitySet`, { headers: { accept: 'application/json;odata.metadata=full' } }, (err, response, result) => {
@@ -599,7 +603,7 @@ describe('OData HTTP', () => {
   })));
 
   let d = describe.skip
-  
+
   if (platform() == "linux") {
     d = describe
   }
