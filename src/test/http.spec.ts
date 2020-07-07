@@ -8,6 +8,7 @@ import * as request from 'request-promise';
 import * as streamBuffers from 'stream-buffers';
 import * as fs from 'fs';
 import * as path from 'path';
+import { platform } from 'os';
 
 const extend = require('extend');
 const categories = require('./model/categories');
@@ -76,7 +77,7 @@ const createTest: any = createTestFactory(it);
 createTest.only = createTestFactory(it.only);
 
 describe('OData HTTP', () => {
-  
+
   serverCacheArray.push(TestServer.create(3002));
   serverCache.set(TestServer, 3002);
   testFactory(createTest);
@@ -596,6 +597,12 @@ describe('OData HTTP', () => {
       '_id': '578f2baa12eaebabec4af289'
     });
   })));
+
+  let d = describe
+  
+  if (platform() == "win32") {
+    d = describe.skip
+  }
 
   describe('Stream properties', () => {
     it('stream property POST', (done) => {
