@@ -5,6 +5,7 @@ import { testFactory } from './server.spec';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as streamBuffers from 'stream-buffers';
+import { platform } from 'os';
 
 const extend = require('extend');
 const categories = require('./model/categories');
@@ -470,8 +471,13 @@ if (typeof describe == 'function') {
           });
       });
     });
-
-    describe('Stream properties', () => {
+    let d = describe
+  
+    if (platform() == "win32") {
+      d = describe.skip
+    }
+    
+    d('Stream properties', () => {
       it('stream property POST', () => {
         const testServer = new TestServer();
         const readableStrBuffer = new streamBuffers.ReadableStreamBuffer();
