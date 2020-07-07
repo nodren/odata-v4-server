@@ -5,6 +5,7 @@ import { Product, Category } from './model/model';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as streamBuffers from 'stream-buffers';
+import { platform } from 'os';
 
 
 const extend = require('extend');
@@ -289,8 +290,14 @@ describe('OData execute', () => {
       });
     });
   });
+  
+  let d = describe.skip
+  
+  if (platform() == "linux") {
+    d = describe
+  }
 
-  describe('Stream properties', () => {
+  d('Stream properties', () => {
     it('stream property POST', () => {
       const readableStrBuffer = new streamBuffers.ReadableStreamBuffer();
       readableStrBuffer.put('tmp.png');

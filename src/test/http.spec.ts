@@ -604,7 +604,7 @@ describe('OData HTTP', () => {
     d = describe
   }
 
-  describe('Stream properties', () => {
+  d('Stream properties', () => {
     it('stream property POST', (done) => {
       const readableStrBuffer = new streamBuffers.ReadableStreamBuffer();
       const req = request.post(`http://localhost:3002/ImagesControllerEntitySet(1)/Data`);

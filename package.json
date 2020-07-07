@@ -2,8 +2,8 @@
   "name": "@odata/server",
   "version": "0.2.13",
   "description": "OData(V4) Server",
-  "main": "lib/lib/index.js",
-  "typings": "lib/lib/index",
+  "main": "lib/index.js",
+  "typings": "lib/index.d.ts",
   "scripts": {
     "prebuild": "rimraf lib",
     "build": "tsc",

@@ -5,6 +5,7 @@ import { Meta, Media, TestEntity, MetaTestServer, CompoundKey, EmptyEntity, Base
 import { ProductPromise, CategoryPromise } from './model/ModelsForPromise';
 import { GeneratorProduct, GeneratorCategory } from './model/ModelsForGenerator';
 import { ObjectID } from 'mongodb';
+import { platform } from 'os';
 
 const extend = require('extend');
 const categories = require('./model/categories');
@@ -1204,7 +1205,13 @@ export function testFactory(createTest: any) {
     });
   });
 
-  describe('Stream properties', () => {
+  let d = describe.skip
+  
+  if (platform() == "linux") {
+    d = describe
+  }
+  
+  d('Stream properties', () => {
     createTest('should return stream property entity set result', TestServer, 'GET /ImagesControllerEntitySet', {
       statusCode: 200,
       body: {
