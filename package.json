@@ -2,12 +2,12 @@
   "name": "@odata/server",
   "version": "0.2.13",
   "description": "OData(V4) Server",
-  "main": "lib/index.js",
-  "typings": "lib/index",
+  "main": "lib/lib/index.js",
+  "typings": "lib/lib/index",
   "scripts": {
     "prebuild": "rimraf lib",
     "build": "tsc",
-    "lint": "eslint src/**/*.ts --fix",
+    "lint": "eslint src/lib --fix",
     "test": "jest",
     "coverage": "npm test -- --coverage --no-cache",
     "prepublishOnly": "npm test && npm run build"

@@ -23,7 +23,7 @@ const products2 = require('./model/products').slice();
 const serverCache = [];
 
 
-const randomPort = () => randomInt(30000, 40000)
+const randomPort = () => randomInt(20000, 50000)
 
 if (typeof afterAll == 'function') {
   afterAll(() => {

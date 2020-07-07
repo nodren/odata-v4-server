@@ -7,16 +7,16 @@ import * as express from 'express';
 import * as http from 'http';
 import * as bodyParser from 'body-parser';
 import * as cors from 'cors';
-import { Transform, TransformOptions } from 'stream';
+import { Transform, TransformOptions, Readable, Writable } from 'stream';
 import { ODataResult } from './result';
 import { ODataController } from './controller';
 import * as odata from './odata';
-import { ODataBase, IODataConnector } from './odata';
 import { createMetadataJSON } from './metadata';
 import { ODataProcessor, ODataProcessorOptions, ODataMetadataType } from './processor';
 import { HttpRequestError, UnsupportedMediaTypeError } from './error';
 import { ContainerBase } from './edm';
-import { Readable, Writable } from 'stream';
+// eslint-disable-next-line no-duplicate-imports
+import { IODataConnector, ODataBase } from './odata';
 
 /** HTTP context interface when using the server HTTP request handler */
 export interface ODataHttpContext {

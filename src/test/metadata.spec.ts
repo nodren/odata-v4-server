@@ -8,7 +8,7 @@ import { randomInt } from '../lib/utils';
 
 const beautify = require('xml-beautifier');
 
-const randomPort = () => randomInt(40000, 50000)
+const randomPort = () => randomInt(20000, 50000)
 
 const serverCache = [];
 if (typeof afterAll == 'function') {
