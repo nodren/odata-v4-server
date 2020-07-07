@@ -1,4 +1,8 @@
-# JayStack OData V4 Server
+# OData(V4) Server
+
+[![npm (scoped)](https://img.shields.io/npm/v/@odata/parser)](https://www.npmjs.com/package/@odata/parser)
+[![GitHub Workflow Status](https://img.shields.io/github/workflow/status/Soontao/odata-v4-server/Node%20CI?label=nodejs)](https://github.com/Soontao/odata-v4-server/actions?query=workflow%3A%Node+CI%22)
+[![Codecov](https://codecov.io/gh/Soontao/odata-v4-server/branch/master/graph/badge.svg)](https://codecov.io/gh/Soontao/odata-v4-server)
 
 OData V4 server for node.js
 
