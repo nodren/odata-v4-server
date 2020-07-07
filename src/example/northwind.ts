@@ -40,7 +40,7 @@ class ProductsController extends ODataController {
       const db = await mongodb();
       if (data.CategoryId) {data.CategoryId = new ObjectID(data.CategoryId);}
       return await db.collection('Products').insert(data).then((result) => {
-        data._id = result.insertedId;
+        data._id = result.insertedIds;
         return data;
       });
     }
