@@ -10,7 +10,8 @@
     "lint": "eslint src/lib --fix",
     "test": "jest --runInBand",
     "coverage": "npm test -- --coverage --no-cache",
-    "prepublishOnly": "npm test && npm run build"
+    "prepublishOnly": "npm test && npm run build",
+    "release": "standard-version --no-verify && git push --follow-tags origin master"
   },
   "keywords": [
     "OData",
@@ -79,6 +80,7 @@
     "typedoc-default-themes": "^0.10.2",
     "typedoc-plugin-external-module-name": "^4.0.3",
     "typescript": "^3.9.6",
-    "xml-beautifier": "^0.4.3"
+    "xml-beautifier": "^0.4.3",
+    "standard-version": "^8.0.0"
   }
 }
