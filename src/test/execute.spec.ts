@@ -8,7 +8,7 @@ import * as streamBuffers from 'stream-buffers';
 import { platform } from 'os';
 
 
-const extend = require('extend');
+const extend = Object.assign
 const categories = require('./model/categories');
 const products = require('./model/products');
 

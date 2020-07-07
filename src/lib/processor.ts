@@ -1578,6 +1578,7 @@ export class ODataProcessor extends Transform {
         let filterAst = queryString;
         const resourceFilterAst = this.resourcePath.ast.value.query && this.resourcePath.ast.value.query.value.options && this.resourcePath.ast.value.query.value.options.find((t) => t.type == TokenType.Filter);
         if (typeof filterAst == 'string') {
+          // @ts-ignore
           filterAst = qs.parse(filterAst).$filter;
           if (typeof filterAst == 'string') {
             filterAst = this.serverType.parser.filter(filterAst, { metadata: this.resourcePath.ast.metadata || this.serverType.$metadata().edmx });

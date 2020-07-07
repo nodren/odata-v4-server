@@ -7,7 +7,7 @@ import * as path from 'path';
 import * as streamBuffers from 'stream-buffers';
 import { platform } from 'os';
 
-const extend = require('extend');
+const extend = Object.assign
 const categories = require('./model/categories');
 
 function createTest(testcase: string, server: typeof ODataServer, command: string, compare: any, body?: any) {

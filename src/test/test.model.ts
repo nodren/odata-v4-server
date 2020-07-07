@@ -13,7 +13,6 @@ import * as path from 'path';
 import * as streamBuffers from 'stream-buffers';
 import { randomPort } from './utils/randomPort'
 
-const extend = require('extend');
 const categories = require('./model/categories').slice();
 const products = require('./model/products').slice();
 const categories2 = require('./model/categories').slice();

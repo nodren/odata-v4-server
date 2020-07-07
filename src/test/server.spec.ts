@@ -7,7 +7,6 @@ import { GeneratorProduct, GeneratorCategory } from './model/ModelsForGenerator'
 import { ObjectID } from 'mongodb';
 import { platform } from 'os';
 
-const extend = require('extend');
 const categories = require('./model/categories');
 const products = require('./model/products');
 const streamBuffers = require('stream-buffers');

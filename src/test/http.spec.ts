@@ -10,7 +10,6 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { platform } from 'os';
 
-const extend = require('extend');
 const categories = require('./model/categories');
 const products = require('./model/products');
 
