@@ -1,4 +1,4 @@
-import { Token } from 'odata-v4-parser/lib/lexer';
+import { Token } from '@odata/parser/lib/lexer';
 import * as odata from './odata';
 import { getFunctionParameters } from './utils';
 
