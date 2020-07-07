@@ -1,6 +1,4 @@
-import { ServiceMetadata } from 'odata-v4-service-metadata';
-import { ServiceDocument } from 'odata-v4-service-document';
-import { Edm as Metadata } from 'odata-v4-metadata';
+import { ServiceMetadata, Edm as Metadata, ServiceDocument } from '@odata/metadata';
 import * as ODataParser from '@odata/parser';
 import { Token, TokenType } from '@odata/parser/lib/lexer';
 import * as express from 'express';

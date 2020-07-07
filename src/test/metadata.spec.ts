@@ -1152,7 +1152,7 @@ if (typeof describe == 'function') {
 
   describe('Root', () => {
     it('should return root result', () => {
-      expect(MetaTestServer.document().document()).toEqual({
+      expect(MetaTestServer.document().document("json")).toEqual({
         // "@odata.context": "http://localhost:randomPort()/$metadata",
         '@odata.context': undefined,
         'value': [

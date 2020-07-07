@@ -1,20 +1,10 @@
 import { randomInt } from '../../lib/utils';
 
 /**
- * generate random port
+ * generate random port,
+ * 
+ * port '0' for nodejs will indicate server use a useable tcp port
  */
 export function randomPort() {
-  // let pt = randomInt(4000, 10000)
-  // for (; ;) {
-  //   if (randomPort['cache'].has(pt)) {
-  //     pt = randomInt(4000, 10000)
-  //   } else {
-  //     break
-  //   }
-  // }
-  // randomPort['cache'].add(pt)
-  // return pt
   return 0
 }
-
-randomPort['cache'] = new Set();
