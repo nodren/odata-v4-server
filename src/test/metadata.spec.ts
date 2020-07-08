@@ -110,7 +110,7 @@ export class Media extends PassThrough {
 
   @Edm.EntityType(Edm.ForwardRef(() => Meta))
   @Edm.Partner('MediaList')
-  Meta: Meta
+  Meta: any
 }
 
 export class CompoundKey {

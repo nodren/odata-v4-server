@@ -73,6 +73,8 @@
     "request": "^2.88.2",
     "request-promise": "^4.2.5",
     "rimraf": "^3.0.2",
+    "sql.js": "^1.3.0",
+    "sqlite3": "^5.0.0",
     "standard-version": "^8.0.0",
     "stream-buffers": "^3.0.2",
     "ts-jest": "^26.1.1",
@@ -80,6 +82,7 @@
     "typedoc": "^0.17.8",
     "typedoc-default-themes": "^0.10.2",
     "typedoc-plugin-external-module-name": "^4.0.3",
+    "typeorm": "^0.2.25",
     "typescript": "^3.9.6",
     "xml-beautifier": "^0.4.3"
   }

@@ -29,7 +29,7 @@ export class Product {
     @Edm.ForeignKey("CategoryId")
     @Edm.EntityType(Edm.ForwardRef(() => Category))
     @Edm.Partner("Products")
-    Category: Category
+    Category: any
 
     @Edm.Boolean
     Discontinued: boolean

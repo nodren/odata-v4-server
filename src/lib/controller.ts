@@ -5,6 +5,7 @@ import { getFunctionParameters } from './utils';
 const { ODataBase } = odata;
 
 export class ODataControllerBase {
+
   entitySetName: string
   elementType: Function
   static containerName: string
@@ -32,5 +33,6 @@ export class ODataControllerBase {
     const parameterNames = getFunctionParameters(<Function>fn);
     odata.filter(this.prototype, fnName, parameterNames.indexOf(param || parameterNames[0]));
   }
+
 }
 export class ODataController extends ODataBase<ODataControllerBase, typeof ODataControllerBase>(ODataControllerBase) { }

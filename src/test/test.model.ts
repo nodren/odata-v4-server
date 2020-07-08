@@ -511,7 +511,7 @@ export class Product2 {
   @Edm.ForeignKey('CategoryId')
   @Edm.EntityType(Edm.ForwardRef(() => Category2))
   @Edm.Partner('Products2')
-  Category2: Category2
+  Category2: any
 
   @Edm.Boolean
   Discontinued: boolean

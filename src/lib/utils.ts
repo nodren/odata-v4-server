@@ -45,9 +45,3 @@ export interface PropertyDecorator<T> {
 export interface Decorator<T = any> {
   (target?: any, targetKey?: string, parameterIndex?: number | TypedPropertyDescriptor<T>): T
 }
-
-export function randomInt(min = 0, max = 99999): number {
-  min = Math.ceil(min);
-  max = Math.floor(max);
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}

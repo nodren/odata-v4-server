@@ -23,7 +23,7 @@ export class GeneratorProduct {
     @Edm.ForeignKey("CategoryId")
     @Edm.EntityType(Edm.ForwardRef(() => GeneratorCategory))
     @Edm.Partner("GeneratorProduct")
-    GeneratorCategory: GeneratorCategory
+    GeneratorCategory: any
 
     @Edm.Boolean
     Discontinued: boolean

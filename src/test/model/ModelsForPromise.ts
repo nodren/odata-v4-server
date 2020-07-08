@@ -19,20 +19,20 @@ export class ProductPromise {
         term: "UI.ControlHint",
         string: "ReadOnly"
     })
-    _id:ObjectID
+    _id: ObjectID
 
     @Edm.String
     @Edm.Required
     @Edm.Convert(toObjectID)
-    CategoryId:ObjectID
+    CategoryId: ObjectID
 
     @Edm.ForeignKey("CategoryId")
     @Edm.EntityType(Edm.ForwardRef(() => CategoryPromise))
     @Edm.Partner("ProductPromise")
-    CategoryPromise:CategoryPromise
+    CategoryPromise: any
 
     @Edm.Boolean
-    Discontinued:boolean
+    Discontinued: boolean
 
     @Edm.String
     @Edm.Annotate({
@@ -42,7 +42,7 @@ export class ProductPromise {
         term: "UI.ControlHint",
         string: "ShortText"
     })
-    Name:string
+    Name: string
 
     @Edm.String
     @Edm.Annotate({
@@ -52,7 +52,7 @@ export class ProductPromise {
         term: "UI.ControlHint",
         string: "ShortText"
     })
-    QuantityPerUnit:string
+    QuantityPerUnit: string
 
     @Edm.Decimal
     @Edm.Annotate({
@@ -62,7 +62,7 @@ export class ProductPromise {
         term: "UI.ControlHint",
         string: "Decimal"
     })
-    UnitPrice:number
+    UnitPrice: number
 }
 
 @Edm.OpenType
@@ -79,34 +79,34 @@ export class CategoryPromise {
         term: "UI.DisplayName",
         string: "CategoryPromise identifier"
     },
-    {
-        term: "UI.ControlHint",
-        string: "ReadOnly"
-    })
-    _id:ObjectID
+        {
+            term: "UI.ControlHint",
+            string: "ReadOnly"
+        })
+    _id: ObjectID
 
     @Edm.String
-    Description:string
+    Description: string
 
     @Edm.String
     @Edm.Annotate({
         term: "UI.DisplayName",
         string: "CategoryPromise name"
     },
-    {
-        term: "UI.ControlHint",
-        string: "ShortText"
-    })
-    Name:string
+        {
+            term: "UI.ControlHint",
+            string: "ShortText"
+        })
+    Name: string
 
     @Edm.ForeignKey("CategoryId")
     @Edm.Collection(Edm.EntityType(ProductPromise))
     @Edm.Partner("CategoryPromise")
-    ProductPromises:ProductPromise[]
+    ProductPromises: ProductPromise[]
 
     @Edm.Collection(Edm.String)
     @Edm.Function
-    echo(){
+    echo() {
         return ["echotest"];
     }
 }

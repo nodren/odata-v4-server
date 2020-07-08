@@ -5,7 +5,8 @@
   "cSpell.words": [
     "Northwind",
     "inmemory",
-    "odata"
+    "odata",
+    "typeorm"
   ],
   "jest.autoEnable": false
 }
