@@ -1,5 +1,5 @@
 import { Token, TokenType } from '@odata/parser/lib/lexer';
-import { Literal } from 'odata-v4-literal';
+import { Literal } from './literal';
 import * as qs from 'qs';
 import { ODataServer } from './server';
 import { ODataController } from './controller';
