@@ -603,9 +603,9 @@ describe('OData HTTP', () => {
 
   let d = describe.skip
 
-  if (platform() == "linux") {
-    d = describe
-  }
+  // if (platform() == "linux") {
+  //   d = describe
+  // }
 
   d('Stream properties', () => {
     it('stream property POST', (done) => {
