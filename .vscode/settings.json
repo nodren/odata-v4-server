@@ -6,5 +6,6 @@
     "Northwind",
     "inmemory",
     "odata"
-  ]
+  ],
+  "jest.autoEnable": false
 }
