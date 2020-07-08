@@ -3,7 +3,7 @@ import { Token, TokenType } from '@odata/parser/lib/lexer';
 import { ErrorRequestHandler } from 'express';
 import { ODataServer } from './server';
 import { ODataController } from './controller';
-import { EntityType } from './edm';
+import { EntityType, EntitySet } from './edm';
 import {
   getFunctionParameters,
   getAllPropertyNames,
@@ -11,11 +11,11 @@ import {
 } from './utils';
 
 export class ODataMethodType {
-    static GET: string = 'GET';
-    static POST: string = 'POST';
-    static PUT: string = 'PUT';
-    static PATCH: string = 'PATCH';
-    static DELETE: string = 'DELETE';
+  static GET: string = 'GET';
+  static POST: string = 'POST';
+  static PUT: string = 'PUT';
+  static PATCH: string = 'PATCH';
+  static DELETE: string = 'DELETE';
 }
 
 const ODataEntitySets: string = 'odata:entitysets';
@@ -50,6 +50,19 @@ export function type(elementType: Function, targetKey?, parameterIndex?): Functi
   }
 }
 
+/**
+ * set EntitySet name of a controller
+ * @alias Edm.EntitySet
+ */
+export function entitySet(name?: string) {
+  return EntitySet(name);
+}
+
+/**
+ * @alias odata.controller
+ */
+export const withController = controller;
+
 /** Set namespace
  * @param namespace Namespace to be set
  */
@@ -66,6 +79,7 @@ export function namespace(namespace: string) {
     }
   };
 }
+
 export function getNamespace(target: any, targetKey?: string) {
   return Reflect.getMetadata(ODataNamespace, target.prototype, targetKey) || (target[targetKey] || target).namespace;
 }
@@ -97,23 +111,23 @@ export function parser(parser: any) {
  */
 export interface IODataConnector {
 
-    /**
-     * Creates compiled query object from an OData URI string
-     * @param {string} queryString - An OData query string
-     * @return {Visitor} Visitor instance
-     */
-    createQuery(odataQuery: string);
-    createQuery(odataQuery: Token);
-    createQuery(odataQuery: string | Token, entityType?: Function);
+  /**
+   * Creates compiled query object from an OData URI string
+   * @param {string} queryString - An OData query string
+   * @return {Visitor} Visitor instance
+   */
+  createQuery(odataQuery: string);
+  createQuery(odataQuery: Token);
+  createQuery(odataQuery: string | Token, entityType?: Function);
 
-    /**
-     * Creates a query object from an OData filter expression string
-     * @param {string} odataFilter - A filter expression in OData $filter format
-     * @return {Object}  query object
-     */
-    createFilter(odataFilter: string): Object;
-    createFilter(odataFilter: Token): Object;
-    createFilter(odataFilter: string | Token, entityType?: Function): Object;
+  /**
+   * Creates a query object from an OData filter expression string
+   * @param {string} odataFilter - A filter expression in OData $filter format
+   * @return {Object}  query object
+   */
+  createFilter(odataFilter: string): Object;
+  createFilter(odataFilter: Token): Object;
+  createFilter(odataFilter: string | Token, entityType?: Function): Object;
 }
 
 /** Attach connector
@@ -126,19 +140,19 @@ export function connector(connector: IODataConnector) {
 }
 
 export interface IODataValidatorOptions {
-    [option: string]: any;
+  [option: string]: any;
 }
 
 export interface IODataValidator {
 
-    /**
-     * Validates OData query AST using validator options parameter
-     * @param {string} odataQuery - An OData query string
-     * @return {null} If validation succeeds, returns null, otherwise throws a ValidationError
-     */
-    validate(odataQuery: string, options?: IODataValidatorOptions);
-    validate(odataQuery: Token, options?: IODataValidatorOptions);
-    validate(odataQuery: string | Token, options?: IODataValidatorOptions);
+  /**
+   * Validates OData query AST using validator options parameter
+   * @param {string} odataQuery - An OData query string
+   * @return {null} If validation succeeds, returns null, otherwise throws a ValidationError
+   */
+  validate(odataQuery: string, options?: IODataValidatorOptions);
+  validate(odataQuery: Token, options?: IODataValidatorOptions);
+  validate(odataQuery: string | Token, options?: IODataValidatorOptions);
 }
 
 /** Attach validator
@@ -205,6 +219,7 @@ export function controller(controller: typeof ODataController, entitySetName?: s
   };
 }
 
+
 /** Gives the public controllers of the given server
  * @param server
  */
@@ -262,40 +277,40 @@ function odataMethodFactory(type: string, navigationProperty?: string): ODataMet
 
 export interface ExpressionDecorator extends PropertyDecorator<ExpressionDecorator>, TypedPropertyDescriptor<any> {
 
-    /** Annotate function for $value handler */
-    $value: PropertyDecorator<void>
+  /** Annotate function for $value handler */
+  $value: PropertyDecorator<void>
 
-    /** Annotate function for $count handler */
-    $count: PropertyDecorator<void>
+  /** Annotate function for $count handler */
+  $count: PropertyDecorator<void>
 }
 export interface RefExpressionDecorator extends ExpressionDecorator {
-    $ref: PropertyDecorator<void>
+  $ref: PropertyDecorator<void>
 }
 export interface ODataMethodDecorator extends ExpressionDecorator {
-    (): ExpressionDecorator
-    (navigationProperty: string): RefExpressionDecorator
+  (): ExpressionDecorator
+  (navigationProperty: string): RefExpressionDecorator
 }
 
 export interface RefExpressionGETDecorator extends ExpressionDecorator {
 
-    /** Create reference for OData GET operation */
-    $ref: PropertyDecorator<void>
+  /** Create reference for OData GET operation */
+  $ref: PropertyDecorator<void>
 }
 export interface ODataGETMethodDecorator extends ExpressionDecorator {
 
-    /** Annotate function for OData GET operation */
-    (): ExpressionDecorator
+  /** Annotate function for OData GET operation */
+  (): ExpressionDecorator
 
-    /** Annotate function for OData GET operation
-     * @param navigationProperty Navigation property name to handle
-     */
-    (navigationProperty: string): RefExpressionGETDecorator
+  /** Annotate function for OData GET operation
+   * @param navigationProperty Navigation property name to handle
+   */
+  (navigationProperty: string): RefExpressionGETDecorator
 
-    /** Annotate function for OData GET operation
-     * @param target    The prototype of the class for an instance member
-     * @param targetKey The name of the class method
-     */
-    (target?: any, targetKey?: string): ExpressionDecorator;
+  /** Annotate function for OData GET operation
+   * @param target    The prototype of the class for an instance member
+   * @param targetKey The name of the class method
+   */
+  (target?: any, targetKey?: string): ExpressionDecorator;
 }
 
 /** Annotate function for OData GET operation */
@@ -303,24 +318,24 @@ export const GET = <ODataGETMethodDecorator>odataMethodFactory('GET');
 
 export interface RefExpressionPOSTDecorator extends ExpressionDecorator {
 
-    /** Create reference for OData POST operation */
-    $ref: PropertyDecorator<void>
+  /** Create reference for OData POST operation */
+  $ref: PropertyDecorator<void>
 }
 export interface ODataPOSTMethodDecorator extends ExpressionDecorator {
 
-    /** Annotate function for OData POST operation */
-    (): ExpressionDecorator
+  /** Annotate function for OData POST operation */
+  (): ExpressionDecorator
 
-    /** Annotate function for OData POST operation
-     * @param navigationProperty Navigation property name to handle
-     */
-    (navigationProperty: string): RefExpressionPOSTDecorator
+  /** Annotate function for OData POST operation
+   * @param navigationProperty Navigation property name to handle
+   */
+  (navigationProperty: string): RefExpressionPOSTDecorator
 
-    /** Annotate function for OData POST operation
-     * @param target    The prototype of the class for an instance member
-     * @param targetKey The name of the class method
-     */
-    (target?: any, targetKey?: string): ExpressionDecorator;
+  /** Annotate function for OData POST operation
+   * @param target    The prototype of the class for an instance member
+   * @param targetKey The name of the class method
+   */
+  (target?: any, targetKey?: string): ExpressionDecorator;
 }
 
 /** Annotate function for OData POST operation */
@@ -328,24 +343,24 @@ export const POST = <ODataPOSTMethodDecorator>odataMethodFactory('POST');
 
 export interface RefExpressionPUTDecorator extends ExpressionDecorator {
 
-    /** Create reference for OData PUT operation */
-    $ref: PropertyDecorator<void>
+  /** Create reference for OData PUT operation */
+  $ref: PropertyDecorator<void>
 }
 export interface ODataPUTMethodDecorator extends ExpressionDecorator {
 
-    /** Annotate function for OData PUT operation */
-    (): ExpressionDecorator
+  /** Annotate function for OData PUT operation */
+  (): ExpressionDecorator
 
-    /** Annotate function for OData PUT operation
-     * @param navigationProperty Navigation property name to handle
-     */
-    (navigationProperty: string): RefExpressionPUTDecorator
+  /** Annotate function for OData PUT operation
+   * @param navigationProperty Navigation property name to handle
+   */
+  (navigationProperty: string): RefExpressionPUTDecorator
 
-    /** Annotate function for OData PUT operation
-     * @param target    The prototype of the class for an instance member
-     * @param targetKey The name of the class method
-     */
-    (target?: any, targetKey?: string): ExpressionDecorator;
+  /** Annotate function for OData PUT operation
+   * @param target    The prototype of the class for an instance member
+   * @param targetKey The name of the class method
+   */
+  (target?: any, targetKey?: string): ExpressionDecorator;
 }
 
 /** Annotate function for OData PUT operation */
@@ -353,24 +368,24 @@ export const PUT = <ODataPUTMethodDecorator>odataMethodFactory('PUT');
 
 export interface RefExpressionPATCHDecorator extends ExpressionDecorator {
 
-    /** Create reference for OData PATCH operation */
-    $ref: PropertyDecorator<void>
+  /** Create reference for OData PATCH operation */
+  $ref: PropertyDecorator<void>
 }
 export interface ODataPATCHMethodDecorator extends ExpressionDecorator {
 
-    /** Annotate function for OData PATCH operation */
-    (): ExpressionDecorator
+  /** Annotate function for OData PATCH operation */
+  (): ExpressionDecorator
 
-    /** Annotate function for OData PATCH operation
-     * @param navigationProperty Navigation property name to handle
-     */
-    (navigationProperty: string): RefExpressionPATCHDecorator
+  /** Annotate function for OData PATCH operation
+   * @param navigationProperty Navigation property name to handle
+   */
+  (navigationProperty: string): RefExpressionPATCHDecorator
 
-    /** Annotate function for OData PATCH operation
-     * @param target    The prototype of the class for an instance member
-     * @param targetKey The name of the class method
-     */
-    (target?: any, targetKey?: string): ExpressionDecorator;
+  /** Annotate function for OData PATCH operation
+   * @param target    The prototype of the class for an instance member
+   * @param targetKey The name of the class method
+   */
+  (target?: any, targetKey?: string): ExpressionDecorator;
 }
 
 /** Annotate function for OData PATCH operation */
@@ -378,24 +393,24 @@ export const PATCH = <ODataPATCHMethodDecorator>odataMethodFactory('PATCH');
 
 export interface RefExpressionDELETEDecorator extends ExpressionDecorator {
 
-    /** Create reference for OData DELETE operation */
-    $ref: PropertyDecorator<void>
+  /** Create reference for OData DELETE operation */
+  $ref: PropertyDecorator<void>
 }
 export interface ODataDELETEMethodDecorator extends ExpressionDecorator {
 
-    /** Annotate function for OData DELETE operation */
-    (): ExpressionDecorator
+  /** Annotate function for OData DELETE operation */
+  (): ExpressionDecorator
 
-    /** Annotate function for OData DELETE operation
-     * @param navigationProperty Navigation property name to handle
-     */
-    (navigationProperty: string): RefExpressionDELETEDecorator
+  /** Annotate function for OData DELETE operation
+   * @param navigationProperty Navigation property name to handle
+   */
+  (navigationProperty: string): RefExpressionDELETEDecorator
 
-    /** Annotate function for OData DELETE operation
-     * @param target    The prototype of the class for an instance member
-     * @param targetKey The name of the class method
-     */
-    (target?: any, targetKey?: string): ExpressionDecorator;
+  /** Annotate function for OData DELETE operation
+   * @param target    The prototype of the class for an instance member
+   * @param targetKey The name of the class method
+   */
+  (target?: any, targetKey?: string): ExpressionDecorator;
 }
 
 /** Annotate function for OData DELETE operation */
@@ -769,8 +784,8 @@ export function parameters(parameters: any) {
 }
 
 export interface IODataBase<T, C> {
-    new(...args: any[]): T;
-    define?(...decorators: Array<Function | Object>): IODataBase<T, C> & C;
+  new(...args: any[]): T;
+  define?(...decorators: Array<Function | Object>): IODataBase<T, C> & C;
 }
 export function ODataBase<T, C>(Base: C): IODataBase<T, C> & C {
   class ODataBaseClass extends (<any>Base) {

@@ -1,6 +1,5 @@
 import { Edm, odata, ODataController, ODataServer, ODataQuery } from "../lib";
 
-@Edm.EntityType()
 class ServiceTicket {
 
   @Edm.Key
@@ -18,13 +17,13 @@ class ServiceTicket {
 }
 
 @odata.type(ServiceTicket)
-@Edm.EntitySet("ServiceTickets")
+@odata.entitySet("Tickets")
 class ServiceTicketController extends ODataController {
 
 }
 
 @odata.namespace('default')
-@odata.controller(ServiceTicketController, true)
+@odata.withController(ServiceTicketController, true)
 class Server extends ODataServer {
 
   @odata.GET
