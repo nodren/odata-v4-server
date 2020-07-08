@@ -28,8 +28,7 @@ describe('Typeorm Integration Test Suite', () => {
   // @ts-ignore
   const createTmpConnection = (opt?: Partial<ConnectionOptions>) => createConnection({
     name: "default",
-    type: "sqlite",
-    database: ":memory:",
+    type: "sqljs",
     synchronize: true,
     // logging: true,
     ...opt
