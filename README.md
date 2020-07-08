@@ -1,20 +1,23 @@
 # OData(V4) Server
 
-[![npm (scoped)](https://img.shields.io/npm/v/@odata/server)](https://www.npmjs.com/package/@odata/server)
+[![npm (scoped)](https://img.shields.io/npm/v/@odata/server?label=@odata/server)](https://www.npmjs.com/package/@odata/server)
+[![npm (scoped)](https://img.shields.io/npm/v/@odata/parser?label=@odata/parser)](https://www.npmjs.com/package/@odata/parser)
+[![npm (scoped)](https://img.shields.io/npm/v/@odata/metadata?label=@odata/metadata)](https://www.npmjs.com/package/@odata/metadata)
+
 [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/Soontao/odata-v4-server/Node%20CI?label=nodejs)](https://github.com/Soontao/odata-v4-server/actions?query=workflow%3A%Node+CI%22)
 [![Codecov](https://codecov.io/gh/Soontao/odata-v4-server/branch/master/graph/badge.svg)](https://codecov.io/gh/Soontao/odata-v4-server)
 
-OData V4 server for node.js
+NodeJS OData(V4) Server Implementation 
 
 ## Features
 
 * OASIS Standard OData Version 4.0 server
 * usable as a standalone server, as an Express router, as a node.js stream or as a library
 * expose service document and service metadata - $metadata
-* setup metadata using decorators or [metadata JSON](https://github.com/jaystack/odata-v4-service-metadata)
+* setup metadata using decorators or [@odata/metadata](https://github.com/Soontao/odata-v4-metadata)
 * supported data types are Edm primitives, complex types, navigation properties
 * support create, read, update, and delete entity sets, action imports, function imports, collection and entity bound actions and functions
-* support for full OData query language using [odata-v4-parser](https://github.com/jaystack/odata-v4-parser)
+* support for full OData query language using [@odata/parser](https://github.com/Soontao/odata-v4-parser)
   * filtering entities - $filter
   * sorting - $orderby
   * paging - $skip and $top
