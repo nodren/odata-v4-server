@@ -2,10 +2,11 @@ module.exports = {
   'root': true,
   'parser': '@typescript-eslint/parser',
   'plugins': [
-    '@typescript-eslint'
+    '@typescript-eslint',
+    'es-beautifier'
   ],
   'extends': [
-    'plugin:@typescript-eslint/eslint-recommended'
+    'plugin:@typescript-eslint/eslint-recommended',
   ],
   'env': {
     'es6': true,

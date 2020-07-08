@@ -4,7 +4,11 @@ import { ErrorRequestHandler } from 'express';
 import { ODataServer } from './server';
 import { ODataController } from './controller';
 import { EntityType } from './edm';
-import { getFunctionParameters, getAllPropertyNames, PropertyDecorator } from './utils';
+import {
+  getFunctionParameters,
+  getAllPropertyNames,
+  PropertyDecorator
+} from './utils';
 
 export class ODataMethodType {
     static GET: string = 'GET';
@@ -57,7 +61,9 @@ export function namespace(namespace: string) {
       } else {
         Reflect.defineMetadata(ODataNamespace, namespace, target, targetKey);
       }
-    } else {target.namespace = namespace;}
+    } else {
+      target.namespace = namespace;
+    }
   };
 }
 export function getNamespace(target: any, targetKey?: string) {
@@ -69,8 +75,11 @@ export function getNamespace(target: any, targetKey?: string) {
  */
 export function container(name: string) {
   return function(target: any, targetKey?: string) {
-    if (targetKey) {target[targetKey].containerName = name;}
-    else {target.containerName = name;}
+    if (targetKey) {
+      target[targetKey].containerName = name;
+    } else {
+      target.containerName = name;
+    }
   };
 }
 
@@ -87,6 +96,7 @@ export function parser(parser: any) {
  * odata-v4-server compatible connector
  */
 export interface IODataConnector {
+
     /**
      * Creates compiled query object from an OData URI string
      * @param {string} queryString - An OData query string
@@ -120,6 +130,7 @@ export interface IODataValidatorOptions {
 }
 
 export interface IODataValidator {
+
     /**
      * Validates OData query AST using validator options parameter
      * @param {string} odataQuery - An OData query string
@@ -155,18 +166,21 @@ export function error(errorHandler: ErrorRequestHandler) {
  * @param isPublic      Is the binding public or not.
  */
 export function controller(controller: typeof ODataController, isPublic?: boolean);
+
 /** Class decorator for server that binds the given controller to the server.
  * @param controller    Controller to be bind to the server.
  * @param isPublic      Is the binding public or not.
  * @param elementType   Type of the element.
  */
 export function controller(controller: typeof ODataController, isPublic?: boolean, elementType?: Function);
+
 /** Class decorator for server that binds the given controller to the server.
  * @param controller    Controller to be bind to the server.
  * @param entitySetName The name of the entity set.
  * @param elementType   Type of the element.
  */
 export function controller(controller: typeof ODataController, entitySetName?: string, elementType?: Function);
+
 /** Class decorator for server that binds the given controller to the server.
  * @param controller    Controller to be bind to the server.
  * @param entitySetName The name of the entity set.
@@ -190,6 +204,7 @@ export function controller(controller: typeof ODataController, entitySetName?: s
     EntityType(controller.prototype.elementType)(server.prototype, (<any>controller).name);
   };
 }
+
 /** Gives the public controllers of the given server
  * @param server
  */
@@ -207,7 +222,9 @@ export const cors = (function cors() {
 })();
 
 function odataMethodFactory(type: string, navigationProperty?: string): ODataMethodDecorator | RefExpressionDecorator {
-  if (type.indexOf('/') < 0) {type = type.toLowerCase();}
+  if (type.indexOf('/') < 0) {
+    type = type.toLowerCase();
+  }
   const decorator: any = function(target, targetKey) {
     const existingMethods: any[] = Reflect.getMetadata(ODataMethod, target, targetKey) || [];
     existingMethods.unshift(type);
@@ -222,10 +239,16 @@ function odataMethodFactory(type: string, navigationProperty?: string): ODataMet
     };
     return <RefExpressionDecorator>fn;
   };
-  if (typeof navigationProperty == 'string') {return createRefFn(navigationProperty);}
+  if (typeof navigationProperty == 'string') {
+    return createRefFn(navigationProperty);
+  }
   const fn: any = <ExpressionDecorator> function(target: any, targetKey?: string): any {
-    if (typeof target == 'string') {return createRefFn(target);}
-    if (arguments.length == 0) {return fn;}
+    if (typeof target == 'string') {
+      return createRefFn(target);
+    }
+    if (arguments.length == 0) {
+      return fn;
+    }
     decorator(target, targetKey);
   };
   (<ExpressionDecorator>fn).$value = function(target, targetKey) {
@@ -238,8 +261,10 @@ function odataMethodFactory(type: string, navigationProperty?: string): ODataMet
 }
 
 export interface ExpressionDecorator extends PropertyDecorator<ExpressionDecorator>, TypedPropertyDescriptor<any> {
+
     /** Annotate function for $value handler */
     $value: PropertyDecorator<void>
+
     /** Annotate function for $count handler */
     $count: PropertyDecorator<void>
 }
@@ -252,102 +277,127 @@ export interface ODataMethodDecorator extends ExpressionDecorator {
 }
 
 export interface RefExpressionGETDecorator extends ExpressionDecorator {
+
     /** Create reference for OData GET operation */
     $ref: PropertyDecorator<void>
 }
 export interface ODataGETMethodDecorator extends ExpressionDecorator {
+
     /** Annotate function for OData GET operation */
     (): ExpressionDecorator
+
     /** Annotate function for OData GET operation
      * @param navigationProperty Navigation property name to handle
      */
     (navigationProperty: string): RefExpressionGETDecorator
+
     /** Annotate function for OData GET operation
      * @param target    The prototype of the class for an instance member
      * @param targetKey The name of the class method
      */
     (target?: any, targetKey?: string): ExpressionDecorator;
 }
+
 /** Annotate function for OData GET operation */
 export const GET = <ODataGETMethodDecorator>odataMethodFactory('GET');
 
 export interface RefExpressionPOSTDecorator extends ExpressionDecorator {
+
     /** Create reference for OData POST operation */
     $ref: PropertyDecorator<void>
 }
 export interface ODataPOSTMethodDecorator extends ExpressionDecorator {
+
     /** Annotate function for OData POST operation */
     (): ExpressionDecorator
+
     /** Annotate function for OData POST operation
      * @param navigationProperty Navigation property name to handle
      */
     (navigationProperty: string): RefExpressionPOSTDecorator
+
     /** Annotate function for OData POST operation
      * @param target    The prototype of the class for an instance member
      * @param targetKey The name of the class method
      */
     (target?: any, targetKey?: string): ExpressionDecorator;
 }
+
 /** Annotate function for OData POST operation */
 export const POST = <ODataPOSTMethodDecorator>odataMethodFactory('POST');
 
 export interface RefExpressionPUTDecorator extends ExpressionDecorator {
+
     /** Create reference for OData PUT operation */
     $ref: PropertyDecorator<void>
 }
 export interface ODataPUTMethodDecorator extends ExpressionDecorator {
+
     /** Annotate function for OData PUT operation */
     (): ExpressionDecorator
+
     /** Annotate function for OData PUT operation
      * @param navigationProperty Navigation property name to handle
      */
     (navigationProperty: string): RefExpressionPUTDecorator
+
     /** Annotate function for OData PUT operation
      * @param target    The prototype of the class for an instance member
      * @param targetKey The name of the class method
      */
     (target?: any, targetKey?: string): ExpressionDecorator;
 }
+
 /** Annotate function for OData PUT operation */
 export const PUT = <ODataPUTMethodDecorator>odataMethodFactory('PUT');
 
 export interface RefExpressionPATCHDecorator extends ExpressionDecorator {
+
     /** Create reference for OData PATCH operation */
     $ref: PropertyDecorator<void>
 }
 export interface ODataPATCHMethodDecorator extends ExpressionDecorator {
+
     /** Annotate function for OData PATCH operation */
     (): ExpressionDecorator
+
     /** Annotate function for OData PATCH operation
      * @param navigationProperty Navigation property name to handle
      */
     (navigationProperty: string): RefExpressionPATCHDecorator
+
     /** Annotate function for OData PATCH operation
      * @param target    The prototype of the class for an instance member
      * @param targetKey The name of the class method
      */
     (target?: any, targetKey?: string): ExpressionDecorator;
 }
+
 /** Annotate function for OData PATCH operation */
 export const PATCH = <ODataPATCHMethodDecorator>odataMethodFactory('PATCH');
 
 export interface RefExpressionDELETEDecorator extends ExpressionDecorator {
+
     /** Create reference for OData DELETE operation */
     $ref: PropertyDecorator<void>
 }
 export interface ODataDELETEMethodDecorator extends ExpressionDecorator {
+
     /** Annotate function for OData DELETE operation */
     (): ExpressionDecorator
+
     /** Annotate function for OData DELETE operation
      * @param navigationProperty Navigation property name to handle
      */
     (navigationProperty: string): RefExpressionDELETEDecorator
+
     /** Annotate function for OData DELETE operation
      * @param target    The prototype of the class for an instance member
      * @param targetKey The name of the class method
      */
     (target?: any, targetKey?: string): ExpressionDecorator;
 }
+
 /** Annotate function for OData DELETE operation */
 export const DELETE = <ODataDELETEMethodDecorator>odataMethodFactory('DELETE');
 
@@ -357,12 +407,14 @@ export const DELETE = <ODataDELETEMethodDecorator>odataMethodFactory('DELETE');
 export function createRef(navigationProperty: string) {
   return POST(navigationProperty).$ref;
 }
+
 /** Update reference for OData PUT operation
  * @param navigationProperty Navigation property name to handle
  */
 export function updateRef(navigationProperty: string) {
   return PUT(navigationProperty).$ref;
 }
+
 /** Delete reference for OData DELETE operation
  * @param navigationProperty Navigation property name to handle
  */
@@ -372,12 +424,15 @@ export function deleteRef(navigationProperty: string) {
 
 /** Annotate function for a specified OData method operation */
 export function method(method: string): ODataMethodDecorator;
+
 /** Annotate function for a specified OData method operation */
 export function method(method: string, navigationProperty: string): RefExpressionDecorator;
+
 /** Annotate function for a specified OData method operation */
 export function method(method: string, navigationProperty?: string): ODataMethodDecorator | RefExpressionDecorator {
   return odataMethodFactory(method.toUpperCase(), navigationProperty);
 }
+
 /** get metadata value of ODataMethod on the prototype chain of target or targetKey
  * @param target    The prototype of the class for an instance member
  * @param targetKey The name of the class method
@@ -390,12 +445,14 @@ export function getMethod(target, targetKey) {
  * @param name
  */
 export function key(name?: string);
+
 /** Gives the entity key
  * @param target            The prototype of the class for an instance member
  * @param targetKey         The name of the class method
  * @param parameterIndex    The ordinal index of the parameter in the function’s parameter list
  */
 export function key(target: any, targetKey: string, parameterIndex: number);
+
 /** Gives the entity key
  * @param target            The prototype of the class for an instance member
  * @param targetKey         The name of the class method
@@ -417,8 +474,10 @@ export function key(target: any, targetKey?: string, parameterIndex?: number): a
   if (typeof target == 'string' || typeof target == 'undefined' || !target) {
     name = target;
     return decorator;
-  } return decorator(target, targetKey, parameterIndex);
+  }
+  return decorator(target, targetKey, parameterIndex);
 }
+
 /** Gives the decorated key parameter.
  * @param target    The prototype of the class for an instance member
  * @param targetKey The name of the class method
@@ -431,12 +490,14 @@ export function getKeys(target, targetKey) {
  * @param name
  */
 export function link(name?: string);
+
 /** Gives the identifier of the referenced entity.
  * @param target            The prototype of the class for an instance member
  * @param targetKey         The name of the class method
  * @param parameterIndex    The ordinal index of the parameter in the function’s parameter list
  */
 export function link(target: any, targetKey: string, parameterIndex: number);
+
 /** Gives the identifier of the referenced entity.
  * @param target            The prototype of the class for an instance member
  * @param targetKey         The name of the class method
@@ -458,8 +519,10 @@ export function link(target: any, targetKey?: string, parameterIndex?: number): 
   if (typeof target == 'string' || typeof target == 'undefined' || !target) {
     name = target;
     return decorator;
-  } return decorator(target, targetKey, parameterIndex);
+  }
+  return decorator(target, targetKey, parameterIndex);
 }
+
 /** Gives the decorated link parameter.
  * @param target    The prototype of the class for an instance member
  * @param targetKey The name of the class method
@@ -711,6 +774,7 @@ export interface IODataBase<T, C> {
 }
 export function ODataBase<T, C>(Base: C): IODataBase<T, C> & C {
   class ODataBaseClass extends (<any>Base) {
+
     /** Define class, properties and parameters with decorators */
     static define(...decorators: Array<Function | Object>): IODataBase<T, C> & C {
       decorators.forEach((decorator) => {
@@ -720,7 +784,9 @@ export function ODataBase<T, C>(Base: C): IODataBase<T, C> & C {
           const props = Object.keys(decorator);
           props.forEach((prop) => {
             let propDecorators = decorator[prop];
-            if (!Array.isArray(propDecorators)) {propDecorators = [propDecorators];}
+            if (!Array.isArray(propDecorators)) {
+              propDecorators = [propDecorators];
+            }
             propDecorators.forEach((propDecorator) => {
               if (typeof propDecorator == 'function') {
                 propDecorator(this.prototype, prop);
@@ -729,7 +795,9 @@ export function ODataBase<T, C>(Base: C): IODataBase<T, C> & C {
                 const parameterNames = getFunctionParameters(this.prototype[prop]);
                 params.forEach((param) => {
                   let paramDecorators = propDecorator[param];
-                  if (!Array.isArray(paramDecorators)) {paramDecorators = [paramDecorators];}
+                  if (!Array.isArray(paramDecorators)) {
+                    paramDecorators = [paramDecorators];
+                  }
                   paramDecorators.forEach((paramDecorator) => {
                     if (typeof paramDecorator == 'function') {
                       paramDecorator(this.prototype, prop, parameterNames.indexOf(param));

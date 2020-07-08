@@ -5,9 +5,13 @@ import * as odata from './odata';
 import { getAllPropertyNames } from './utils';
 
 export function createMetadataJSON(server: typeof ODataServer) {
-  if (!server.namespace) {server.namespace = 'Default';}
+  if (!server.namespace) {
+    server.namespace = 'Default';
+  }
   const containerType = Object.getPrototypeOf(server.container).constructor;
-  if (containerType != Edm.ContainerBase && !containerType.namespace) {containerType.namespace = server.namespace;}
+  if (containerType != Edm.ContainerBase && !containerType.namespace) {
+    containerType.namespace = server.namespace;
+  }
 
   const definition: any = {
     version: '4.0',
@@ -20,7 +24,9 @@ export function createMetadataJSON(server: typeof ODataServer) {
     let ret = {};
     ops.forEach((op) => ret[op] = target);
     target = Object.getPrototypeOf(target.prototype);
-    if (target instanceof ODataController) {ret = Object.assign(getAllOperations(target.constructor), ret);}
+    if (target instanceof ODataController) {
+      ret = Object.assign(getAllOperations(target.constructor), ret);
+    }
     return ret;
   };
   const propNames = getAllPropertyNames(server.prototype).filter((it) => it != 'constructor');
@@ -211,13 +217,19 @@ export function createMetadataJSON(server: typeof ODataServer) {
   };
   const resolvingTypes = [];
   const resolveType = (elementType, parent, prop?, baseType?, paramTypeName?) => {
-    if (resolvingTypes.indexOf(elementType) >= 0) {return null;}
+    if (resolvingTypes.indexOf(elementType) >= 0) {
+      return null;
+    }
     resolvingTypes.push(elementType);
 
-    if (!elementType.namespace) {elementType.namespace = server.container.resolve(elementType) ? (containerType.namespace || parent.namespace) : parent.namespace;}
+    if (!elementType.namespace) {
+      elementType.namespace = server.container.resolve(elementType) ? (containerType.namespace || parent.namespace) : parent.namespace;
+    }
 
     let typeName = paramTypeName || Edm.getTypeName(parent, prop, server.container) || elementType.name;
-    if (typeName.indexOf('Collection') == 0) {typeName = elementType.name;}
+    if (typeName.indexOf('Collection') == 0) {
+      typeName = elementType.name;
+    }
     const typeDefinition: any = {
       name: typeName.split('.').pop(),
       baseType: baseType ? `${baseType.namespace || server.namespace}.${baseType.name}` : undefined,
@@ -330,7 +342,9 @@ export function createMetadataJSON(server: typeof ODataServer) {
     });
 
     const __proto__ = Object.getPrototypeOf(elementType.prototype);
-    if (!baseType && __proto__) {baseType = __proto__.constructor;}
+    if (!baseType && __proto__) {
+      baseType = __proto__.constructor;
+    }
     if (baseType && baseType != Object && Edm.getProperties(baseType.prototype).length > 0) {
       const resolvedType = resolveType(baseType, elementType, prop);
       typeDefinition.baseType = `${baseType.namespace || server.namespace}.${baseType.name}`;
@@ -357,7 +371,9 @@ export function createMetadataJSON(server: typeof ODataServer) {
     if (i != '$metadata' && server.prototype[i]) {
       if (server.prototype[i].prototype instanceof ODataController) {
         const ctrl = server.prototype[i];
-        if (!ctrl.namespace) {ctrl.namespace = server.namespace;}
+        if (!ctrl.namespace) {
+          ctrl.namespace = server.namespace;
+        }
         const elementType = ctrl.prototype.elementType;
         const containerName = ctrl.containerName || 'Default';
         let ctrlSchema = definition.dataServices.schema.find((schema) => schema.namespace == ctrl.namespace);

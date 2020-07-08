@@ -2,7 +2,7 @@ import * as es from 'event-stream';
 import { ODataServer, ODataController, odata } from '../lib/index';
 
 class TestController extends ODataController {
-    @odata.GET
+  @odata.GET
   find() {
     return [{
       a: 1
@@ -13,17 +13,17 @@ class TestController extends ODataController {
     }];
   }
 
-    @odata.GET
-    findOne(@odata.key key:number) {
-      return {
-        id: key,
-        t: Date.now()
-      };
-    }
+  @odata.GET
+  findOne(@odata.key key: number) {
+    return {
+      id: key,
+      t: Date.now()
+    };
+  }
 }
 
 @odata.controller(TestController, true)
-export class TestServer extends ODataServer {}
+export class TestServer extends ODataServer { }
 
 TestServer.execute('/Test/$count', 'GET').then((result) => {
   console.log(result);

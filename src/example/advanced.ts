@@ -6,26 +6,27 @@ import { Writable } from 'stream';
 const categories = require('./categories');
 const products = require('./products');
 
-const mongodb = async function():Promise<Db> {
+const mongodb = async function (): Promise<Db> {
   return (await MongoClient.connect('mongodb://localhost:27017/odataserver')).db();
 };
 
 @odata.type(Product)
 @Edm.EntitySet('Products')
 export class ProductsController extends ODataController {
-    @odata.GET
-  async find(@odata.query query:ODataQuery, @odata.stream stream:Writable) {
+  
+  @odata.GET
+  async find(@odata.query query: ODataQuery, @odata.stream stream: Writable) {
     const mongodbQuery = createQuery(query);
     return (await mongodb()).collection('Products').find(mongodbQuery.query, { projection: mongodbQuery.projection, skip: mongodbQuery.skip, limit: mongodbQuery.limit }).stream().pipe(stream);
   }
 
-    @odata.GET
-    async findOne(@odata.key key:string, @odata.query query:ODataQuery) {
-      const mongodbQuery = createQuery(query);
-      return (await mongodb()).collection('Products').findOne({ _id: key }, {
-        fields: mongodbQuery.projection
-      });
-    }
+  @odata.GET
+  async findOne(@odata.key key: string, @odata.query query: ODataQuery) {
+    const mongodbQuery = createQuery(query);
+    return (await mongodb()).collection('Products').findOne({ _id: key }, {
+      fields: mongodbQuery.projection
+    });
+  }
 
   /*@odata.GET("Category")
     async getCategory(@odata.result result:any){
@@ -36,19 +37,19 @@ export class ProductsController extends ODataController {
 @odata.type(Category)
 @Edm.EntitySet('Categories')
 export class CategoriesController extends ODataController {
-    @odata.GET
-  async find(@odata.query query:ODataQuery, @odata.stream stream:Writable) {
+  @odata.GET
+  async find(@odata.query query: ODataQuery, @odata.stream stream: Writable) {
     const mongodbQuery = createQuery(query);
     return (await mongodb()).collection('Categories').find(mongodbQuery.query, { projection: mongodbQuery.projection, skip: mongodbQuery.skip, limit: mongodbQuery.limit }).stream().pipe(stream);
   }
 
-    @odata.GET
-    async findOne(@odata.key() key:string, @odata.query query:ODataQuery) {
-      const mongodbQuery = createQuery(query);
-      return (await mongodb()).collection('Categories').findOne({ _id: key }, {
-        fields: mongodbQuery.projection
-      });
-    }
+  @odata.GET
+  async findOne(@odata.key() key: string, @odata.query query: ODataQuery) {
+    const mongodbQuery = createQuery(query);
+    return (await mongodb()).collection('Categories').findOne({ _id: key }, {
+      fields: mongodbQuery.projection
+    });
+  }
 
   /*@odata.GET("Products")
     async getProducts(@odata.result result:any, @odata.query query:ODataQuery, @odata.stream stream:Writable){
@@ -65,26 +66,26 @@ export class CategoriesController extends ODataController {
 @odata.controller(CategoriesController)
 @odata.cors
 export class NorthwindODataServer extends ODataServer {
-    @Edm.EntityType(Category)
-    @Edm.FunctionImport
-  *GetCategoryById(@Edm.String id:string) {
+  @Edm.EntityType(Category)
+  @Edm.FunctionImport
+  *GetCategoryById(@Edm.String id: string) {
     return yield categories.filter((category: any) => category._id.toString() == id)[0];
   }
 
-    @Edm.ActionImport
-    async initDb():Promise<void> {
-      const db = await mongodb();
-      await db.dropDatabase();
-      const categoryCollection = db.collection('Categories');
-      const productsCollection = db.collection('Products');
-      await categoryCollection.insertMany(categories);
-      await productsCollection.insertMany(products);
-    }
+  @Edm.ActionImport
+  async initDb(): Promise<void> {
+    const db = await mongodb();
+    await db.dropDatabase();
+    const categoryCollection = db.collection('Categories');
+    const productsCollection = db.collection('Products');
+    await categoryCollection.insertMany(categories);
+    await productsCollection.insertMany(products);
+  }
 
-    static errorHandler(err, req, res, next) {
-      delete err.stack;
-      ODataErrorHandler(err, req, res, next);
-    }
+  static errorHandler(err, req, res, next) {
+    delete err.stack;
+    ODataErrorHandler(err, req, res, next);
+  }
 }
 
 createODataServer(NorthwindODataServer, '/odata', 3000);

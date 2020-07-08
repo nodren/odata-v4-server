@@ -80,7 +80,9 @@ function typeDecoratorFactory(type: string): any {
       const desc = Object.getOwnPropertyDescriptor(target, targetKey);
       if (targetKey != EdmType && ((desc && typeof desc.value != 'function') || (!desc && typeof target[targetKey] != 'function'))) {
         const properties: string[] = Reflect.getOwnMetadata(EdmProperties, target) || [];
-        if (properties.indexOf(targetKey) < 0) { properties.push(targetKey); }
+        if (properties.indexOf(targetKey) < 0) {
+          properties.push(targetKey);
+        }
         Reflect.defineMetadata(EdmProperties, properties, target);
       }
       Reflect.defineMetadata(EdmType, type, target, targetKey);
@@ -88,38 +90,55 @@ function typeDecoratorFactory(type: string): any {
   };
 
   return function(this: any, ...args: any[]) {
-    if (arguments.length == 0) { return decorator; }
+    if (arguments.length == 0) {
+      return decorator;
+    }
     return decorator.apply(this, args);
   };
 }
+
 /** Edm.Binary primitive type property decorator */
 export const Binary = typeDecoratorFactory('Edm.Binary');
+
 /** Edm.Boolean primitive type property decorator */
 export const Boolean = typeDecoratorFactory('Edm.Boolean');
+
 /** Edm.Byte primitive type property decorator */
 export const Byte = typeDecoratorFactory('Edm.Byte');
+
 /** Edm.Date primitive type property decorator */
 export const Date = typeDecoratorFactory('Edm.Date');
+
 /** Edm.DateTimeOffset primitive type property decorator */
 export const DateTimeOffset = typeDecoratorFactory('Edm.DateTimeOffset');
+
 /** Edm.Decimal primitive type property decorator */
 export const Decimal = typeDecoratorFactory('Edm.Decimal');
+
 /** Edm.Double primitive type property decorator */
 export const Double = typeDecoratorFactory('Edm.Double');
+
 /** Edm.Duration primitive type property decorator */
 export const Duration = typeDecoratorFactory('Edm.Duration');
+
 /** Edm.Guid primitive type property decorator */
 export const Guid = typeDecoratorFactory('Edm.Guid');
+
 /** Edm.Int16 primitive type property decorator */
 export const Int16 = typeDecoratorFactory('Edm.Int16');
+
 /** Edm.Int32 primitive type property decorator */
 export const Int32 = typeDecoratorFactory('Edm.Int32');
+
 /** Edm.Int64 primitive type property decorator */
 export const Int64 = typeDecoratorFactory('Edm.Int64');
+
 /** Edm.SByte primitive type property decorator */
 export const SByte = typeDecoratorFactory('Edm.SByte');
+
 /** Edm.Single primitive type property decorator */
 export const Single = typeDecoratorFactory('Edm.Single');
+
 /** Edm.Stream primitive type property decorator */
 export function Stream(contentType?: string);
 export function Stream(target?: any, targetKey?: string);
@@ -133,61 +152,81 @@ export function Stream(this: any, target?: any) {
   }
   // eslint-disable-next-line prefer-rest-params
   return typeDecoratorFactory('Edm.Stream').apply(this, arguments);
-};
+}
+;
+
 /** Edm.String primitive type property decorator */
 export const String = typeDecoratorFactory('Edm.String');
+
 /** Edm.TimeOfDay primitive type property decorator */
 export const TimeOfDay = typeDecoratorFactory('Edm.TimeOfDay');
+
 /** Edm.Geography primitive type property decorator */
 export const Geography = typeDecoratorFactory('Edm.Geography');
+
 /** Edm.GeographyPoint primitive type property decorator */
 export const GeographyPoint = typeDecoratorFactory('Edm.GeographyPoint');
+
 /** Edm.GeographyLineString primitive type property decorator */
 export const GeographyLineString = typeDecoratorFactory('Edm.GeographyLineString');
+
 /** Edm.GeographyPolygon primitive type property decorator */
 export const GeographyPolygon = typeDecoratorFactory('Edm.GeographyPolygon');
+
 /** Edm.GeographyMultiPoint primitive type property decorator */
 export const GeographyMultiPoint = typeDecoratorFactory('Edm.GeographyMultiPoint');
+
 /** Edm.GeographyMultiLineString primitive type property decorator */
 export const GeographyMultiLineString = typeDecoratorFactory('Edm.GeographyMultiLineString');
+
 /** Edm.GeographyMultiPolygon primitive type property decorator */
 export const GeographyMultiPolygon = typeDecoratorFactory('Edm.GeographyMultiPolygon');
+
 /** Edm.GeographyCollection primitive type property decorator */
 export const GeographyCollection = (function GeographyCollection() {
   return typeDecoratorFactory('Edm.GeographyCollection');
 })();
+
 /** Edm.Geometry primitive type property decorator */
 export const Geometry = (function Geometry() {
   return typeDecoratorFactory('Edm.Geometry');
 })();
+
 /** Edm.GeometryPoint primitive type property decorator */
 export const GeometryPoint = (function GeometryPoint() {
   return typeDecoratorFactory('Edm.GeometryPoint');
 })();
+
 /** Edm.GeometryLineString primitive type property decorator */
 export const GeometryLineString = (function GeometryLineString() {
   return typeDecoratorFactory('Edm.GeometryLineString');
 })();
+
 /** Edm.GeometryPolygon primitive type property decorator */
 export const GeometryPolygon = (function GeometryPolygon() {
   return typeDecoratorFactory('Edm.GeometryPolygon');
 })();
+
 /** Edm.GeometryMultiPoint primitive type property decorator */
 export const GeometryMultiPoint = (function GeometryMultiPoint() {
   return typeDecoratorFactory('Edm.GeometryMultiPoint');
 })();
+
 /** Edm.GeometryMultiLineString primitive type property decorator */
 export const GeometryMultiLineString = (function GeometryMultiLineString() {
   return typeDecoratorFactory('Edm.GeometryMultiLineString');
 })();
+
 /** Edm.GeometryMultiPolygon primitive type property decorator */
 export const GeometryMultiPolygon = (function GeometryMultiPolygon() {
   return typeDecoratorFactory('Edm.GeometryMultiPolygon');
 })();
+
 /** Edm.GeometryCollection primitive type property decorator */
 export const GeometryCollection = (function GeometryCollection() {
   return typeDecoratorFactory('Edm.GeometryCollection');
 })();
+
 /** ?????????? */
 /** Edm.Collection decorator for describing properties as collections */
 export function Collection(elementType: Function): Decorator {
@@ -195,7 +234,7 @@ export function Collection(elementType: Function): Decorator {
     if (typeof parameterIndex == 'number') {
       const parameterNames = getFunctionParameters(target, targetKey);
       const existingParameters: any[] = Reflect.getOwnMetadata(EdmParameters, target, targetKey) || [];
-      const element = function Collection() { };
+      const element = function Collection() {};
       Reflect.decorate([elementType()], element, EdmType);
       let elementTypeName = Reflect.getMetadata(EdmType, element, EdmType);
       if (typeof elementTypeName == 'function') {
@@ -228,10 +267,12 @@ export function Collection(elementType: Function): Decorator {
       const desc = Object.getOwnPropertyDescriptor(target, targetKey);
       if ((desc && typeof desc.value != 'function') || (!desc && typeof target[targetKey] != 'function')) {
         const properties: string[] = Reflect.getOwnMetadata(EdmProperties, target) || [];
-        if (properties.indexOf(targetKey) < 0) { properties.push(targetKey); }
+        if (properties.indexOf(targetKey) < 0) {
+          properties.push(targetKey);
+        }
         Reflect.defineMetadata(EdmProperties, properties, target);
       }
-      const element = function Collection() { };
+      const element = function Collection() {};
       try {
         Reflect.decorate([elementType()], element, EdmType);
       } catch (err) {
@@ -250,6 +291,7 @@ export function Collection(elementType: Function): Decorator {
     }
   };
 }
+
 /** ?????????? */
 export function getTypeName(target: Function, propertyKey: string, container?: ContainerBase): string {
   let type = Reflect.getMetadata(EdmType, target) || Reflect.getMetadata(EdmType, target.prototype, propertyKey) || Reflect.getMetadata(EdmType, target.prototype);
@@ -280,7 +322,9 @@ export function getTypeName(target: Function, propertyKey: string, container?: C
   } else if (typeof type == 'function') {
     if (type.__forward__ref__) {
       type = `${(<any>type).namespace || (<any>target).namespace || 'Default'}.${(<any>type)().name}`;
-    } else { type = `${(<any>type).namespace || (<any>target).namespace || 'Default'}.${(<any>type).name}`; }
+    } else {
+      type = `${(<any>type).namespace || (<any>target).namespace || 'Default'}.${(<any>type).name}`;
+    }
   }
   if (typeof elementType == 'string' && elementType != 'Collection' && elementType.indexOf('.') < 0) {
     for (let i = 0; i < EdmContainer.length; i++) {
@@ -297,21 +341,34 @@ export function getTypeName(target: Function, propertyKey: string, container?: C
   } else if (typeof elementType == 'function') {
     if (elementType.__forward__ref__) {
       elementType = `${(<any>elementType).namespace || (<any>target).namespace || 'Default'}.${(<any>elementType)().name}`;
-    } else { elementType = `${(<any>elementType).namespace || (<any>target).namespace || 'Default'}.${(<any>elementType).name}`; }
+    } else {
+      elementType = `${(<any>elementType).namespace || (<any>target).namespace || 'Default'}.${(<any>elementType).name}`;
+    }
   }
   return elementType ? `${type}(${elementType})` : type;
 }
+
 /** ?????????? */
 export function getType(target: Function, propertyKey: string, container?: ContainerBase): Function | string {
   let type = !propertyKey ? Reflect.getMetadata(EdmType, target) : Reflect.getMetadata(EdmType, target.prototype, propertyKey);
   let elementType = !propertyKey ? Reflect.getMetadata(EdmElementType, target) : Reflect.getMetadata(EdmElementType, target.prototype, propertyKey);
   const hasEntityType = isEntityType(target, propertyKey) || isComplexType(target, propertyKey);
-  if (!elementType) { elementType = type; }
-  if (elementType && elementType.__forward__ref__) { elementType = elementType(); }
-  if (type && type.__forward__ref__) { type = type(); }
+  if (!elementType) {
+    elementType = type;
+  }
+  if (elementType && elementType.__forward__ref__) {
+    elementType = elementType();
+  }
+  if (type && type.__forward__ref__) {
+    type = type();
+  }
   if (hasEntityType) {
-    if (typeof elementType == 'string' && elementType.indexOf('.') < 0) { elementType = `${(<any>target).namespace || 'Default'}.${elementType}`; }
-    if (typeof type == 'string' && type.indexOf('.') < 0) { type = `${(<any>target).namespace || 'Default'}.${type}`; }
+    if (typeof elementType == 'string' && elementType.indexOf('.') < 0) {
+      elementType = `${(<any>target).namespace || 'Default'}.${elementType}`;
+    }
+    if (typeof type == 'string' && type.indexOf('.') < 0) {
+      type = `${(<any>target).namespace || 'Default'}.${type}`;
+    }
   }
   if (typeof elementType == 'string') {
     if (container && container instanceof ContainerBase) {
@@ -333,10 +390,12 @@ export function getType(target: Function, propertyKey: string, container?: Conta
   }
   return elementType;
 }
+
 /** Returns true if property is a collection (decorated by Edm.Collection) */
 export function isCollection(target: Function, propertyKey: string): boolean {
   return Reflect.getMetadata(EdmType, target.prototype, propertyKey) == 'Collection';
 }
+
 /** ?????????? */
 export function getProperties(target: Function): string[] {
   try {
@@ -345,6 +404,7 @@ export function getProperties(target: Function): string[] {
     return [];
   }
 }
+
 /** ?????????? */
 export function getParameters(target: Function, targetKey: string): any[] {
   const params = [];
@@ -366,15 +426,19 @@ export const Key = (function Key() {
       register(target);
     }
     const properties: string[] = Reflect.getOwnMetadata(EdmKeyProperties, target) || [];
-    if (properties.indexOf(targetKey) < 0) { properties.push(targetKey); }
+    if (properties.indexOf(targetKey) < 0) {
+      properties.push(targetKey);
+    }
     Reflect.defineMetadata(EdmKeyProperties, properties, target);
     Reflect.defineMetadata(EdmKeyProperty, true, target, targetKey);
   };
 })();
+
 /** Returns true if property is a key (decorated by Edm.Key) */
 export function isKey(target: Function, propertyKey: string): boolean {
   return Reflect.getMetadata(EdmKeyProperty, target.prototype, propertyKey) || false;
 }
+
 /** Returns property names that build up the key (names of properties decorated by Edm.Key) */
 export function getKeyProperties(target: Function): string[] {
   return Reflect.getOwnMetadata(EdmKeyProperties, target) || Reflect.getOwnMetadata(EdmKeyProperties, target.prototype) || [];
@@ -390,8 +454,12 @@ export function getKeyProperties(target: Function): string[] {
  * @return      Escaped string
  */
 export async function escape(value: any, type: any, serializer?: Function) {
-  if (typeof serializer == 'function') { return await serializer(value); }
-  if (typeof value == 'undefined' || value == null) { return value; }
+  if (typeof serializer == 'function') {
+    return await serializer(value);
+  }
+  if (typeof value == 'undefined' || value == null) {
+    return value;
+  }
   switch (type) {
     case 'Edm.Binary':
       return value.toString('hex');
@@ -421,6 +489,7 @@ export const Computed = (function Computed() {
     Reflect.defineMetadata(EdmComputedProperty, true, target, targetKey);
   };
 })();
+
 /** Returns true if property is computed (decorated by Edm.Computed) */
 export function isComputed(target: Function, propertyKey: string): boolean {
   return Reflect.getMetadata(EdmComputedProperty, target.prototype, propertyKey) || false;
@@ -451,6 +520,7 @@ export const Nullable = (function Nullable() {
     }
   };
 })();
+
 /** Returns true if property is nullable (decorated by Edm.Nullable) */
 export function isNullable(target: Function, propertyKey: string): boolean {
   return Reflect.getMetadata(EdmNullableProperty, target.prototype, propertyKey);
@@ -481,6 +551,7 @@ export const Required = (function Required() {
     }
   };
 })();
+
 /** Returns true if property is required (decorated by Edm.Required) */
 export function isRequired(target: Function, propertyKey: string): boolean {
   return Reflect.getMetadata(EdmNullableProperty, target.prototype, propertyKey) == false ? true : false;
@@ -511,6 +582,7 @@ export function MaxLength(maxLength: number) {
     }
   };
 }
+
 /** Returns property max length (decorated by Edm.MaxLength) */
 export function getMaxLength(target: Function, propertyKey: string): boolean {
   return Reflect.getMetadata(EdmMaxLength, target.prototype, propertyKey);
@@ -541,6 +613,7 @@ export function Precision(precision: number) {
     }
   };
 }
+
 /** Returns property precision (decorated by Edm.Precision) */
 export function getPrecision(target: Function, propertyKey: string): boolean {
   return Reflect.getMetadata(EdmPrecision, target.prototype, propertyKey);
@@ -571,6 +644,7 @@ export function Scale(scale: number) {
     }
   };
 }
+
 /** Returns property scale (decorated by Edm.Scale) */
 export function getScale(target: Function, propertyKey: string): boolean {
   return Reflect.getMetadata(EdmScale, target.prototype, propertyKey);
@@ -601,6 +675,7 @@ export const Unicode = (function Unicode() {
     }
   };
 })();
+
 /** Returns true if property is unicode (decorated by Edm.Unicode) */
 export function isUnicode(target: Function, propertyKey: string): boolean {
   return Reflect.getMetadata(EdmUnicode, target.prototype, propertyKey);
@@ -631,6 +706,7 @@ export function SRID(srid: number) {
     }
   };
 }
+
 /** Returns property SRID (decorated by Edm.SRID) */
 export function getSRID(target: Function, propertyKey: string): boolean {
   return Reflect.getMetadata(EdmSRID, target.prototype, propertyKey);
@@ -661,6 +737,7 @@ export function DefaultValue(value: any) {
     }
   };
 }
+
 /** Returns property default value (decorated by Edm.DefaultValue) */
 export function getDefaultValue(target: Function, propertyKey: string): boolean {
   return Reflect.getMetadata(EdmDefaultValue, target.prototype, propertyKey);
@@ -675,6 +752,7 @@ export function ConcurrencyMode(mode: string) {
     Reflect.defineMetadata(EdmConcurrencyMode, mode, target, targetKey);
   };
 }
+
 /** Returns property concurrency mode (decorated by Edm.ConcurrencyMode) */
 export function getConcurrencyMode(target: Function, propertyKey: string): boolean {
   return Reflect.getMetadata(EdmConcurrencyMode, target.prototype, propertyKey);
@@ -682,14 +760,13 @@ export function getConcurrencyMode(target: Function, propertyKey: string): boole
 
 function operationDecoratorFactory(type, returnType?) {
   return function(target, targetKey) {
-    const element = function() { };
+    const element = function() {};
     (<any>element).target = target;
     (<any>element).targetKey = targetKey;
     if (typeof returnType == 'function') {
       try {
         Reflect.decorate([returnType()], element.prototype, EdmReturnType);
-      }
-      catch (err) {
+      } catch (err) {
         returnType(element.prototype, EdmReturnType);
       }
     }
@@ -700,30 +777,39 @@ function operationDecoratorFactory(type, returnType?) {
     Reflect.defineMetadata(EdmReturnType, element, target, targetKey);
   };
 }
+
 /** Edm.ActionImport decorator for describing unbound actions callable from the service root */
 export function ActionImport();
 export function ActionImport(returnType?: any);
 export function ActionImport(target?: any, targetKey?: string);
 export function ActionImport(target?: any, targetKey?: string) {
-  if (arguments.length > 1) { return operationDecoratorFactory(EdmAction)(target, targetKey); }
+  if (arguments.length > 1) {
+    return operationDecoratorFactory(EdmAction)(target, targetKey);
+  }
   return operationDecoratorFactory(EdmAction, target);
 }
+
 /** Edm.Action decorator for describing actions */
 export function _Action();
 export function _Action(returnType?: any);
 export function _Action(target?: any, targetKey?: string);
 export function _Action(target?: any, targetKey?: string) {
-  if (arguments.length > 1) { return operationDecoratorFactory(EdmAction)(target, targetKey); }
+  if (arguments.length > 1) {
+    return operationDecoratorFactory(EdmAction)(target, targetKey);
+  }
   return operationDecoratorFactory(EdmAction, target);
 }
 export const Action = _Action;
+
 /** ?????????? */
 /** Edm.FunctionImport decorator for describing unbound actions callable from the service root */
 export function FunctionImport();
 export function FunctionImport(returnType?: any);
 export function FunctionImport(target?: any, targetKey?: string);
 export function FunctionImport(target?: any, targetKey?: string) {
-  if (arguments.length > 1) { return operationDecoratorFactory(EdmFunction)(target, targetKey); }
+  if (arguments.length > 1) {
+    return operationDecoratorFactory(EdmFunction)(target, targetKey);
+  }
   return operationDecoratorFactory(EdmFunction, target);
 }
 
@@ -733,7 +819,9 @@ export function _Function();
 export function _Function(returnType?: any);
 export function _Function(target?: any, targetKey?: string);
 export function _Function(target?: any, targetKey?: string) {
-  if (arguments.length > 1) { return operationDecoratorFactory(EdmFunction)(target, targetKey); }
+  if (arguments.length > 1) {
+    return operationDecoratorFactory(EdmFunction)(target, targetKey);
+  }
   return operationDecoratorFactory(EdmFunction, target);
 }
 export const Function = _Function;
@@ -748,6 +836,7 @@ export function getReturnTypeName(target: Function, propertyKey: string, contain
   const returnType = Reflect.getMetadata(EdmReturnType, target.prototype, propertyKey);
   return getTypeName(returnType, EdmReturnType, container) || getTypeName(target, propertyKey, container);
 }
+
 /** ?????????? */
 export function getReturnType(target: Function, propertyKey: string, container?: ContainerBase): Function | string {
   const returnType = Reflect.getMetadata(EdmReturnType, target.prototype, propertyKey);
@@ -758,14 +847,17 @@ export function getReturnType(target: Function, propertyKey: string, container?:
 export function isActionImport(target: Function, propertyKey: string): boolean {
   return Reflect.getMetadata(EdmAction, target.prototype, propertyKey) || false;
 }
+
 /** Returns true if property is a statically callable function (decorated by Edm.FunctionImport) */
 export function isFunctionImport(target: Function, propertyKey: string): boolean {
   return Reflect.getMetadata(EdmFunction, target.prototype, propertyKey) || false;
 }
+
 /** Returns true if property is an action (decorated by Edm.Action) */
 export function isAction(target: Function, propertyKey: string): boolean {
   return Reflect.getMetadata(EdmAction, target.prototype, propertyKey) || false;
 }
+
 /** Returns true if property is an function (decorated by Edm.Function) */
 export function isFunction(target: Function, propertyKey: string): boolean {
   return Reflect.getMetadata(EdmFunction, target.prototype, propertyKey) || false;
@@ -774,7 +866,9 @@ export function isFunction(target: Function, propertyKey: string): boolean {
 /** Edm.ComplexType decorator for describing properties of complex types */
 export function ComplexType(type?: Function | string) {
   return function(target: any, targetKey?: string, parameterIndex?: any) {
-    if (type && (<any>type).__forward__ref__) { type = (<any>type)(); }
+    if (type && (<any>type).__forward__ref__) {
+      type = (<any>type)();
+    }
     const baseType = Object.getPrototypeOf(target).constructor;
     if (baseType != Object && getProperties(baseType.prototype).length > 0) {
       ComplexType()(baseType.prototype);
@@ -806,15 +900,20 @@ export function ComplexType(type?: Function | string) {
       const desc = Object.getOwnPropertyDescriptor(target, targetKey);
       if (targetKey && targetKey != EdmType && ((desc && typeof desc.value != 'function') || (!desc && typeof target[targetKey] != 'function'))) {
         const properties: string[] = Reflect.getOwnMetadata(EdmProperties, target) || [];
-        if (properties.indexOf(targetKey) < 0) { properties.push(targetKey); }
+        if (properties.indexOf(targetKey) < 0) {
+          properties.push(targetKey);
+        }
         Reflect.defineMetadata(EdmProperties, properties, target);
       }
-      if (type) { Reflect.defineMetadata(EdmComplexType, true, type); }
+      if (type) {
+        Reflect.defineMetadata(EdmComplexType, true, type);
+      }
       Reflect.defineMetadata(EdmComplexType, type || true, target, targetKey);
       Reflect.defineMetadata(EdmType, type, target, targetKey);
     }
   };
 }
+
 /** Returns true if property is a complex type (decorated by Edm.ComplexType) */
 export function isComplexType(target: Function, propertyKey?: string): boolean {
   return typeof propertyKey == 'string'
@@ -826,10 +925,12 @@ export function isComplexType(target: Function, propertyKey?: string): boolean {
 export function MediaEntity(contentType: string) {
   return Reflect.metadata(EdmMediaEntity, contentType);
 }
+
 /** Returns true if property is a media entity (decorated by Edm.MediaEntity) */
 export function isMediaEntity(target: Function) {
   return Reflect.hasMetadata(EdmMediaEntity, target);
 }
+
 /** ?????????? */
 export function getContentType(target: Function, targetKey?: string) {
   return Reflect.getMetadata(EdmMediaEntity, target, targetKey);
@@ -839,6 +940,7 @@ export function getContentType(target: Function, targetKey?: string) {
 export const OpenType = (function OpenType() {
   return Reflect.metadata(EdmOpenType, true);
 })();
+
 /** Returns true if property is a open type (decorated by Edm.OpenType) */
 export function isOpenType(target: Function) {
   return Reflect.hasMetadata(EdmOpenType, target) || false;
@@ -879,15 +981,20 @@ export function EntityType(type?: Function | string) {
       const desc = Object.getOwnPropertyDescriptor(target, targetKey);
       if (targetKey && targetKey != EdmType && ((desc && typeof desc.value != 'function') || (!desc && typeof target[targetKey] != 'function'))) {
         const properties: string[] = Reflect.getOwnMetadata(EdmProperties, target) || [];
-        if (properties.indexOf(targetKey) < 0) { properties.push(targetKey); }
+        if (properties.indexOf(targetKey) < 0) {
+          properties.push(targetKey);
+        }
         Reflect.defineMetadata(EdmProperties, properties, target);
       }
-      if (type) { Reflect.defineMetadata(EdmEntityType, true, type); }
+      if (type) {
+        Reflect.defineMetadata(EdmEntityType, true, type);
+      }
       Reflect.defineMetadata(EdmEntityType, type || true, target, targetKey);
       Reflect.defineMetadata(EdmType, type, target, targetKey);
     }
   };
 }
+
 /** Returns true if property is an EntityType (decorated by Edm.EntityType) */
 export function isEntityType(target: Function, propertyKey?: string): boolean {
   return typeof propertyKey == 'string'
@@ -934,7 +1041,9 @@ export function EnumType(type: any): Decorator {
       const desc = Object.getOwnPropertyDescriptor(target, targetKey);
       if (targetKey && targetKey != EdmType && ((desc && typeof desc.value != 'function') || (!desc && typeof target[targetKey] != 'function'))) {
         const properties: string[] = Reflect.getOwnMetadata(EdmProperties, target) || [];
-        if (properties.indexOf(targetKey) < 0) { properties.push(targetKey); }
+        if (properties.indexOf(targetKey) < 0) {
+          properties.push(targetKey);
+        }
         Reflect.defineMetadata(EdmProperties, properties, target);
       }
       Reflect.defineMetadata(EdmEnumType, true, target, targetKey);
@@ -981,7 +1090,9 @@ export function TypeDefinition(type) {
       const desc = Object.getOwnPropertyDescriptor(target, targetKey);
       if (targetKey && targetKey != EdmType && ((desc && typeof desc.value != 'function') || (!desc && typeof target[targetKey] != 'function'))) {
         const properties: string[] = Reflect.getOwnMetadata(EdmProperties, target) || [];
-        if (properties.indexOf(targetKey) < 0) { properties.push(targetKey); }
+        if (properties.indexOf(targetKey) < 0) {
+          properties.push(targetKey);
+        }
         Reflect.defineMetadata(EdmProperties, properties, target);
       }
       Reflect.defineMetadata(EdmTypeDefinition, true, target, targetKey);
@@ -997,7 +1108,9 @@ export function isTypeDefinition(target: any, propertyKey?: string): boolean {
 
 /** ?????????? */
 export function register(type: Function) {
-  if (EdmContainer.indexOf(type) < 0) { EdmContainer.push(type); }
+  if (EdmContainer.indexOf(type) < 0) {
+    EdmContainer.push(type);
+  }
 }
 
 /** ?????????? */
@@ -1009,6 +1122,7 @@ export function Convert(converter: Function) {
     Reflect.defineMetadata(EdmConverter, converter, target, targetKey);
   };
 }
+
 /** ?????????? */
 export function getConverter(target: Function, propertyKey: string): Function {
   return Reflect.getMetadata(EdmConverter, target.prototype, propertyKey);
@@ -1023,6 +1137,7 @@ export function Serialize(converter: Function) {
     Reflect.defineMetadata(EdmSerializer, converter, target, targetKey);
   };
 }
+
 /** ?????????? */
 export function getSerializer(target: Function, propertyKey: string, type?: any, container?: ContainerBase): Function {
   return Reflect.getMetadata(EdmSerializer, target.prototype, propertyKey) ||
@@ -1038,6 +1153,7 @@ export function Deserialize(converter: Function) {
     Reflect.defineMetadata(EdmDeserializer, converter, target, targetKey);
   };
 }
+
 /** ?????????? */
 export function getDeserializer(target: Function, propertyKey: string, type?: any, container?: ContainerBase): Function {
   return Reflect.getMetadata(EdmDeserializer, target.prototype, propertyKey) ||
@@ -1053,6 +1169,7 @@ export function URLSerialize(converter: Function) {
     Reflect.defineMetadata(EdmURLSerializer, converter, target, targetKey);
   };
 }
+
 /** ?????????? */
 export function getURLSerializer(target: Function, propertyKey: string, type?: any, container?: ContainerBase): Function {
   return Reflect.getMetadata(EdmURLSerializer, target.prototype, propertyKey) ||
@@ -1068,6 +1185,7 @@ export function URLDeserialize(converter: Function) {
     Reflect.defineMetadata(EdmURLDeserializer, converter, target, targetKey);
   };
 }
+
 /** ?????????? */
 export function getURLDeserializer(target: Function, propertyKey: string, type?: any, container?: ContainerBase): Function {
   return Reflect.getMetadata(EdmURLDeserializer, target.prototype, propertyKey) ||
@@ -1085,6 +1203,7 @@ export function Annotate(...annotation: any[]) {
     Reflect.defineMetadata(EdmAnnotations, existingAnnotations, target, targetKey);
   };
 }
+
 /** ?????????? */
 export function getAnnotations(target: Function, targetKey?: string): any[] {
   try {
@@ -1106,6 +1225,7 @@ export function ForeignKey(...keys: string[]) {
     Reflect.defineMetadata(EdmForeignKeys, existingForeignKeys, target, targetKey);
   };
 }
+
 /** ?????????? */
 /** Edm.ForeignKey decorator for describing properties as foreign keys */
 export function getForeignKeys(target: Function, targetKey?: string): string[] {
@@ -1117,6 +1237,7 @@ export function getForeignKeys(target: Function, targetKey?: string): string[] {
 export function Partner(property: string) {
   return Reflect.metadata(EdmPartnerProperty, property);
 }
+
 /** ?????????? */
 export function getPartner(target: any, targetKey: string) {
   return Reflect.getMetadata(EdmPartnerProperty, target, targetKey) || Reflect.getMetadata(EdmPartnerProperty, target.prototype, targetKey);
@@ -1159,10 +1280,12 @@ export function Container(type: any) {
   };
 }
 export const EdmContainerClass = <IEdmContainer> class {
-  constructor(_?: typeof ODataServer) { }
+  constructor(_?: typeof ODataServer) {}
   resolve(type): string {
     for (const prop in this) {
-      if (this[prop] == type) { return prop; }
+      if (this[prop] == type) {
+        return prop;
+      }
     }
     return null;
   }

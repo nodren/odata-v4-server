@@ -1,16 +1,29 @@
-import { ServiceMetadata, Edm as Metadata, ServiceDocument } from '@odata/metadata';
+import {
+  ServiceMetadata,
+  Edm as Metadata,
+  ServiceDocument
+} from '@odata/metadata';
 import * as ODataParser from '@odata/parser';
 import { Token, TokenType } from '@odata/parser/lib/lexer';
 import * as express from 'express';
 import * as http from 'http';
 import * as bodyParser from 'body-parser';
 import * as cors from 'cors';
-import { Transform, TransformOptions, Readable, Writable } from 'stream';
+import {
+  Transform,
+  TransformOptions,
+  Readable,
+  Writable
+} from 'stream';
 import { ODataResult } from './result';
 import { ODataController } from './controller';
 import * as odata from './odata';
 import { createMetadataJSON } from './metadata';
-import { ODataProcessor, ODataProcessorOptions, ODataMetadataType } from './processor';
+import {
+  ODataProcessor,
+  ODataProcessorOptions,
+  ODataMetadataType
+} from './processor';
 import { HttpRequestError, UnsupportedMediaTypeError } from './error';
 import { ContainerBase } from './edm';
 // eslint-disable-next-line no-duplicate-imports
@@ -30,17 +43,26 @@ export interface ODataHttpContext {
 function ensureODataMetadataType(req, res) {
   let metadata: ODataMetadataType = ODataMetadataType.minimal;
   if (req.headers && req.headers.accept && req.headers.accept.indexOf('odata.metadata=') >= 0) {
-    if (req.headers.accept.indexOf('odata.metadata=full') >= 0) { metadata = ODataMetadataType.full; }
-    else if (req.headers.accept.indexOf('odata.metadata=none') >= 0) { metadata = ODataMetadataType.none; }
+    if (req.headers.accept.indexOf('odata.metadata=full') >= 0) {
+      metadata = ODataMetadataType.full;
+    } else if (req.headers.accept.indexOf('odata.metadata=none') >= 0) {
+      metadata = ODataMetadataType.none;
+    }
   }
 
   res['metadata'] = metadata;
 }
 function ensureODataContentType(req, res, contentType?) {
   contentType = contentType || 'application/json';
-  if (contentType.indexOf('odata.metadata=') < 0) { contentType += `;odata.metadata=${ODataMetadataType[res['metadata']]}`; }
-  if (contentType.indexOf('odata.streaming=') < 0) { contentType += ';odata.streaming=true'; }
-  if (contentType.indexOf('IEEE754Compatible=') < 0) { contentType += ';IEEE754Compatible=false'; }
+  if (contentType.indexOf('odata.metadata=') < 0) {
+    contentType += `;odata.metadata=${ODataMetadataType[res['metadata']]}`;
+  }
+  if (contentType.indexOf('odata.streaming=') < 0) {
+    contentType += ';odata.streaming=true';
+  }
+  if (contentType.indexOf('IEEE754Compatible=') < 0) {
+    contentType += ';IEEE754Compatible=false';
+  }
   if (req.headers.accept && req.headers.accept.indexOf('charset') > 0) {
     contentType += `;charset=${res['charset']}`;
   }
@@ -61,12 +83,16 @@ function ensureODataHeaders(req, res, next?) {
     };
     const origsend = res.send;
     res.send = <any>((data) => {
-      if (typeof data == 'object') { data = JSON.stringify(data); }
+      if (typeof data == 'object') {
+        data = JSON.stringify(data);
+      }
       origsend.call(res, Buffer.from(data, bufferEncoding[charset]));
     });
   }
 
-  if (typeof next == 'function') { next(); }
+  if (typeof next == 'function') {
+    next();
+  }
 }
 
 /** ODataServer base class to be extended by concrete OData Server data sources */
@@ -120,8 +146,11 @@ export class ODataServerBase extends Transform {
                 ensureODataContentType(req, res, result.contentType || 'text/plain');
               }
               if (typeof result.body != 'undefined') {
-                if (typeof result.body != 'object') { res.send(`${result.body}`); }
-                else if (!res.headersSent) { res.send(result.body); }
+                if (typeof result.body != 'object') {
+                  res.send(`${result.body}`);
+                } else if (!res.headersSent) {
+                  res.send(result.body);
+                }
               }
             }
             res.end();
@@ -167,7 +196,9 @@ export class ODataServerBase extends Transform {
     const values = [];
     let flushObject;
     let response = '';
-    if (context.response instanceof Writable) { processor.pipe(context.response); }
+    if (context.response instanceof Writable) {
+      processor.pipe(context.response);
+    }
     processor.on('data', (chunk: any) => {
       if (!(typeof chunk == 'string' || chunk instanceof Buffer)) {
         if (chunk['@odata.context'] && chunk.value && Array.isArray(chunk.value) && chunk.value.length == 0) {
@@ -176,12 +207,16 @@ export class ODataServerBase extends Transform {
         } else {
           values.push(chunk);
         }
-      } else { response += chunk.toString(); }
+      } else {
+        response += chunk.toString();
+      }
     });
     return processor.execute(context.body || body).then((result: ODataResult<T>) => {
       if (flushObject) {
         result.body = flushObject;
-        if (!result.elementType || typeof result.elementType == 'object') { result.elementType = flushObject.elementType; }
+        if (!result.elementType || typeof result.elementType == 'object') {
+          result.elementType = flushObject.elementType;
+        }
         delete flushObject.elementType;
         result.contentType = result.contentType || 'application/json';
       } else if (result && response) {
@@ -208,12 +243,16 @@ export class ODataServerBase extends Transform {
     }
     this.serverType.execute(chunk).then((result) => {
       this.push(result);
-      if (typeof done == 'function') { done(); }
+      if (typeof done == 'function') {
+        done();
+      }
     }, <any>done);
   }
 
   _flush(done?: Function) {
-    if (typeof done == 'function') { done(); }
+    if (typeof done == 'function') {
+      done();
+    }
   }
 
   static createProcessor(context: any, options?: ODataProcessorOptions) {
@@ -225,8 +264,11 @@ export class ODataServerBase extends Transform {
   static $metadata(metadata?): ServiceMetadata {
     if (metadata) {
       if (!(metadata instanceof Metadata.Edmx)) {
-        if (metadata.version && metadata.dataServices && Array.isArray(metadata.dataServices.schema)) { this._metadataCache = ServiceMetadata.processMetadataJson(metadata); }
-        else { this._metadataCache = ServiceMetadata.defineEntities(metadata); }
+        if (metadata.version && metadata.dataServices && Array.isArray(metadata.dataServices.schema)) {
+          this._metadataCache = ServiceMetadata.processMetadataJson(metadata);
+        } else {
+          this._metadataCache = ServiceMetadata.defineEntities(metadata);
+        }
       }
     }
     return this._metadataCache || (this._metadataCache = ServiceMetadata.processMetadataJson(createMetadataJSON(this)));
@@ -264,11 +306,15 @@ export class ODataServerBase extends Transform {
     const router = express.Router();
     router.use((req, _, next) => {
       req.url = req.url.replace(/[\/]+/g, '/').replace(':/', '://');
-      if (req.headers['odata-maxversion'] && req.headers['odata-maxversion'] < '4.0') { return next(new HttpRequestError(500, 'Only OData version 4.0 supported')); }
+      if (req.headers['odata-maxversion'] && req.headers['odata-maxversion'] < '4.0') {
+        return next(new HttpRequestError(500, 'Only OData version 4.0 supported'));
+      }
       next();
     });
     router.use(bodyParser.json());
-    if ((<any>server).cors) { router.use(cors()); }
+    if ((<any>server).cors) {
+      router.use(cors());
+    }
     router.use((req, res, next) => {
       res.setHeader('OData-Version', '4.0');
       if (req.headers.accept &&
@@ -277,10 +323,14 @@ export class ODataServerBase extends Transform {
         req.headers.accept.indexOf('*/*') < 0 &&
         req.headers.accept.indexOf('xml') < 0) {
         next(new UnsupportedMediaTypeError());
-      } else { next(); }
+      } else {
+        next();
+      }
     });
     router.get('/', ensureODataHeaders, (req, _, next) => {
-      if (typeof req.query == 'object' && Object.keys(req.query).length > 0) { return next(new HttpRequestError(500, 'Unsupported query')); }
+      if (typeof req.query == 'object' && Object.keys(req.query).length > 0) {
+        return next(new HttpRequestError(500, 'Unsupported query'));
+      }
       next();
     }, server.document().requestHandler());
     router.get('/\\$metadata', server.$metadata().requestHandler());
@@ -312,7 +362,9 @@ export function ODataErrorHandler(err, _, res, next) {
       return next(err);
     }
     const statusCode = err.statusCode || err.status || (res.statusCode < 400 ? 500 : res.statusCode);
-    if (!res.statusCode || res.statusCode < 400) { res.status(statusCode); }
+    if (!res.statusCode || res.statusCode < 400) {
+      res.status(statusCode);
+    }
     res.send({
       error: {
         code: statusCode,
@@ -320,7 +372,9 @@ export function ODataErrorHandler(err, _, res, next) {
         stack: process.env.ODATA_V4_DISABLE_STACKTRACE ? undefined : err.stack
       }
     });
-  } else { next(); }
+  } else {
+    next();
+  }
 }
 
 /** Create Express server for OData Server
@@ -328,23 +382,27 @@ export function ODataErrorHandler(err, _, res, next) {
  * @return       Express Router object
  */
 export function createODataServer(server: typeof ODataServer): express.Router;
+
 /** Create Express server for OData Server
  * @param server OData Server instance
  * @param port   port number for Express to listen to
  */
 export function createODataServer(server: typeof ODataServer, port: number): http.Server;
+
 /** Create Express server for OData Server
  * @param server OData Server instance
  * @param path   routing path for Express
  * @param port   port number for Express to listen to
  */
 export function createODataServer(server: typeof ODataServer, path: string, port: number): http.Server;
+
 /** Create Express server for OData Server
  * @param server   OData Server instance
  * @param port     port number for Express to listen to
  * @param hostname hostname for Express
  */
 export function createODataServer(server: typeof ODataServer, port: number, hostname: string): http.Server;
+
 /** Create Express server for OData Server
  * @param server   OData Server instance
  * @param path     routing path for Express

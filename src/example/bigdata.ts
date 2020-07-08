@@ -57,13 +57,13 @@ console.log('Data ready.');
 
 @Edm.OpenType
 class Index {
-    @Edm.Int64
-    id: number
+  @Edm.Int64
+  id: number
 }
 
 @odata.type(Index)
 class IndicesController extends ODataController {
-    @odata.GET
+  @odata.GET
   find(@odata.filter filter: Token, @odata.query query: Token) {
     let mapper = (it) => it;
     if (query) {
@@ -77,14 +77,14 @@ class IndicesController extends ODataController {
         };
       }
     }
-    if (filter) {return bigdata.filter(createFilter(filter)).map(mapper);}
+    if (filter) { return bigdata.filter(createFilter(filter)).map(mapper); }
     return bigdata.map(mapper);
   }
 }
 
 @odata.namespace('BigData')
 @odata.controller(IndicesController, true)
-class BigDataServer extends ODataServer {}
+class BigDataServer extends ODataServer { }
 BigDataServer.$metadata(schemaJson);
 BigDataServer.create('/odata', 3000);
 console.log('OData ready.');
