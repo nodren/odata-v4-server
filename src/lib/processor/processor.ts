@@ -9,20 +9,20 @@ import {
   isIterator,
   isPromise,
   isStream
-} from './utils';
-import { ODataResult } from './result';
-import { ODataController, ODataControllerBase } from './controller';
+} from '../utils';
+import { ODataResult } from '../result';
+import { ODataController, ODataControllerBase } from '../controller';
 import {
   ResourcePathVisitor,
   NavigationPart,
   ODATA_TYPE,
   ODATA_TYPENAME
-} from './visitor';
-import * as Edm from './edm';
-import * as odata from './odata';
-import { ResourceNotFoundError, MethodNotAllowedError, NotImplementedError } from './error';
-import { ODataServer, ODataHttpContext } from './server';
-import { IODataResult } from './index';
+} from '../visitor';
+import * as Edm from '../edm';
+import * as odata from '../odata';
+import { ResourceNotFoundError, MethodNotAllowedError, NotImplementedError } from '../error';
+import { ODataServer, ODataHttpContext } from '../server';
+import { IODataResult } from '../index';
 
 const getODataRoot = function(context: ODataHttpContext) {
   return `${context.protocol || 'http'}://${context.host || 'localhost'}${context.base || ''}`;
@@ -959,6 +959,7 @@ export class ODataProcessor extends Transform {
 
           let fn;
           if (typeof filter == 'string' || !filter) {
+            // get metadata of method
             fn = odata.findODataMethod(ctrl, method, part.key);
 
             // not found method to process
@@ -985,8 +986,10 @@ export class ODataProcessor extends Transform {
             }
 
             if (typeof fn != 'function') {
+              // construct injected params
               const fnDesc = fn;
               fn = ctrl.prototype[fnDesc.call];
+              // >> assign keys to params
               if (fnDesc.key.length == 1 && part.key.length == 1 && fnDesc.key[0].to != part.key[0].name) {
                 params[fnDesc.key[0].to] = params[part.key[0].name];
                 delete params[part.key[0].name];
@@ -998,6 +1001,8 @@ export class ODataProcessor extends Transform {
                   }
                 }
               }
+              // <<
+              // assign other parameters
               await this.__applyParams(ctrl, fnDesc.call, params, queryString, undefined, include);
             } else {
               await this.__applyParams(ctrl, method, params, queryString, undefined, include);

@@ -547,7 +547,10 @@ export function getLinks(target, targetKey) {
   return Reflect.getMetadata(ODataLinkParameters, target.prototype, targetKey) || [];
 }
 
-/** Finds the given OData method
+/**
+ * Finds the given OData method
+ * return metadata of this method
+ *
  * @param {any} target
  * @param {any} method
  * @param {any} keys

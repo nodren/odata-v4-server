@@ -17,8 +17,8 @@ export class HttpRequestError extends CustomError {
 
 export class NotImplementedError extends HttpRequestError {
   static MESSAGE: string = 'Not implemented.';
-  constructor() {
-    super(501, NotImplementedError.MESSAGE);
+  constructor(message?: string) {
+    super(501, message || NotImplementedError.MESSAGE);
   }
 }
 

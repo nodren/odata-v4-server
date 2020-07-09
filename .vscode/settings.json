@@ -6,6 +6,7 @@
     "Northwind",
     "inmemory",
     "odata",
+    "sqljs",
     "typeorm"
   ],
   "jest.autoEnable": false

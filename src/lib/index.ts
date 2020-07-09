@@ -15,4 +15,4 @@ export * from './result';
 export * from './visitor';
 export * from './error';
 export * from './literal';
-export { Token as ODataQuery } from '@odata/parser/lib/lexer';
+export { QueryOptionsNode as ODataQuery } from '@odata/parser';
