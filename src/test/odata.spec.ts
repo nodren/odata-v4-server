@@ -19,6 +19,7 @@ describe('Code coverage', () => {
   it('should throw resource not found error', () => AuthenticationServer.execute('/Users', 'DELETE').then(() => {
     throw new Error('should throw error');
   }, (err) => {
-    expect(err.message).toEqual('Resource not found.');
+    expect(err.message).toEqual('Not implemented.');
   }));
+  
 });

@@ -493,7 +493,8 @@ export function key(target: any, targetKey?: string, parameterIndex?: number): a
   return decorator(target, targetKey, parameterIndex);
 }
 
-/** Gives the decorated key parameter.
+/**
+ * Gives the decorated key parameter.
  * @param target    The prototype of the class for an instance member
  * @param targetKey The name of the class method
  */
@@ -603,102 +604,89 @@ export function findODataMethod(target, method, keys) {
   return null;
 }
 
+/**
+ * method parameter annotation creator
+ *
+ * @private
+ * @ignore
+ * @internal
+ * @param key the metadata key
+ */
+export const createMethodParameterAnnotation = (key: any) => function(target, targetKey, parameterIndex: number) {
+  const parameterNames = getFunctionParameters(target, targetKey);
+  const paramName = parameterNames[parameterIndex];
+  Reflect.defineMetadata(key, paramName, target, targetKey);
+};
+
+/**
+ * method parameter getter creator
+ *
+ * @private
+ * @ignore
+ * @internal
+ * @param key the metadata key
+ */
+export const createMethodParameterGetter = (key: any) => (target, targetKey) => Reflect.getMetadata(key, target.prototype, targetKey);
+
+
 /** Provides access to all OData query options.
  * @param target            The prototype of the class for an instance member
  * @param targetKey         The name of the class method
  * @param parameterIndex    The ordinal index of the parameter in the function’s parameter list
  */
-export const query = (function query() {
-  return function(target, targetKey, parameterIndex: number) {
-    const parameterNames = getFunctionParameters(target, targetKey);
-    const paramName = parameterNames[parameterIndex];
-    Reflect.defineMetadata(ODataQueryParameter, paramName, target, targetKey);
-  };
-})();
+export const query = createMethodParameterAnnotation(ODataQueryParameter);
 
 /** Gives the decorated query parameter.
  * @param target    The prototype of the class for an instance member
  * @param targetKey The name of the class method
  */
-export function getQueryParameter(target, targetKey) {
-  return Reflect.getMetadata(ODataQueryParameter, target.prototype, targetKey);
-}
+export const getQueryParameter = createMethodParameterGetter(ODataQueryParameter);
 
 /** Gives filter information and provides the AST tree of the OData $filter.
  * @param target            The prototype of the class for an instance member
  * @param targetKey         The name of the class method
  * @param parameterIndex    The ordinal index of the parameter in the function’s parameter list
  */
-export const filter = (function filter() {
-  return function(target, targetKey, parameterIndex: number) {
-    const parameterNames = getFunctionParameters(target, targetKey);
-    const paramName = parameterNames[parameterIndex];
-    Reflect.defineMetadata(ODataFilterParameter, paramName, target, targetKey);
-  };
-})();
+export const filter = createMethodParameterAnnotation(ODataFilterParameter);
 
 /** Gives the decorated filter parameter.
  * @param target    The prototype of the class for an instance member
  * @param targetKey The name of the class method
  */
-export function getFilterParameter(target, targetKey) {
-  return Reflect.getMetadata(ODataFilterParameter, target.prototype, targetKey);
-}
+export const getFilterParameter = createMethodParameterGetter(ODataFilterParameter);
 
 /** Gives the body of the OData request.
  * @param target            The prototype of the class for an instance member
  * @param targetKey         The name of the class method
  * @param parameterIndex    The ordinal index of the parameter in the function’s parameter list
  */
-export const body = (function body() {
-  return function(target, targetKey, parameterIndex: number) {
-    const parameterNames = getFunctionParameters(target, targetKey);
-    const paramName = parameterNames[parameterIndex];
-    Reflect.defineMetadata(ODataBodyParameter, paramName, target, targetKey);
-  };
-})();
+export const body = createMethodParameterAnnotation(ODataBodyParameter);
 
 /** Gives the decorated body parameter.
  * @param target    The prototype of the class for an instance member
  * @param targetKey The name of the class method
  */
-export function getBodyParameter(target, targetKey) {
-  return Reflect.getMetadata(ODataBodyParameter, target.prototype, targetKey);
-}
+export const getBodyParameter = createMethodParameterGetter(ODataBodyParameter);
 
 /** Gives the current execution context.
  * @param target            The prototype of the class for an instance member
  * @param targetKey         The name of the class method
  * @param parameterIndex    The ordinal index of the parameter in the function’s parameter list
  */
-export const context = (function context() {
-  return function(target, targetKey, parameterIndex: number) {
-    const parameterNames = getFunctionParameters(target, targetKey);
-    const paramName = parameterNames[parameterIndex];
-    Reflect.defineMetadata(ODataContextParameter, paramName, target, targetKey);
-  };
-})();
+export const context = createMethodParameterAnnotation(ODataContextParameter);
 
 /** Gives the decorated context parameter.
  * @param target    The prototype of the class for an instance member
  * @param targetKey The name of the class method
  */
-export function getContextParameter(target, targetKey) {
-  return Reflect.getMetadata(ODataContextParameter, target.prototype, targetKey);
-}
+export const getContextParameter = createMethodParameterGetter(ODataContextParameter);
 
 /** Gives a writable stream that will perform OData result transformation on the result and then sends it forward to your response stream.
  * @param target            The prototype of the class for an instance member
  * @param targetKey         The name of the class method
  * @param parameterIndex    The ordinal index of the parameter in the function’s parameter list
  */
-export const stream = (function stream() {
-  return function(target, targetKey, parameterIndex: number) {
-    const parameterNames = getFunctionParameters(target, targetKey);
-    const paramName = parameterNames[parameterIndex];
-    Reflect.defineMetadata(ODataStreamParameter, paramName, target, targetKey);
-  };
-})();
+export const stream = createMethodParameterAnnotation(ODataStreamParameter);
 
 /** Gives the decorated stream parameter.
  * @param target    The prototype of the class for an instance member
@@ -713,52 +701,35 @@ export function getStreamParameter(target, targetKey) {
  * @param targetKey         The name of the class method
  * @param parameterIndex    The ordinal index of the parameter in the function’s parameter list
  */
-export const result = (function result() {
-  return function(target, targetKey, parameterIndex: number) {
-    const parameterNames = getFunctionParameters(target, targetKey);
-    const paramName = parameterNames[parameterIndex];
-    Reflect.defineMetadata(ODataResultParameter, paramName, target, targetKey);
-  };
-})();
+export const result = createMethodParameterAnnotation(ODataResultParameter);
 
 /** Gives the decorated result parameter.
  * @param target    The prototype of the class for an instance member
  * @param targetKey The name of the class method
  */
-export function getResultParameter(target, targetKey) {
-  return Reflect.getMetadata(ODataResultParameter, target.prototype, targetKey);
-}
+export const getResultParameter = createMethodParameterGetter(ODataResultParameter);
 
 /** Gives the url that was provided either in request body as @odata.id or in query parameters as $id.
  * @param target            The prototype of the class for an instance member
  * @param targetKey         The name of the class method
  * @param parameterIndex    The ordinal index of the parameter in the function’s parameter list
  */
-export const id = (function id() {
-  return function(target, targetKey, parameterIndex: number) {
-    const parameterNames = getFunctionParameters(target, targetKey);
-    const paramName = parameterNames[parameterIndex];
-    Reflect.defineMetadata(ODataIdParameter, paramName, target, targetKey);
-  };
-})();
+export const id = createMethodParameterAnnotation(ODataIdParameter);
 
 /** Gives the decorated id parameter.
  * @param target    The prototype of the class for an instance member
  * @param targetKey The name of the class method
  */
-export function getIdParameter(target, targetKey) {
-  return Reflect.getMetadata(ODataIdParameter, target.prototype, targetKey);
-}
+export const getIdParameter = createMethodParameterGetter(ODataIdParameter);
 
 /** Gives the decorated type parameter.
  * @param target    The prototype of the class for an instance member
  * @param targetKey The name of the class method
  */
-export function getTypeParameter(target, targetKey) {
-  return Reflect.getMetadata(ODataTypeParameter, target.prototype, targetKey);
-}
+export const getTypeParameter = createMethodParameterGetter(ODataTypeParameter);
 
-/** Sets a parameter decorator for the given parameter.
+/**
+ * Sets a parameter decorator for the given parameter.
  * @param name The name of the parameter.
  * @param type OData decorator type.
  */
@@ -772,7 +743,8 @@ export function parameter(name: string, type: Function) {
   };
 }
 
-/** Sets parameter decorators for the given parameters.
+/**
+ * Sets parameter decorators for the given parameters.
  * @param parameters Object that contains the name of the parameter as key and the type of the parameter as value.
  */
 export function parameters(parameters: any) {

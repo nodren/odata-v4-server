@@ -20,7 +20,7 @@ import {
 } from './visitor';
 import * as Edm from './edm';
 import * as odata from './odata';
-import { ResourceNotFoundError, MethodNotAllowedError } from './error';
+import { ResourceNotFoundError, MethodNotAllowedError, NotImplementedError } from './error';
 import { ODataServer, ODataHttpContext } from './server';
 import { IODataResult } from './index';
 
@@ -960,8 +960,10 @@ export class ODataProcessor extends Transform {
           let fn;
           if (typeof filter == 'string' || !filter) {
             fn = odata.findODataMethod(ctrl, method, part.key);
+
+            // not found method to process
             if (!fn) {
-              return reject(new ResourceNotFoundError());
+              return reject(new NotImplementedError());
             }
 
             let queryString = filter ? `$filter=${filter}` : (include || this.url).query;
@@ -976,6 +978,8 @@ export class ODataProcessor extends Transform {
                 return `${p}=${(include || this).query[p]}`;
               }).join('&') || queryString;
             }
+
+            // build object to query string
             if (queryString && typeof queryString == 'object') {
               queryString = Object.keys(queryString).map((p) => `${p}=${queryString[p]}`).join('&');
             }
@@ -1007,6 +1011,7 @@ export class ODataProcessor extends Transform {
           }
 
           let currentResult: any;
+          // inject parameters by type
           switch (method) {
             case 'get':
             case 'delete':

@@ -8,6 +8,7 @@ export class ODataControllerBase {
 
   entitySetName: string
   elementType: Function
+
   static containerName: string
   static validator: (odataQuery: string | Token) => null;
 
@@ -35,4 +36,5 @@ export class ODataControllerBase {
   }
 
 }
+
 export class ODataController extends ODataBase<ODataControllerBase, typeof ODataControllerBase>(ODataControllerBase) { }

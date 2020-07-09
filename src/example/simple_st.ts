@@ -17,20 +17,21 @@ class ServiceTicket {
 }
 
 @odata.type(ServiceTicket)
-@odata.entitySet("Tickets")
+@odata.entitySet("ServiceTickets")
 class ServiceTicketController extends ODataController {
 
-}
-
-@odata.namespace('default')
-@odata.withController(ServiceTicketController, true)
-class Server extends ODataServer {
 
   @odata.GET
   find(@odata.filter filter: ODataQuery) {
     // build query
     return []
   }
+
+}
+
+@odata.withController(ServiceTicketController, true)
+class Server extends ODataServer {
+
 
 };
 
