@@ -6,6 +6,9 @@
 
 [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/Soontao/odata-v4-server/Node%20CI?label=nodejs)](https://github.com/Soontao/odata-v4-server/actions?query=workflow%3A%Node+CI%22)
 [![Codecov](https://codecov.io/gh/Soontao/odata-v4-server/branch/master/graph/badge.svg)](https://codecov.io/gh/Soontao/odata-v4-server)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=Soontao_odata-v4-server&metric=security_rating)](https://sonarcloud.io/dashboard?id=Soontao_odata-v4-server)
+[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=Soontao_odata-v4-server&metric=reliability_rating)](https://sonarcloud.io/dashboard?id=Soontao_odata-v4-server)
+[![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=Soontao_odata-v4-server&metric=sqale_index)](https://sonarcloud.io/dashboard?id=Soontao_odata-v4-server)
 
 NodeJS OData(V4) Server Implementation 
 
@@ -32,9 +35,9 @@ NodeJS OData(V4) Server Implementation
 ## Controller and server functions parameter injection decorators
 
 * @odata.key
-* @odata.filter
+* ~~@odata.filter~~ -- **just use @odata.query**
 * @odata.query
 * @odata.context
 * @odata.body
-* @odata.result
+* ~~@odata.result~~ -- **NOT stable**
 * ~~@odata.stream~~ -- **NOT stable**
