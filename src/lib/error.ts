@@ -3,7 +3,7 @@ export class CustomError extends Error {
     super(message);
     this.message = message;
     this.name = (this as any).constructor.name;
-    Error.captureStackTrace(this, CustomError);
+    Error.captureStackTrace(this, this?.constructor || CustomError);
   }
 }
 
@@ -12,6 +12,12 @@ export class HttpRequestError extends CustomError {
   constructor(statusCode: number, message: string) {
     super(message);
     this.statusCode = statusCode;
+  }
+}
+
+export class ServerInternalError extends HttpRequestError {
+  constructor(message = 'Server Internal Error') {
+    super(500, message);
   }
 }
 

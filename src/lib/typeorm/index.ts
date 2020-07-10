@@ -1,5 +1,6 @@
 // typeorm integration
 
 
-export * from './typeorm';
+export * from './typed_controller';
 export * from './visitor';
+export * from './service';

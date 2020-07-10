@@ -38,3 +38,22 @@ export class ODataControllerBase {
 }
 
 export class ODataController extends ODataBase<ODataControllerBase, typeof ODataControllerBase>(ODataControllerBase) { }
+
+/**
+ * get controller instance
+ *
+ * @singleton
+ *
+ * @param ct
+ * @param args
+ */
+export function getControllerInstance(ct: typeof ODataController, ...args: any[]) {
+  if (!getControllerInstance.cache.has(ct)) {
+    // @ts-ignore
+    getControllerInstance.cache.set(ct, new ct(...args));
+  }
+  return getControllerInstance.cache.get(ct);
+
+}
+
+getControllerInstance['cache'] = new WeakMap();

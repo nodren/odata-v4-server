@@ -62,12 +62,13 @@ export interface FieldNameMapper {
   (field: string): string
 }
 
-export const transformQueryAst = (node: ODataQuery, nameMapper: FieldNameMapper = identity): { selectedFields: string[], sqlQuery: string } => {
+export const transformQueryAst = (node: ODataQuery, nameMapper: FieldNameMapper = identity): { selectedFields: string[], sqlQuery: string, count: boolean, where: string } => {
 
   let sqlQuery = '';
   let offset = 0;
   let limit = 0;
   let where = '';
+  let inlineCount = false;
 
   const orderBy = [];
   const selects = [];
@@ -94,6 +95,9 @@ export const transformQueryAst = (node: ODataQuery, nameMapper: FieldNameMapper 
       // please raise error on deep path
       selects.push(nameMapper(node.raw));
     },
+    InlineCount: (node) => {
+      inlineCount = node.value?.raw == 'true';
+    },
     Search: () => {
       // not support now
       throw new NotImplementedError('Not implement $search.');
@@ -115,7 +119,7 @@ export const transformQueryAst = (node: ODataQuery, nameMapper: FieldNameMapper 
     sqlQuery += ` ORDERBY ${orderBy.join(', ')}`;
   }
 
-  return { sqlQuery, selectedFields: selects };
+  return { sqlQuery, selectedFields: selects, count: inlineCount, where };
 
 };
 

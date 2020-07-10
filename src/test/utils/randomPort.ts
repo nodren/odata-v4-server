@@ -1,6 +1,6 @@
 
 /**
- * generate random port,
+ * generate random port
  * 
  * port '0' for nodejs will indicate server use a useable tcp port
  */

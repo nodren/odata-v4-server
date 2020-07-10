@@ -202,12 +202,14 @@ export function controller(controller: typeof ODataController, entitySetName?: s
  */
 export function controller(controller: typeof ODataController, entitySetName?: string | boolean, elementType?: Function) {
   return function(server: typeof ODataServer) {
-    server.prototype[(<any>controller).name] = controller;
-    entitySetName = (typeof entitySetName == 'string' ? entitySetName : '') || controller.prototype.entitySetName || (entitySetName === true ? (<any>controller).name.replace('Controller', '') : false);
+    server.prototype[controller.name] = controller;
+    entitySetName = (typeof entitySetName == 'string' ? entitySetName : '') || controller.prototype.entitySetName || (entitySetName === true ? controller.name.replace('Controller', '') : false);
     if (entitySetName) {
       const entitySets: any[] = Reflect.getOwnMetadata(ODataEntitySets, server) || {};
       entitySets[<string>entitySetName] = controller;
       Reflect.defineMetadata(ODataEntitySets, entitySets, server);
+    } else {
+      // throw error here
     }
     if (elementType) {
       controller.prototype.elementType = elementType;

@@ -11,7 +11,7 @@ import {
   isStream
 } from '../utils';
 import { ODataResult } from '../result';
-import { ODataController, ODataControllerBase } from '../controller';
+import { ODataController, ODataControllerBase, getControllerInstance } from '../controller';
 import {
   ResourcePathVisitor,
   NavigationPart,
@@ -20,7 +20,7 @@ import {
 } from '../visitor';
 import * as Edm from '../edm';
 import * as odata from '../odata';
-import { ResourceNotFoundError, MethodNotAllowedError, NotImplementedError } from '../error';
+import { ResourceNotFoundError, MethodNotAllowedError, NotImplementedError, ServerInternalError } from '../error';
 import { ODataServer, ODataHttpContext } from '../server';
 import { IODataResult } from '../index';
 import { findOne } from '@odata/parser/lib/utils';
@@ -573,9 +573,14 @@ export class ODataProcessor extends Transform {
 
         this.workflow.push((result) => {
           if (result && result.statusCode && result.statusCode == 201) {
-            this.emit('header', {
-              'Location': result.body['@odata.id']
-            });
+            if (result.body['@odata.id']) {
+              this.emit('header', {
+                'Location': result.body['@odata.id']
+              });
+            } else {
+              this.emit('error', new ServerInternalError('instance created, but service logic not return the created instance id'));
+            }
+
           }
           return Promise.resolve(result);
         });
@@ -956,7 +961,7 @@ export class ODataProcessor extends Transform {
           ? 'get'
           : this.method;
 
-        this.instance = new ctrl();
+        this.instance = getControllerInstance(ctrl);
 
         let fn;
         if (typeof filter == 'string' || !filter) {
@@ -1021,10 +1026,12 @@ export class ODataProcessor extends Transform {
         switch (method) {
           case 'get':
           case 'delete':
-            currentResult = fnCaller.call(ctrl, fn, params);
+            currentResult = fnCaller.call(getControllerInstance(ctrl), fn, params);
             break;
+
           case 'post':
             this.odataContext += '/$entity';
+
           case 'put':
           case 'patch':
             const body = data ? Object.assign(this.body || {}, data.foreignKeys) : this.body;
@@ -1046,7 +1053,7 @@ export class ODataProcessor extends Transform {
                 }
               });
             }
-            currentResult = fnCaller.call(ctrl, fn, params);
+            currentResult = fnCaller.call(getControllerInstance(ctrl), fn, params);
             break;
         }
 
