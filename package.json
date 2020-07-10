@@ -67,7 +67,7 @@
     "eslint-plugin-es-beautifier": "^1.0.1",
     "event-stream": "^3.3.4",
     "jest": "^26.1.0",
-    "light-odata": "^2.5.1",
+    "light-odata": "^2.5.2",
     "mongodb": "^3.5.9",
     "mssql": "^4.1.0",
     "odata-v4-inmemory": "^0.1.7",

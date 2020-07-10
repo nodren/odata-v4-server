@@ -1,4 +1,4 @@
-import { Entity, BaseEntity, PrimaryColumn, Column, createConnection, PrimaryGeneratedColumn } from "typeorm";
+import { Entity, BaseEntity, PrimaryColumn, Column, createConnection, PrimaryGeneratedColumn } from 'typeorm';
 import { Edm } from '../lib';
 import { createTypedODataServer } from '../lib/typeorm';
 import { randomPort } from '../test/utils/randomPort';
@@ -40,19 +40,19 @@ class Class extends BaseEntity {
 }
 
 
-const run = async () => {
+const run = async() => {
   const conn = await createConnection({
-    name: "default",
-    type: "sqljs",
+    name: 'default',
+    type: 'sqljs',
     synchronize: true,
     // logging: true,
     entities: [Student, Class]
-  })
-  const server = createTypedODataServer(conn.name, Student, Class)
+  });
+  const server = createTypedODataServer(conn.name, Student, Class);
 
-  const s = server.create(randomPort())
-  s.once('listening', () => console.log(`server started at ${s.address()['port']}`))
-}
+  const s = server.create(randomPort());
+  s.once('listening', () => console.log(`server started at ${s.address()['port']}`));
+};
 
 if (require.main == module) {
   run();
