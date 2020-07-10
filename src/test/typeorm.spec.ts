@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { ORMController, transformQueryAst, transformFilterAst, FieldNameMapper } from "../lib/typeorm";
 import { createConnection, Entity, PrimaryColumn, Column, ConnectionOptions, getConnection } from "typeorm";
-import { Edm, odata, ODataServer, withController, ODataQuery } from "../lib/index"
+import { Edm, odata, ODataServer, withController } from "../lib/index"
 import { randomPort } from './utils/randomPort';
 import { ready, shutdown } from './utils/server';
 import * as req from 'request-promise';
@@ -21,10 +21,11 @@ describe('Typeorm Integration Test Suite', () => {
   it('should support CRUD by repository', async () => {
 
     // example entity
-    @Entity()
+    @Entity({ name: "t_products" })
     class Product {
 
       @Edm.Key
+      @Edm.Int32 // remember to identify the type of key column
       @PrimaryColumn()
       id: number;
 
@@ -40,11 +41,11 @@ describe('Typeorm Integration Test Suite', () => {
 
     // ensure typeorm works
     await tmpRepo.save({ id: 2, desc: "123" })
-
     expect(await tmpRepo.findOne({ id: 2 })).not.toBeUndefined()
     tmpRepo.find({})
 
-    // example controller
+
+    // example service
     @odata.type(Product)
     @odata.entitySet("Products")
     class C4 extends ORMController<Product> {
@@ -52,6 +53,26 @@ describe('Typeorm Integration Test Suite', () => {
       @odata.GET
       async findOne(@odata.key key) {
         return getConnection("default").getRepository(Product).findOne(key)
+      }
+
+      @odata.GET
+      async find(@odata.query query) {
+
+        const conn = getConnection("default")
+        const repo = conn.getRepository(Product)
+        let data = []
+
+        if (query) {
+          const meta = conn.getMetadata(Product)
+          const tableName = meta.tableName
+          const { selectedFields, sqlQuery } = transformQueryAst(query, (f) => `${tableName}.${f}`)
+          const sql = `select ${selectedFields.length > 0 ? selectedFields.join(", ") : '*'} from ${tableName} ${sqlQuery};`
+          data = await repo.query(sql)
+        } else {
+          data = await repo.find()
+        }
+
+        return data
       }
 
       @odata.POST
@@ -74,6 +95,7 @@ describe('Typeorm Integration Test Suite', () => {
 
     }
 
+    // example server
     @withController(C4)
     class TmpServer extends ODataServer { }
 
@@ -89,8 +111,10 @@ describe('Typeorm Integration Test Suite', () => {
 
     expect(v).not.toBeUndefined()
 
-    res = await req.get(`http://127.0.0.1:${port}/Products(1)`, { json: true })
-    expect(res['desc']).toEqual('description')
+    // query
+    res = await req.get(`http://127.0.0.1:${port}/Products?$filter=id eq 1`, { json: true })
+    expect(res.value).toHaveLength(1)
+    expect(res.value[0]?.desc).toEqual('description')
 
     // update
     // no content
@@ -104,6 +128,12 @@ describe('Typeorm Integration Test Suite', () => {
 
     // not found
     await expect(async () => req.get(`http://127.0.0.1:${port}/Products(1)`)).rejects.toThrow()
+
+    // no limit query
+    res = await req.get(`http://127.0.0.1:${port}/Products`, { json: true })
+
+    // still have a '2' record
+    expect(res.value).toHaveLength(1)
 
     await shutdown(server)
     await tmpConn.close()
