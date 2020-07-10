@@ -1,81 +1,121 @@
 import { ODataQuery } from '..';
-import { FindManyOptions, FindConditions, Not } from 'typeorm';
 import { Traverser, traverseAst, traverseAstDeepFirst, Token } from '@odata/parser';
 import { NotImplementedError } from '../error';
+import { identity } from '@newdash/newdash/.internal/identity';
 
-export const transformFilterAst = (node: Token): FindConditions<any> | FindConditions<any>[] => {
+/**
+ * transformFilterAst to where sql
+ *
+ * @param node
+ */
+export const transformFilterAst = (node: Token, nameMapper: FieldNameMapper = identity): string => {
 
-  let rt = undefined;
-  const tmp = [];
+  // maybe the hidden 'sql' property will pollute the object,
+  // but deep copy object will consume too much resource
 
   const traverser: Traverser = {
     EqualsExpression: (node) => {
-      tmp.push(
-        { [node.value.left.raw]: [node.value.right.raw] }
-      );
+      node['sql'] = `${nameMapper(node.value.left.raw)} = ${node.value.right.raw}`;
     },
     NotEqualsExpression: (node) => {
-      tmp.push(
-        { [node.value.left.raw]: [node.value.right.raw] }
-      );
+      node['sql'] = `${nameMapper(node.value.left.raw)} != ${node.value.right.raw}`;
+    },
+    GreaterOrEqualsExpression: (node) => {
+      node['sql'] = `${nameMapper(node.value.left.raw)} >= ${node.value.right.raw}`;
+    },
+    GreaterThanExpression: (node) => {
+      node['sql'] = `${nameMapper(node.value.left.raw)} > ${node.value.right.raw}`;
+    },
+    LesserOrEqualsExpression: (node) => {
+      node['sql'] = `${nameMapper(node.value.left.raw)} <= ${node.value.right.raw}`;
+    },
+    LesserThanExpression: (node) => {
+      node['sql'] = `${nameMapper(node.value.left.raw)} < ${node.value.right.raw}`;
     },
     OrExpression: (node) => {
-      if (node.value.left.type == 'BoolParenExpression' || node.value.left.type == 'BoolParenExpression') {
-        if (node.value.left.type == 'BoolParenExpression') {
-
-        }
-
-      } else {
-        rt = Object.assign({}, ...tmp);
-      }
+      const { value: { left, right } } = node;
+      node['sql'] = `${left['sql']} OR ${right['sql']}`;
     },
-
     AndExpression: (node) => {
-      if (node.value.left.type == 'BoolParenExpression' || node.value.left.type == 'BoolParenExpression') {
-
-      } else {
-        rt = Object.assign({}, ...tmp);
-      }
+      const { value: { left, right } } = node;
+      node['sql'] = `${left['sql']} AND ${right['sql']}`;
+    },
+    BoolParenExpression: (node) => {
+      const { value } = node;
+      node['sql'] = `(${value['sql']})`;
+    },
+    Filter: (node) => {
+      node['sql'] = node.value?.sql;
     }
   };
 
   traverseAstDeepFirst(traverser, node);
 
-  return rt;
+  return node['sql'];
+
 };
 
+/**
+ * OData Field Mapping
+ */
+export interface FieldNameMapper {
+  (field: string): string
+}
 
-export const transformQueryAst = (node: ODataQuery): FindManyOptions<any> => {
-  const opt: FindManyOptions = {};
+export const transformQueryAst = (node: ODataQuery, nameMapper: FieldNameMapper = identity): { selectedFields: string[], sqlQuery: string } => {
+
+  let sqlQuery = '';
+  let offset = 0;
+  let limit = 0;
+  let where = '';
+
+  const orderBy = [];
+  const selects = [];
 
   const traverser: Traverser = {
     Top: (node) => {
-      opt.take = parseInt(node?.value?.raw);
+      limit = parseInt(node?.value?.raw);
     },
     Skip: (node) => {
-      opt.skip = parseInt(node?.value?.raw);
+      offset = parseInt(node?.value?.raw);
     },
     OrderByItem: (node) => {
-      opt.order = opt.order || {};
-      opt.order[node.value?.expr?.raw] = node?.value?.direction;
+      switch (node?.value?.direction) {
+        case -1:
+          orderBy.push(`${nameMapper(node.value?.expr?.raw)} DESC`); break;
+        case 1:
+          orderBy.push(`${nameMapper(node.value?.expr?.raw)} ASC`); break;
+        default:
+          break;
+      }
     },
     SelectItem: (node) => {
       // only support simple property of entity
       // please raise error on deep path
-      opt.select = opt.select || [];
-      opt.select.push(node.raw);
+      selects.push(nameMapper(node.raw));
     },
-    Search: (node) => {
+    Search: () => {
       // not support now
       throw new NotImplementedError('Not implement $search.');
     },
     Filter: (node) => {
-      opt.where = opt.where || {};
+      where = transformFilterAst(node, nameMapper);
     }
   };
 
   traverseAst(traverser, node);
 
-  return opt;
+  if (where) {
+    sqlQuery += ` WHERE ${where}`;
+  }
+  if (offset || limit) {
+    sqlQuery += ` LIMIT ${offset}, ${limit}`;
+  }
+  if (orderBy.length > 0) {
+    sqlQuery += ` ORDERBY ${orderBy.join(', ')}`;
+  }
+
+  return { sqlQuery, selectedFields: selects };
+
 };
 
