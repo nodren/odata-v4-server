@@ -73,6 +73,9 @@ export class TypedController<T = any> extends ODataController {
 
 
 /**
+ * indicate the controller use the connection name
+ * if user not use this decorator, or set empty connection name, the controller will use the 'default' connection of typeorm
+ *
  * @param connectionName typeorm connection name
  */
 export function withConnection(connectionName: string = 'default') {
