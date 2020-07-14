@@ -17,6 +17,7 @@
     "allowJs": true,
     "charset": "utf-8",
     "lib": [
+      "DOM",
       "ES2015",
       "ES2016",
       "ES2017"
@@ -27,8 +28,6 @@
   ],
   "exclude": [
     "node_modules",
-    "build",
-    "src/example",
-    "src/test"
+    "build"
   ]
 }
