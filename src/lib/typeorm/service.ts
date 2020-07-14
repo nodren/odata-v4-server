@@ -10,8 +10,7 @@ export function createTypedODataServer(connectionName: string = 'default', ...en
   entities.forEach((entity) => {
     const ct = class extends TypedController { };
     const entitySet = `${entity.name}s`;
-
-    Object.defineProperty(ct, 'name', { value: entitySet }); // define controller name to use decorator
+    Object.defineProperty(ct, 'name', { value: `${entitySet}Controller` }); // define controller name to use decorator
     withConnection(connectionName)(ct);
     odata.withController(ct, entitySet, entity)(server); // default public controller
   });

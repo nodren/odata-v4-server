@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 import { Entity, BaseEntity, PrimaryColumn, Column, createConnection, PrimaryGeneratedColumn } from 'typeorm';
-import { createTypedODataServer, ODataColumn, ODataModel } from '../lib';
+import { createTypedODataServer, ODataColumn, ODataModel, beforeCreate, beforeUpdate, HookType, beforeDelete, afterLoad } from '../lib';
 import { randomPort } from '../test/utils/randomPort';
 
 @ODataModel()
@@ -29,6 +29,28 @@ class Class extends BaseEntity {
 
   @ODataColumn()
   desc: string;
+
+  @beforeCreate()
+  @beforeUpdate()
+  async beforeCreate(item: Class, { type }) {
+
+    if (type == HookType.beforeCreate) {
+      // creation specify logic
+    }
+
+  }
+
+  @beforeDelete()
+  beforeDelete() {
+
+  }
+
+  @afterLoad()
+  afterLoad() {
+
+  }
+
+
 
 }
 
