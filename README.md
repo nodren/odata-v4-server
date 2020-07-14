@@ -19,7 +19,7 @@ NodeJS OData(V4) Server Implementation
 * expose service document and service metadata - $metadata
 * setup metadata using decorators or [@odata/metadata](https://github.com/Soontao/odata-v4-metadata)
 * supported data types are Edm primitives, complex types, navigation properties
-* support create, read, update, and delete entity sets, action imports, function imports, collection and entity bound actions and functions
+* support `create`, `read`, `update`, and `delete` entity sets, action imports, function imports, collection and entity bound actions and functions
 * support for full OData query language using [@odata/parser](https://github.com/Soontao/odata-v4-parser)
   * filtering entities - $filter
   * sorting - $orderby
@@ -27,10 +27,7 @@ NodeJS OData(V4) Server Implementation
   * projection of entities - $select
   * expanding entities - $expand
   * $count
-* support sync and async controller functions
 * support async controller functions using Promise, async/await or ES6 generator functions
-* support result streaming
-* support media entities
 
 ## Controller and server functions parameter injection decorators
 
