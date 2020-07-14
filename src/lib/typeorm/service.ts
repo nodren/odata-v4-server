@@ -1,11 +1,12 @@
 import { BaseEntity } from 'typeorm';
-import { TypedController, withConnection } from './typed_controller';
+import { TypedController, withConnection } from './controller';
 import { odata } from '..';
 import { ODataServer } from '../server';
+import { TypedODataServer } from './server';
 
 export function createTypedODataServer(connectionName: string = 'default', ...entities: (typeof BaseEntity)[]): typeof ODataServer {
 
-  const server = class extends ODataServer { };
+  const server = class extends TypedODataServer { };
 
   entities.forEach((entity) => {
     const ct = class extends TypedController { };
