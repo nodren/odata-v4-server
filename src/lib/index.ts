@@ -1,3 +1,5 @@
+import 'reflect-metadata';
+
 // exports Edm decorator system
 export * from './edm';
 import * as _Edm from './edm';

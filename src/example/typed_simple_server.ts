@@ -1,51 +1,43 @@
 import { Entity, BaseEntity, PrimaryColumn, Column, createConnection, PrimaryGeneratedColumn } from 'typeorm';
-import { Edm } from '../lib';
-import { createTypedODataServer } from '../lib/typeorm';
+import { createTypedODataServer, ODataColumn, ODataModel } from '../lib/typeorm';
 import { randomPort } from '../test/utils/randomPort';
 
-@Entity()
+@ODataModel()
 class Student extends BaseEntity {
 
-  @Edm.Key
-  @Edm.Int32
-  @PrimaryGeneratedColumn() // generated
+  @ODataColumn({ primary: true, generated: "increment" })
+  // generated
   id: number;
 
-  @Edm.String
-  @Column()
+  @ODataColumn()
   name: string;
 
-  @Edm.Int32
-  @Column()
+  @ODataColumn()
   age: number;
 
 }
 
-@Entity()
+@ODataModel()
 class Class extends BaseEntity {
 
-  @Edm.Key
-  @Edm.Int32
-  @PrimaryGeneratedColumn()
+  @ODataColumn({ primary: true, generated: "increment" })
   id: number;
 
-  @Edm.String
-  @Column()
+  @ODataColumn()
   name: string;
 
-  @Edm.String
-  @Column()
+  @ODataColumn()
   desc: string;
 
 }
 
 
-const run = async() => {
+const run = async () => {
   const conn = await createConnection({
     name: 'default',
     type: 'sqljs',
     synchronize: true,
-    // logging: true,
+    logging: true,
     entities: [Student, Class]
   });
   const server = createTypedODataServer(conn.name, Student, Class);

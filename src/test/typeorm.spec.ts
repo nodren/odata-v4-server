@@ -1,8 +1,8 @@
 // @ts-nocheck
+import "reflect-metadata"
 import "light-odata/lib/polyfill"
-import { TypedController, transformQueryAst, transformFilterAst, FieldNameMapper, withConnection, createTypedODataServer } from "../lib/typeorm";
 import { createConnection, Entity, PrimaryColumn, Column, ConnectionOptions, getConnection, BaseEntity, PrimaryGeneratedColumn } from "typeorm";
-import { Edm, odata, ODataServer, withController } from "../lib/index"
+import { Edm, odata, ODataServer, withController, ODataColumn, TypedController, transformQueryAst, transformFilterAst, FieldNameMapper, withConnection, createTypedODataServer } from "../lib/index"
 import { randomPort } from './utils/randomPort';
 import { ready, shutdown } from './utils/server';
 import * as req from 'request-promise';
@@ -207,6 +207,29 @@ describe('Typeorm Integration Test Suite', () => {
     await shutdown(s)
     await conn.close()
 
+
+  });
+
+  it('should works with decorator', () => {
+
+    class E1 {
+
+      @ODataColumn()
+      f1: string
+
+      @ODataColumn()
+      f2: boolean
+
+      @ODataColumn()
+      f3: number
+
+      @ODataColumn()
+      f4: Date
+
+      @ODataColumn()
+      f5: 'a' | 'b'
+
+    }
 
   });
 
