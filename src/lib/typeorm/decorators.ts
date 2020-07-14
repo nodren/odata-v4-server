@@ -13,7 +13,7 @@ import { has } from '@newdash/newdash/has';
  * @param options
  */
 export function ODataModel(options: EntityOptions = {}) {
-  return function(target) {
+  return function(target: any): void {
     Entity(options)(target);
   };
 }
@@ -26,7 +26,7 @@ export function ODataModel(options: EntityOptions = {}) {
  * @param options
  */
 export function ODataColumn(options: ColumnOptions = {}) {
-  return function(object: any, propertyName: string, propertyIndex: number) {
+  return function(object: any, propertyName: string): void {
     const { primary, length, precision, nullable } = options;
 
     Column(options)(object, propertyName);
@@ -36,19 +36,19 @@ export function ODataColumn(options: ColumnOptions = {}) {
     }
 
     if (length) {
-      Edm.MaxLength(toInteger(length))(object, propertyName, propertyIndex);
+      Edm.MaxLength(toInteger(length))(object, propertyName);
     }
 
     if (precision) {
-      Edm.Precision(toInteger(precision))(object, propertyName, propertyIndex);
+      Edm.Precision(toInteger(precision))(object, propertyName);
     }
 
     if (nullable) {
-      Edm.Nullable(object, propertyName, propertyIndex);
+      Edm.Nullable(object, propertyName);
     }
 
     if (has(options, 'default')) {
-      Edm.DefaultValue(options.default)(object, propertyName, propertyIndex);
+      Edm.DefaultValue(options.default)(object, propertyName);
     }
 
     const reflectType = Reflect.getMetadata('design:type', object, propertyName);

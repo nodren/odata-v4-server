@@ -1,12 +1,13 @@
+import 'reflect-metadata'
 import { Entity, BaseEntity, PrimaryColumn, Column, createConnection, PrimaryGeneratedColumn } from 'typeorm';
-import { createTypedODataServer, ODataColumn, ODataModel } from '../lib/typeorm';
+import { createTypedODataServer, ODataColumn, ODataModel } from '../lib';
 import { randomPort } from '../test/utils/randomPort';
 
 @ODataModel()
 class Student extends BaseEntity {
 
+  // generated id
   @ODataColumn({ primary: true, generated: "increment" })
-  // generated
   id: number;
 
   @ODataColumn()
