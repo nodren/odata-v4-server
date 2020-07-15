@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Token, TokenType } from '@odata/parser/lib/lexer';
 import * as url from 'url';
 import * as qs from 'qs';
@@ -185,7 +186,7 @@ const expCalls = {
   $count(this: ODataResult) {
     return this.body && this.body.value ? (this.body.value.length || 0) : 0;
   },
-  async $value(this: ODataResult, processor) {
+  async $value(this: ODataResult, processor: ODataProcessor) {
     try {
       const prevPart = processor.resourcePath.navigation[processor.resourcePath.navigation.length - 2];
 
@@ -717,13 +718,17 @@ export class ODataProcessor extends Transform {
   private __EntityCollectionNavigationProperty(part: NavigationPart): Function {
     return async(result) => {
       try {
+
         const resultType = result.elementType;
         const elementType = <Function>Edm.getType(resultType, part.name, this.serverType.container);
         const partIndex = this.resourcePath.navigation.indexOf(part);
         const method = writeMethods.indexOf(this.method) >= 0 && partIndex < this.resourcePath.navigation.length - 1
           ? 'get'
           : this.method;
+
         let fn: any = odata.findODataMethod(this.ctrl, `${method}/${part.name}`, part.key);
+
+        // if the controller has defined a customize processor for this navigation
         if (fn) {
           const ctrl = this.ctrl;
           const fnDesc = fn;
@@ -753,18 +758,25 @@ export class ODataProcessor extends Transform {
             return result;
           });
         }
+
+        // use default process, find the correct controller for this navigation
         const ctrl = this.serverType.getController(elementType);
         const foreignKeys = Edm.getForeignKeys(resultType, part.name);
         const typeKeys = Edm.getKeyProperties(resultType);
         result.foreignKeys = {};
+
+        // create filter string for navigation
         const foreignFilter = (await Promise.all(foreignKeys.map(async(key) => {
           result.foreignKeys[key] = result.body[typeKeys[0]];
           return `${key} eq ${await Edm.escape(result.body[typeKeys[0]], Edm.getTypeName(elementType, key, this.serverType.container))}`;
         }))).join(' and ');
+
         const params = {};
+
         if (part.key) {
           part.key.forEach((key) => params[key.name] = key.value);
         }
+
         return this.__read(ctrl, part, params, result, foreignFilter);
       } catch (err) {
         return Promise.reject(err);
@@ -781,7 +793,9 @@ export class ODataProcessor extends Transform {
         const method = writeMethods.indexOf(this.method) >= 0 && partIndex < this.resourcePath.navigation.length - 1
           ? 'get'
           : this.method;
+
         let fn: any = odata.findODataMethod(this.ctrl, `${method}/${part.name}`, part.key);
+        // if the controller has defined a customize processor for this navigation
         if (fn) {
           const ctrl = this.ctrl;
           const fnDesc = fn;
@@ -819,9 +833,11 @@ export class ODataProcessor extends Transform {
           };
         });
         const params = {};
+
         if (part.key) {
           part.key.forEach((key) => params[key.name] = key.value);
         }
+
         return this.__read(ctrl, part, params, result);
       } catch (err) {
         return Promise.reject(err);

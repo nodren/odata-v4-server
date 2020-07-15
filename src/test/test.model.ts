@@ -315,7 +315,7 @@ export class MusicController extends ODataController {
   }
 
   @odata.POST.$value
-  post(@odata.key _: number, @odata.body upload: Readable) {
+  post(@odata.key _: number, @odata.body upload) {
     return upload.pipe(globalWritableMediaStrBuffer);
   }
 }

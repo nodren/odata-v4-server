@@ -196,13 +196,13 @@ class MusicController extends ODataController {
   }
 
   @odata.POST.$value
-  post(@odata.key _: number, @odata.body upload: Readable) {
+  post(@odata.key _: number, @odata.body context: ODataHttpContext) {
     const file = fs.createWriteStream('tmp.mp3');
     return new Promise((resolve, reject) => {
       file.on('open', () => {
-        upload.pipe(file);
+        context.request.pipe(file);
       }).on('error', reject);
-      upload.on('end', resolve);
+      context.request.on('end', resolve);
     });
   }
 }

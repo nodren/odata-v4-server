@@ -137,7 +137,13 @@ export class ODataServerBase extends Transform {
             res.write(chunk, encoding, done);
           }
         });
-        const body = req.body && Object.keys(req.body).length > 0 ? req.body : req;
+
+        let body = req.body;
+        // if chunked upload, will use request stream as body
+        if (req.headers['transfer-encoding'] == 'chunked') {
+          body = req;
+        }
+
         const origStatus = res.statusCode;
         processor.execute(body).then((result: ODataResult) => {
           try {
@@ -190,6 +196,7 @@ export class ODataServerBase extends Transform {
       context.method = method || 'GET';
     }
     context.method = context.method || 'GET';
+    context.request = context.request || body;
     const processor = this.createProcessor(context, <ODataProcessorOptions>{
       objectMode: true,
       metadata: context.metadata || ODataMetadataType.minimal

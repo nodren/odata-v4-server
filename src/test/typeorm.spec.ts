@@ -2,7 +2,7 @@
 import "reflect-metadata"
 import "light-odata/lib/polyfill"
 import { createConnection, Entity, PrimaryColumn, Column, ConnectionOptions, getConnection, BaseEntity, PrimaryGeneratedColumn } from "typeorm";
-import { Edm, odata, ODataServer, withController, ODataColumn, TypedController, transformQueryAst, transformFilterAst, FieldNameMapper, withConnection, createTypedODataServer, ODataModel } from "../lib/index"
+import { Edm, odata, ODataServer, withController, ODataColumn, TypedController, transformQueryAst, transformFilterAst, FieldNameMapper, withConnection, createTypedODataServer, ODataModel, ODataNavigation } from "../lib/index"
 import { randomPort } from './utils/randomPort';
 import { ready, shutdown } from './utils/server';
 import * as req from 'request-promise';
@@ -211,6 +211,7 @@ describe('Typeorm Integration Test Suite', () => {
   });
 
   it('should works with decorator', () => {
+    class A { }
 
     @ODataModel()
     class E1 {
@@ -229,6 +230,13 @@ describe('Typeorm Integration Test Suite', () => {
 
       @ODataColumn()
       f5: 'a' | 'b'
+
+      @ODataNavigation({
+        type: "OneToMany",
+        entity: () => A,
+        foreignKey: "a"
+      })
+      f6: A[]
 
     }
 

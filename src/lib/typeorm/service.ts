@@ -1,4 +1,4 @@
-import { BaseEntity } from 'typeorm';
+import { BaseEntity, getConnection } from 'typeorm';
 import { TypedController, withConnection } from './controller';
 import { odata } from '..';
 import { ODataServer } from '../server';

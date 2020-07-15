@@ -1,9 +1,10 @@
-import { ColumnOptions, Column, EntityOptions, Entity } from 'typeorm';
+import { ColumnOptions, Column, EntityOptions, Entity, OneToMany, ManyToOne, JoinColumn, OneToOne } from 'typeorm';
 import { Edm } from '..';
-import { NotImplementedError } from '../error';
+import { NotImplementedError, ServerInternalError } from '../error';
 import toInteger from '@newdash/newdash/toInteger';
 import { has } from '@newdash/newdash/has';
-
+import { BaseODataModel } from './model';
+import { isEmpty } from '@newdash/newdash/isEmpty';
 
 /**
  * ODataModel
@@ -80,5 +81,60 @@ export function ODataColumn(options: ColumnOptions = {}) {
       default:
         throw new NotImplementedError(`Not support the type of field '${propertyName}'.`);
     }
+  };
+}
+
+export interface NavigationOptions<T extends typeof BaseODataModel> {
+  /**
+   * navigation type
+   */
+  type: 'OneToOne' | 'OneToMany' | 'ManyToOne';
+  /**
+   * entity provider
+   */
+  entity: (type?: any) => T,
+  /**
+   * (ref) foreignKey,
+   *
+   * which field record the relation ship between `this` & `that` table
+   */
+  foreignKey: string;
+}
+
+/**
+ * ODataNavigation decorator
+ *
+ * define the navigation
+ *
+ * @param options
+ */
+export function ODataNavigation<T extends typeof BaseODataModel>(options: NavigationOptions<T>) {
+  return function(object: any, propertyName: string): void {
+
+    if (isEmpty(options.foreignKey)) {
+      throw new ServerInternalError(`OneToMany navigation must define the ref 'foreign key' in ${object?.constructor?.name} ${propertyName}`);
+    }
+
+    switch (options.type) {
+      case 'OneToMany':
+        OneToMany(options.entity, options.foreignKey)(object, propertyName);
+        Edm.Collection(Edm.EntityType(Edm.ForwardRef(options.entity)))(object, propertyName);
+        Edm.ForeignKey(options.foreignKey)(object, propertyName);
+        break;
+      case 'ManyToOne':
+        ManyToOne(options.entity)(object, propertyName);
+        JoinColumn({ name: options.foreignKey })(object, propertyName);
+        Edm.EntityType(Edm.ForwardRef(options.entity))(object, propertyName);
+        Edm.ForeignKey(options.foreignKey)(object, propertyName);
+        break;
+      case 'OneToOne':
+        OneToOne(options.entity)(object, propertyName);
+        Edm.EntityType(Edm.ForwardRef(options.entity))(object, propertyName);
+        JoinColumn({ name: options.foreignKey })(object, propertyName);
+        Edm.ForeignKey(options.foreignKey)(object, propertyName);
+      default:
+        break;
+    }
+
   };
 }
