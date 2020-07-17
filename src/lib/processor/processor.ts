@@ -174,6 +174,7 @@ const ODataRequestMethods: string[] = [
   'patch',
   'delete'
 ];
+
 const ODataRequestResult: any = {
   get: ODataResult.Ok,
   post: ODataResult.Created,
@@ -384,6 +385,7 @@ export type GeneratorAction = (value?) => any;
 export type PromiseGeneratorHandler = Promise<any> | void;
 
 export namespace ODataGeneratorHandlers {
+
   export function PromiseHandler(request: any, next: GeneratorAction): PromiseGeneratorHandler {
     if (isPromise(request)) {
       return request.then(next);
@@ -405,6 +407,7 @@ export namespace ODataGeneratorHandlers {
     }
   }
 }
+
 const defaultHandlers = [
   ODataGeneratorHandlers.GeneratorHandler,
   ODataGeneratorHandlers.PromiseHandler,
@@ -786,177 +789,169 @@ export class ODataProcessor extends Transform {
 
   private __EntityNavigationProperty(part: NavigationPart): Function {
     return async(result) => {
-      try {
-        const resultType = result.elementType;
-        const elementType = <Function>Edm.getType(resultType, part.name, this.serverType.container);
-        const partIndex = this.resourcePath.navigation.indexOf(part);
-        const method = writeMethods.indexOf(this.method) >= 0 && partIndex < this.resourcePath.navigation.length - 1
-          ? 'get'
-          : this.method;
+      const resultType = result.elementType;
+      const elementType = <Function>Edm.getType(resultType, part.name, this.serverType.container);
+      const partIndex = this.resourcePath.navigation.indexOf(part);
+      const method = writeMethods.indexOf(this.method) >= 0 && partIndex < this.resourcePath.navigation.length - 1
+        ? 'get'
+        : this.method;
 
-        let fn: any = odata.findODataMethod(this.ctrl, `${method}/${part.name}`, part.key);
-        // if the controller has defined a customize processor for this navigation
-        if (fn) {
-          const ctrl = this.ctrl;
-          const fnDesc = fn;
-          const params = {};
-          if (part.key) {
-            part.key.forEach((key) => params[key.name] = key.value);
-          }
-          await this.__applyParams(ctrl, fnDesc.call, params, this.url.query, result);
-          fn = ctrl.prototype[fnDesc.call];
-          if (fnDesc.key.length == 1 && part.key.length == 1 && fnDesc.key[0].to != part.key[0].name) {
-            params[fnDesc.key[0].to] = params[part.key[0].name];
-            delete params[part.key[0].name];
-          } else {
-            for (let i = 0; i < fnDesc.key.length; i++) {
-              if (fnDesc.key[i].to != fnDesc.key[i].from) {
-                params[fnDesc.key[i].to] = params[fnDesc.key[i].from];
-                delete params[fnDesc.key[i].from];
-              }
-            }
-          }
-          this.elementType = elementType;
-          return this.__read(ctrl, part, params, result, fn, elementType).then((result) => {
-            this.ctrl = this.serverType.getController(elementType);
-            return result;
-          });
-        }
-        const ctrl = this.serverType.getController(elementType);
-        const foreignKeys = Edm.getForeignKeys(resultType, part.name);
-        result.foreignKeys = {};
-        (<any>part).key = foreignKeys.map((key) => {
-          result.foreignKeys[key] = result.body[key];
-          return {
-            name: key,
-            value: result.body[key]
-          };
-        });
+      let fn: any = odata.findODataMethod(this.ctrl, `${method}/${part.name}`, part.key);
+      // if the controller has defined a customize processor for this navigation
+      if (fn) {
+        const ctrl = this.ctrl;
+        const fnDesc = fn;
         const params = {};
-
         if (part.key) {
           part.key.forEach((key) => params[key.name] = key.value);
         }
-
-        return this.__read(ctrl, part, params, result);
-      } catch (err) {
-        return Promise.reject(err);
+        await this.__applyParams(ctrl, fnDesc.call, params, this.url.query, result);
+        fn = ctrl.prototype[fnDesc.call];
+        if (fnDesc.key.length == 1 && part.key.length == 1 && fnDesc.key[0].to != part.key[0].name) {
+          params[fnDesc.key[0].to] = params[part.key[0].name];
+          delete params[part.key[0].name];
+        } else {
+          for (let i = 0; i < fnDesc.key.length; i++) {
+            if (fnDesc.key[i].to != fnDesc.key[i].from) {
+              params[fnDesc.key[i].to] = params[fnDesc.key[i].from];
+              delete params[fnDesc.key[i].from];
+            }
+          }
+        }
+        this.elementType = elementType;
+        result = await this.__read(ctrl, part, params, result, fn, elementType);
+        this.ctrl = this.serverType.getController(elementType);
+        return result;
       }
+
+      const ctrl = this.serverType.getController(elementType);
+      const foreignKeys = Edm.getForeignKeys(resultType, part.name);
+      result.foreignKeys = {};
+      (<any>part).key = foreignKeys.map((key) => {
+        result.foreignKeys[key] = result.body[key];
+        return {
+          name: key,
+          value: result.body[key]
+        };
+      });
+
+      const params = {};
+
+      if (part.key) {
+        part.key.forEach((key) => params[key.name] = key.value);
+      }
+
+      return this.__read(ctrl, part, params, result);
     };
   }
 
   private __PrimitiveProperty(part: NavigationPart): Function {
     return async(result) => {
-      try {
-        return new Promise(async(resolve, reject) => {
-          this.__enableStreaming(part);
+      this.__enableStreaming(part);
 
-          let currentResult;
-          const prevPart = this.resourcePath.navigation[this.resourcePath.navigation.indexOf(part) - 1];
-          let fn = odata.findODataMethod(this.ctrl, `${this.method}/${part.name}`, prevPart.key || []) ||
-            odata.findODataMethod(this.ctrl, `${this.method}/${part.name}/$value`, prevPart.key || []);
-          if (!fn && this.method != 'get') {
-            fn = this.method == 'delete'
-              ? odata.findODataMethod(this.ctrl, 'patch', prevPart.key || [])
-              : odata.findODataMethod(this.ctrl, `${this.method}`, prevPart.key || []);
-            if (fn) {
-              let body = this.body;
-              if (Edm.getTypeName(result.elementType, part.name, this.serverType.container) != 'Edm.Stream') {
-                body = body.body || body;
-              }
-              this.body = {};
-              this.body[part.name] = this.method == 'delete' ? null : body.value || body;
-            }
+      let currentResult;
+
+      const prevPart = this.resourcePath.navigation[this.resourcePath.navigation.indexOf(part) - 1];
+      let fn = odata.findODataMethod(this.ctrl, `${this.method}/${part.name}`, prevPart.key || []) ||
+        odata.findODataMethod(this.ctrl, `${this.method}/${part.name}/$value`, prevPart.key || []);
+      if (!fn && this.method != 'get') {
+        fn = this.method == 'delete'
+          ? odata.findODataMethod(this.ctrl, 'patch', prevPart.key || [])
+          : odata.findODataMethod(this.ctrl, `${this.method}`, prevPart.key || []);
+        if (fn) {
+          let body = this.body;
+          if (Edm.getTypeName(result.elementType, part.name, this.serverType.container) != 'Edm.Stream') {
+            body = body.body || body;
           }
-          if (fn) {
-            const ctrl = this.prevCtrl;
-            const params = {};
-            if (prevPart.key) {
-              prevPart.key.forEach((key) => params[key.name] = key.value);
-            }
-
-            const fnDesc = fn;
-            await this.__applyParams(ctrl, fnDesc.call, params, this.url.query, result);
-
-            fn = ctrl.prototype[fnDesc.call];
-            if (fnDesc.key.length == 1 && prevPart.key.length == 1 && fnDesc.key[0].to != prevPart.key[0].name) {
-              params[fnDesc.key[0].to] = params[prevPart.key[0].name];
-              delete params[prevPart.key[0].name];
-            } else {
-              for (let i = 0; i < fnDesc.key.length; i++) {
-                if (fnDesc.key[i].to != fnDesc.key[i].from) {
-                  params[fnDesc.key[i].to] = params[fnDesc.key[i].from];
-                  delete params[fnDesc.key[i].from];
-                }
-              }
-            }
-
-            this.elementType = Edm.getType(result.elementType, part.name, this.serverType.container) || Object;
-            if (typeof this.elementType == 'string') {
-              this.elementType = Object;
-            }
-            currentResult = fnCaller.call(ctrl, fn, params);
-
-            if (isIterator(fn)) {
-              currentResult = run(currentResult, defaultHandlers);
-            }
-
-            if (!isPromise(currentResult)) {
-              currentResult = Promise.resolve(currentResult);
-            }
-          } else {
-            let value = result.body[part.name];
-            if (value instanceof StreamWrapper) {
-              value = value.stream;
-            }
-
-            currentResult = Promise.resolve(value);
-          }
-
-          if (this.method == 'get') {
-            currentResult.then((value) => {
-              try {
-                result.body = {
-                  '@odata.context': this.options.metadata != ODataMetadataType.none ? result.body['@odata.context'] : undefined,
-                  value
-                };
-                const elementType = result.elementType;
-                // if (value instanceof Object)
-                result.elementType = Edm.isEnumType(result.elementType, part.name)
-                  ? Edm.getTypeName(result.elementType, part.name, this.serverType.container)
-                  : Edm.getType(result.elementType, part.name, this.serverType.container) || Object;
-
-                if (value && (isStream(value) || isStream(value.stream))) {
-                  this.emit('header', {
-                    'Content-Type': Edm.getContentType(elementType.prototype, part.name) || value.contentType || 'application/octet-stream'
-                  });
-                  if (value.stream) {
-                    value = value.stream;
-                  }
-                  value.pipe(this);
-                  value.on('end', resolve);
-                  value.on('error', reject);
-                } else {
-                  if (this.streamEnabled && this.streamStart) {
-                    delete result.body;
-                  }
-                  if (result.stream) {
-                    delete result.stream;
-                  }
-                  resolve(result);
-                }
-              } catch (err) {
-                console.log(err);
-                reject(err);
-              }
-            }, reject);
-          } else {
-            ODataResult.NoContent(currentResult).then(resolve, reject);
-          }
-        });
-      } catch (err) {
-        return Promise.reject(err);
+          this.body = {};
+          this.body[part.name] = this.method == 'delete' ? null : body.value || body;
+        }
       }
+
+      if (fn) {
+        const ctrl = this.prevCtrl;
+        const params = {};
+        if (prevPart.key) {
+          prevPart.key.forEach((key) => params[key.name] = key.value);
+        }
+
+        const fnDesc = fn;
+        await this.__applyParams(ctrl, fnDesc.call, params, this.url.query, result);
+
+        fn = ctrl.prototype[fnDesc.call];
+        if (fnDesc.key.length == 1 && prevPart.key.length == 1 && fnDesc.key[0].to != prevPart.key[0].name) {
+          params[fnDesc.key[0].to] = params[prevPart.key[0].name];
+          delete params[prevPart.key[0].name];
+        } else {
+          for (let i = 0; i < fnDesc.key.length; i++) {
+            if (fnDesc.key[i].to != fnDesc.key[i].from) {
+              params[fnDesc.key[i].to] = params[fnDesc.key[i].from];
+              delete params[fnDesc.key[i].from];
+            }
+          }
+        }
+
+        this.elementType = Edm.getType(result.elementType, part.name, this.serverType.container) || Object;
+        if (typeof this.elementType == 'string') {
+          this.elementType = Object;
+        }
+        currentResult = fnCaller.call(ctrl, fn, params);
+
+        if (isIterator(fn)) {
+          currentResult = run(currentResult, defaultHandlers);
+        }
+
+        if (!isPromise(currentResult)) {
+          currentResult = Promise.resolve(currentResult);
+        }
+      } else {
+        let value = result.body[part.name];
+        if (value instanceof StreamWrapper) {
+          value = value.stream;
+        }
+
+        currentResult = Promise.resolve(value);
+      }
+
+      if (this.method == 'get') {
+        let value = await currentResult;
+
+        result.body = {
+          '@odata.context': this.options.metadata != ODataMetadataType.none ? result.body['@odata.context'] : undefined,
+          value
+        };
+        const elementType = result.elementType;
+
+        // if (value instanceof Object)
+        result.elementType = Edm.isEnumType(result.elementType, part.name)
+          ? Edm.getTypeName(result.elementType, part.name, this.serverType.container)
+          : Edm.getType(result.elementType, part.name, this.serverType.container) || Object;
+
+        if (value && (isStream(value) || isStream(value.stream))) {
+          this.emit('header', {
+            'Content-Type': Edm.getContentType(elementType.prototype, part.name) || value.contentType || 'application/octet-stream'
+          });
+          if (value.stream) {
+            value = value.stream;
+          }
+          value.pipe(this);
+          return new Promise((resolve, reject) => {
+            value.on('end', resolve);
+            value.on('error', reject);
+          });
+        }
+        if (this.streamEnabled && this.streamStart) {
+          delete result.body;
+        }
+        if (result.stream) {
+          delete result.stream;
+        }
+        return result;
+
+      }
+
+      return ODataResult.NoContent(currentResult);
+
     };
   }
 
@@ -1159,48 +1154,44 @@ export class ODataProcessor extends Transform {
   }
 
   private __actionOrFunctionImport(part: NavigationPart): Function {
+
     const fn = this.serverType.prototype[part.name];
-    return (data) => new Promise(async(resolve, reject) => {
-      try {
-        this.__enableStreaming(part);
+    return async(data) => {
+      this.__enableStreaming(part);
 
-        const returnType = <Function>Edm.getReturnType(this.serverType, part.name, this.serverType.container);
-        let isAction = false;
-        const schemas = this.serverType.$metadata().edmx.dataServices.schemas;
-        if (Edm.isActionImport(this.serverType, part.name) ||
-          schemas.some((schema) => schema.entityContainer.some((container) => container.actionImports.some((actionImport) => actionImport.name == part.name)))
-        ) {
-          isAction = true;
-          part.params = Object.assign(part.params || {}, this.body || {});
-        }
-        await this.__applyParams(this.serverType, part.name, part.params);
-        let result = fnCaller.call(data, fn, part.params);
-
-        if (isIterator(fn)) {
-          result = run(result, defaultHandlers);
-        }
-
-        if (isAction && !returnType) {
-          return ODataResult.NoContent(result).then(resolve, reject);
-        }
-        return ODataResult.Ok(result).then((result) => {
-          if (isStream(result.body)) {
-            (<any>result.body).on('end', resolve);
-            (<any>result.body).on('error', reject);
-          } else {
-            try {
-              this.__appendODataContext(result, returnType, this.resourcePath.includes, this.resourcePath.select).then(() => {
-                resolve(result);
-              });
-            } catch (err) {
-              reject(err);
-            }
-          }
-        }, reject);
-      } catch (err) {
-        return Promise.reject(err);
+      const returnType = <Function>Edm.getReturnType(this.serverType, part.name, this.serverType.container);
+      let isAction = false;
+      const schemas = this.serverType.$metadata().edmx.dataServices.schemas;
+      if (Edm.isActionImport(this.serverType, part.name) ||
+        schemas.some((schema) => schema.entityContainer.some((container) => container.actionImports.some((actionImport) => actionImport.name == part.name)))
+      ) {
+        isAction = true;
+        part.params = Object.assign(part.params || {}, this.body || {});
       }
-    });
+      await this.__applyParams(this.serverType, part.name, part.params);
+      let result = fnCaller.call(data, fn, part.params);
+
+      if (isIterator(fn)) {
+        result = run(result, defaultHandlers);
+      }
+
+      if (isAction && !returnType) {
+        return ODataResult.NoContent(result);
+      }
+
+      result = await ODataResult.Ok(result);
+
+      if (isStream(result.body)) {
+        return new Promise((resolve, reject) => {
+          (<any>result.body).on('end', resolve);
+          (<any>result.body).on('error', reject);
+        });
+      }
+
+      await this.__appendODataContext(result, returnType, this.resourcePath.includes, this.resourcePath.select);
+      return result;
+
+    };
   }
 
   private __actionOrFunction(part: NavigationPart): Function {
