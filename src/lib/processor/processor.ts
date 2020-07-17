@@ -1036,6 +1036,7 @@ export class ODataProcessor extends Transform {
     }
 
     let currentResult: any;
+
     // inject parameters by type
     switch (method) {
       case 'get':
@@ -1082,22 +1083,9 @@ export class ODataProcessor extends Transform {
     let result = await currentResult;
 
     if (isStream(result) && include) {
+
       result = await include.streamPromise;
       result = await ODataRequestResult[method](result);
-
-      if (elementType) {
-        result.elementType = elementType;
-      }
-
-
-      await this.__appendODataContext(
-        result,
-        elementType || this.ctrl.prototype.elementType,
-        (include || this.resourcePath).includes,
-        select
-      );
-
-      return result;
 
     } else if (isStream(result) && (!part.key || !Edm.isMediaEntity(elementType || this.ctrl.prototype.elementType))) {
 
