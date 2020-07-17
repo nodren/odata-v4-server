@@ -960,184 +960,180 @@ export class ODataProcessor extends Transform {
     };
   }
 
-  private __read(ctrl: typeof ODataController, part: any, params: any, data?: any, filter?: string | Function, elementType?: any, include?, select?) {
-    return new Promise(async(resolve, reject) => {
-      try {
-        select = select || this.resourcePath.select;
+  private async __read(ctrl: typeof ODataController, part: any, params: any, data?: any, filter?: string | Function, elementType?: any, include?, select?) {
+    select = select || this.resourcePath.select;
 
-        if (this.ctrl) {
-          this.prevCtrl = this.ctrl;
-        } else {
-          this.prevCtrl = ctrl;
-        }
-        this.ctrl = ctrl;
+    if (this.ctrl) {
+      this.prevCtrl = this.ctrl;
+    } else {
+      this.prevCtrl = ctrl;
+    }
+    this.ctrl = ctrl;
 
-        const method = writeMethods.indexOf(this.method) >= 0 &&
-          this.resourcePath.navigation.indexOf(part) < this.resourcePath.navigation.length - 1
-          ? 'get'
-          : this.method;
+    const method = writeMethods.indexOf(this.method) >= 0 &&
+      this.resourcePath.navigation.indexOf(part) < this.resourcePath.navigation.length - 1
+      ? 'get'
+      : this.method;
 
-        this.instance = getControllerInstance(ctrl);
+    this.instance = getControllerInstance(ctrl);
 
-        let fn;
-        if (typeof filter == 'string' || !filter) {
-          // get metadata of method
-          fn = odata.findODataMethod(ctrl, method, part.key);
+    let fn;
+    if (typeof filter == 'string' || !filter) {
+      // get metadata of method
+      fn = odata.findODataMethod(ctrl, method, part.key);
 
-          // not found method to process
-          if (!fn) {
-            return reject(new NotImplementedError());
-          }
-
-          let queryString = filter ? `$filter=${filter}` : (include || this.url).query;
-          if (include && filter && include.query && !include.query.$filter) {
-            include.query.$filter = filter;
-            queryString = Object.keys(include.query).map((p) => `${p}=${include.query[p]}`).join('&');
-          } else if ((include && filter && include.query) || (!include && this.resourcePath.navigation.indexOf(part) == this.resourcePath.navigation.length - 1)) {
-            queryString = Object.keys((include || this).query).map((p) => {
-              if (p == '$filter' && filter) {
-                (include || this).query[p] = `(${(include || this).query[p]}) and (${filter})`;
-              }
-              return `${p}=${(include || this).query[p]}`;
-            }).join('&') || queryString;
-          }
-
-          // build object to query string
-          if (queryString && typeof queryString == 'object') {
-            queryString = Object.keys(queryString).map((p) => `${p}=${queryString[p]}`).join('&');
-          }
-
-          if (typeof fn != 'function') {
-            // construct injected params
-            const fnDesc = fn;
-            fn = ctrl.prototype[fnDesc.call];
-            // >> assign keys to params
-            if (fnDesc.key.length == 1 && part.key.length == 1 && fnDesc.key[0].to != part.key[0].name) {
-              params[fnDesc.key[0].to] = params[part.key[0].name];
-              delete params[part.key[0].name];
-            } else {
-              for (let i = 0; i < fnDesc.key.length; i++) {
-                if (fnDesc.key[i].to != fnDesc.key[i].from) {
-                  params[fnDesc.key[i].to] = params[fnDesc.key[i].from];
-                  delete params[fnDesc.key[i].from];
-                }
-              }
-            }
-            // <<
-            // assign other parameters
-            await this.__applyParams(ctrl, fnDesc.call, params, queryString, undefined, include);
-          } else {
-            await this.__applyParams(ctrl, method, params, queryString, undefined, include);
-          }
-        } else {
-          fn = filter;
-        }
-
-        if (!include) {
-          this.__enableStreaming(part);
-        }
-
-        let currentResult: any;
-        // inject parameters by type
-        switch (method) {
-          case 'get':
-          case 'delete':
-            currentResult = fnCaller.call(getControllerInstance(ctrl), fn, params);
-            break;
-
-          case 'post':
-            this.odataContext += '/$entity';
-
-          case 'put':
-          case 'patch':
-            const body = data ? Object.assign(this.body || {}, data.foreignKeys) : this.body;
-            const bodyParam = odata.getBodyParameter(ctrl, fn.name);
-            const typeParam = odata.getTypeParameter(ctrl, fn.name);
-            if (typeParam) {
-              params[typeParam] = (body['@odata.type'] || (`${(<any>ctrl.prototype.elementType).namespace}.${(<any>ctrl.prototype.elementType).name}`)).replace(/^#/, '');
-            }
-            if (bodyParam) {
-              await this.__deserialize(body, ctrl.prototype.elementType);
-              this.__stripOData(body);
-              params[bodyParam] = body;
-            }
-            if (!part.key) {
-              const properties: string[] = Edm.getProperties((elementType || ctrl.prototype.elementType).prototype);
-              properties.forEach((prop) => {
-                if (Edm.isKey(elementType || ctrl.prototype.elementType, prop)) {
-                  params[prop] = (this.body || {})[prop] || ((data || {}).body || {})[prop];
-                }
-              });
-            }
-            currentResult = fnCaller.call(getControllerInstance(ctrl), fn, params);
-            break;
-        }
-
-        if (isIterator(fn)) {
-          currentResult = run(currentResult, defaultHandlers);
-        }
-
-        if (!isPromise(currentResult)) {
-          currentResult = Promise.resolve(currentResult);
-        }
-
-        return currentResult.then((result: any): any => {
-          if (isStream(result) && include) {
-            include.streamPromise.then((result) => {
-              (<Promise<ODataResult>>ODataRequestResult[method](result)).then((result) => {
-                if (elementType) {
-                  result.elementType = elementType;
-                }
-                return this.__appendODataContext(result, elementType || this.ctrl.prototype.elementType, (include || this.resourcePath).includes, select).then(() => {
-                  resolve(result);
-                }, reject);
-              }, reject);
-            }, reject);
-          } else if (isStream(result) && (!part.key || !Edm.isMediaEntity(elementType || this.ctrl.prototype.elementType))) {
-            result.on('end', () => resolve(ODataRequestResult[method]()));
-            result.on('error', reject);
-          } else if (!(result instanceof ODataResult)) {
-            return (<Promise<ODataResult>>ODataRequestResult[method](result)).then((result) => {
-              if (!this.streamStart &&
-                writeMethods.indexOf(this.method) < 0 && !result.body) {
-                return reject(new ResourceNotFoundError());
-              }
-              try {
-                if (elementType) {
-                  result.elementType = elementType;
-                }
-                this.__appendODataContext(result, elementType || this.ctrl.prototype.elementType, (include || this.resourcePath).includes, select).then(() => {
-                  if (!this.streamEnd && this.streamEnabled && this.streamStart) {
-                    this.on('end', () => resolve(result));
-                  } else {
-                    resolve(result);
-                  }
-                }, reject);
-              } catch (err) {
-                reject(err);
-              }
-            }, reject);
-          } else {
-            try {
-              if (elementType) {
-                result.elementType = elementType;
-              }
-              this.__appendODataContext(result, elementType || this.ctrl.prototype.elementType, (include || this.resourcePath).includes, select).then(() => {
-                if (!this.streamEnd && this.streamEnabled && this.streamStart) {
-                  this.on('end', () => resolve(result));
-                } else {
-                  resolve(result);
-                }
-              }, reject);
-            } catch (err) {
-              reject(err);
-            }
-          }
-        }, reject);
-      } catch (err) {
-        reject(err);
+      // not found method to process
+      if (!fn) {
+        throw new NotImplementedError();
       }
-    });
+
+      let queryString = filter ? `$filter=${filter}` : (include || this.url).query;
+      if (include && filter && include.query && !include.query.$filter) {
+        include.query.$filter = filter;
+        queryString = Object.keys(include.query).map((p) => `${p}=${include.query[p]}`).join('&');
+      } else if ((include && filter && include.query) || (!include && this.resourcePath.navigation.indexOf(part) == this.resourcePath.navigation.length - 1)) {
+        queryString = Object.keys((include || this).query).map((p) => {
+          if (p == '$filter' && filter) {
+            (include || this).query[p] = `(${(include || this).query[p]}) and (${filter})`;
+          }
+          return `${p}=${(include || this).query[p]}`;
+        }).join('&') || queryString;
+      }
+
+      // build object to query string
+      if (queryString && typeof queryString == 'object') {
+        queryString = Object.keys(queryString).map((p) => `${p}=${queryString[p]}`).join('&');
+      }
+
+      if (typeof fn != 'function') {
+        // construct injected params
+        const fnDesc = fn;
+        fn = ctrl.prototype[fnDesc.call];
+        // >> assign keys to params
+        if (fnDesc.key.length == 1 && part.key.length == 1 && fnDesc.key[0].to != part.key[0].name) {
+          params[fnDesc.key[0].to] = params[part.key[0].name];
+          delete params[part.key[0].name];
+        } else {
+          for (let i = 0; i < fnDesc.key.length; i++) {
+            if (fnDesc.key[i].to != fnDesc.key[i].from) {
+              params[fnDesc.key[i].to] = params[fnDesc.key[i].from];
+              delete params[fnDesc.key[i].from];
+            }
+          }
+        }
+        // <<
+        // assign other parameters
+        await this.__applyParams(ctrl, fnDesc.call, params, queryString, undefined, include);
+      } else {
+        await this.__applyParams(ctrl, method, params, queryString, undefined, include);
+      }
+    } else {
+      fn = filter;
+    }
+
+    if (!include) {
+      this.__enableStreaming(part);
+    }
+
+    let currentResult: any;
+    // inject parameters by type
+    switch (method) {
+      case 'get':
+      case 'delete':
+        currentResult = fnCaller.call(getControllerInstance(ctrl), fn, params);
+        break;
+
+      case 'post':
+        this.odataContext += '/$entity';
+
+      case 'put':
+      case 'patch':
+        const body = data ? Object.assign(this.body || {}, data.foreignKeys) : this.body;
+        const bodyParam = odata.getBodyParameter(ctrl, fn.name);
+        const typeParam = odata.getTypeParameter(ctrl, fn.name);
+        if (typeParam) {
+          params[typeParam] = (body['@odata.type'] || (`${(<any>ctrl.prototype.elementType).namespace}.${(<any>ctrl.prototype.elementType).name}`)).replace(/^#/, '');
+        }
+        if (bodyParam) {
+          await this.__deserialize(body, ctrl.prototype.elementType);
+          this.__stripOData(body);
+          params[bodyParam] = body;
+        }
+        if (!part.key) {
+          const properties: string[] = Edm.getProperties((elementType || ctrl.prototype.elementType).prototype);
+          properties.forEach((prop) => {
+            if (Edm.isKey(elementType || ctrl.prototype.elementType, prop)) {
+              params[prop] = (this.body || {})[prop] || ((data || {}).body || {})[prop];
+            }
+          });
+        }
+        currentResult = fnCaller.call(getControllerInstance(ctrl), fn, params);
+        break;
+    }
+
+    if (isIterator(fn)) {
+      currentResult = run(currentResult, defaultHandlers);
+    }
+
+    if (!isPromise(currentResult)) {
+      currentResult = Promise.resolve(currentResult);
+    }
+
+    let result = await currentResult;
+
+    if (isStream(result) && include) {
+      result = await include.streamPromise;
+      result = await ODataRequestResult[method](result);
+
+      if (elementType) {
+        result.elementType = elementType;
+      }
+
+
+      await this.__appendODataContext(
+        result,
+        elementType || this.ctrl.prototype.elementType,
+        (include || this.resourcePath).includes,
+        select
+      );
+
+      return result;
+
+    } else if (isStream(result) && (!part.key || !Edm.isMediaEntity(elementType || this.ctrl.prototype.elementType))) {
+
+      return new Promise((resolve, reject) => {
+        result.on('end', () => resolve(ODataRequestResult[method]()));
+        result.on('error', reject);
+      });
+
+    } else if (!(result instanceof ODataResult)) {
+      result = await ODataRequestResult[method](result);
+
+      if (!this.streamStart && writeMethods.indexOf(this.method) < 0 && !result.body) {
+        throw new ResourceNotFoundError();
+      }
+
+    }
+
+    if (elementType) {
+      result.elementType = elementType;
+    }
+
+    await this.__appendODataContext(
+      result,
+      elementType || this.ctrl.prototype.elementType,
+      (include || this.resourcePath).includes,
+      select
+    );
+
+    if (!this.streamEnd && this.streamEnabled && this.streamStart) {
+      return new Promise((resolve) => {
+        this.on('end', () => resolve(result));
+      });
+    }
+
+    return result;
+
   }
 
   private async __deserialize(obj, type) {
