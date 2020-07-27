@@ -1,6 +1,6 @@
-import 'reflect-metadata'
-import { Entity, BaseEntity, PrimaryColumn, Column, createConnection, PrimaryGeneratedColumn, OneToMany, ManyToMany, ManyToOne, JoinColumn } from 'typeorm';
-import { createTypedODataServer, ODataColumn, ODataModel, beforeCreate, beforeUpdate, HookType, beforeDelete, afterLoad, BaseODataModel, Edm, ODataNavigation } from '../lib';
+import 'reflect-metadata';
+import { createConnection } from 'typeorm';
+import { BaseODataModel, createTypedODataServer, ODataColumn, ODataModel, ODataNavigation } from '../lib';
 
 @ODataModel()
 class Student extends BaseODataModel {
