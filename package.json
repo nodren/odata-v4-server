@@ -35,7 +35,7 @@
     }
   ],
   "dependencies": {
-    "@newdash/newdash": "^5.10.0",
+    "@newdash/newdash": "^5.12.0",
     "@odata/metadata": "^0.1.12",
     "@odata/parser": "^0.1.38",
     "body-parser": "^1.19.0",

@@ -1,12 +1,12 @@
-import 'reflect-metadata';
-import { Token, TokenType } from '@odata/parser/lib/lexer';
+import { Token } from '@odata/parser/lib/lexer';
 import { ErrorRequestHandler } from 'express';
-import { ODataServer } from './server';
+import 'reflect-metadata';
 import { ODataController } from './controller';
-import { EntityType, EntitySet } from './edm';
+import { EntitySet, EntityType } from './edm';
+import { ODataServer } from './server';
 import {
-  getFunctionParameters,
-  getAllPropertyNames,
+  getAllPropertyNames, getFunctionParameters,
+
   PropertyDecorator
 } from './utils';
 
@@ -212,9 +212,11 @@ export function controller(controller: typeof ODataController, entitySetName?: s
       // throw error here
     }
     if (elementType) {
+      // @ts-ignore
       controller.prototype.elementType = elementType;
     }
     if (!controller.prototype.elementType) {
+      // @ts-ignore
       controller.prototype.elementType = Object;
     }
     EntityType(controller.prototype.elementType)(server.prototype, (<any>controller).name);

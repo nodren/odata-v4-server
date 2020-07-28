@@ -1,24 +1,36 @@
-import { BaseEntity } from 'typeorm';
-import { HookType } from './hook_type';
 import { ODataHttpContext } from '../../server';
+import { BaseODataModel } from '../model';
+import { HookType } from './hook_type';
+import { registerHooks } from './storage';
 
-export interface HookContext<T = any> {
+export interface HookContext<T extends typeof BaseODataModel = any> {
   context: ODataHttpContext
-  type: HookType
-  instance: T
-}
-
-export interface HookFunction<T> {
+  hookType: HookType
+  entityType: T
   /**
-   * instance data
+   * data item for read/create/update
    */
-  (ctx: HookContext<T>): Promise<T> | T | Promise<void> | void
+  data?: InstanceType<T>
+  /**
+   * data items for read
+   */
+  listData?: Array<InstanceType<T>>
+  /**
+   * key for update/delete/read
+   */
+  key?: any
 }
 
-const createHookDecorator = (hook: HookType) => (type?: typeof BaseEntity) => (target: any, targetKey: any) => {
-  // if type not exist, use 'target' as type, but please check the entity is annotated with 'ODataModel'
-  Reflect.defineMetadata(hook, { type: type || target }, target, targetKey);
+const KEY_HOOK_META = 'odata:hook';
+
+const createHookDecorator = <E extends typeof BaseODataModel>(hookType: HookType) => (entityType?: E, order: number = 0) => (target: any) => {
+  Reflect.defineMetadata(KEY_HOOK_META, { hookType, entityType, order }, target);
+  registerHooks(target);
 };
+
+interface HookMetadata { entityType: typeof BaseODataModel, hookType: HookType, order: number }
+
+export const getHookMetadata = (target: any): HookMetadata => Reflect.getMetadata(KEY_HOOK_META, target);
 
 export const beforeCreate = createHookDecorator(HookType.beforeCreate);
 export const beforeUpdate = createHookDecorator(HookType.beforeUpdate);

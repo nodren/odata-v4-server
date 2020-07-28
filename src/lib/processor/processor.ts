@@ -13,16 +13,9 @@ import { IODataResult } from '../index';
 import * as odata from '../odata';
 import { ODataResult } from '../result';
 import { ODataHttpContext, ODataServer } from '../server';
-import {
-  getFunctionParameters,
-  isIterator,
-  isPromise,
-  isStream
-} from '../utils';
-import {
-  NavigationPart,
-  ODATA_TYPE, ResourcePathVisitor
-} from '../visitor';
+import { isIterator, isPromise, isStream } from '../utils';
+import { NavigationPart, ODATA_TYPE, ResourcePathVisitor } from '../visitor';
+import { fnCaller } from './fnCaller';
 
 const getODataRoot = function(context: ODataHttpContext) {
   return `${context.protocol || 'http'}://${context.host || 'localhost'}${context.base || ''}`;
@@ -156,14 +149,6 @@ const createODataContext = function(context: ODataHttpContext, entitySets, serve
   return odataContextBase + odataContext;
 };
 
-const fnCaller = function(this: any, fn, params) {
-  params = params || {};
-  const fnParams: any[] = getFunctionParameters(fn);
-  for (let i = 0; i < fnParams.length; i++) {
-    fnParams[i] = params[fnParams[i]];
-  }
-  return fn.apply(this, fnParams);
-};
 
 const ODataRequestMethods: string[] = [
   'get',
@@ -216,7 +201,7 @@ const expCalls = {
           }
         }
 
-        let currentResult = fnCaller.call(ctrl, fn, params);
+        let currentResult = fnCaller(ctrl, fn, params);
 
         if (isIterator(fn)) {
           currentResult = run(currentResult, defaultHandlers);
@@ -319,7 +304,7 @@ const expCalls = {
         }
       }
 
-      let currentResult = fnCaller.call(ctrl, fn, params);
+      let currentResult = fnCaller(ctrl, fn, params);
 
       if (isIterator(fn)) {
         currentResult = run(currentResult, defaultHandlers);
@@ -893,7 +878,7 @@ export class ODataProcessor extends Transform {
         if (typeof this.elementType == 'string') {
           this.elementType = Object;
         }
-        currentResult = fnCaller.call(ctrl, fn, params);
+        currentResult = fnCaller(ctrl, fn, params);
 
         if (isIterator(fn)) {
           currentResult = run(currentResult, defaultHandlers);
@@ -1034,7 +1019,7 @@ export class ODataProcessor extends Transform {
     switch (method) {
       case 'get':
       case 'delete':
-        currentResult = fnCaller.call(getControllerInstance(ctrl), fn, params);
+        currentResult = fnCaller(getControllerInstance(ctrl), fn, params);
         break;
 
       case 'post':
@@ -1061,7 +1046,7 @@ export class ODataProcessor extends Transform {
             }
           });
         }
-        currentResult = fnCaller.call(getControllerInstance(ctrl), fn, params);
+        currentResult = fnCaller(getControllerInstance(ctrl), fn, params);
         break;
     }
 
@@ -1167,7 +1152,7 @@ export class ODataProcessor extends Transform {
         part.params = Object.assign(part.params || {}, this.body || {});
       }
       await this.__applyParams(this.serverType, part.name, part.params);
-      let result = fnCaller.call(data, fn, part.params);
+      let result = fnCaller(data, fn, part.params);
 
       if (isIterator(fn)) {
         result = run(result, defaultHandlers);
@@ -1240,7 +1225,7 @@ export class ODataProcessor extends Transform {
           part.params['processor'] = this;
         }
         const boundOp = entityBoundOp || ctrlBoundOp || expOp;
-        let opResult = fnCaller.call(scope, boundOp, part.params);
+        let opResult = fnCaller(scope, boundOp, part.params);
 
         if (isIterator(boundOp)) {
           opResult = run(opResult, defaultHandlers);
@@ -1662,7 +1647,7 @@ export class ODataProcessor extends Transform {
       if (fn) {
         await this.__applyParams(ctrl, fn.call, params, include.ast, result, include);
         const fnCall = ctrl.prototype[fn.call];
-        let fnResult = fnCaller.call(ctrl, fnCall, params);
+        let fnResult = fnCaller(ctrl, fnCall, params);
 
         if (isIterator(fnCall)) {
           fnResult = await run(fnResult, defaultHandlers);

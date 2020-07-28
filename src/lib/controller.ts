@@ -1,5 +1,6 @@
 import { Token } from '@odata/parser/lib/lexer';
 import * as odata from './odata';
+import { BaseODataModel } from './typeorm';
 import { getFunctionParameters } from './utils';
 
 const { ODataBase } = odata;
@@ -7,7 +8,7 @@ const { ODataBase } = odata;
 export class ODataControllerBase {
 
   entitySetName: string
-  elementType: Function
+  elementType: typeof BaseODataModel
 
   static containerName: string
   static validator: (odataQuery: string | Token) => null;
@@ -56,4 +57,4 @@ export function getControllerInstance(ct: typeof ODataController, ...args: any[]
 
 }
 
-getControllerInstance['cache'] = new WeakMap();
+getControllerInstance['cache'] = new Map();

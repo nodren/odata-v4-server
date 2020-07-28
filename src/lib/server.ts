@@ -1,31 +1,20 @@
-import {
-  Edm as Metadata,
-  ServiceDocument, ServiceMetadata
-} from '@odata/metadata';
+import { Edm as Metadata, ServiceDocument, ServiceMetadata } from '@odata/metadata';
 import * as ODataParser from '@odata/parser';
 import { Token } from '@odata/parser/lib/lexer';
 import * as bodyParser from 'body-parser';
 import * as cors from 'cors';
 import * as express from 'express';
 import * as http from 'http';
-import {
-  Readable, Transform,
-  TransformOptions,
-
-  Writable
-} from 'stream';
+import { Readable, Transform, TransformOptions, Writable } from 'stream';
 import { ODataController } from './controller';
 import { ContainerBase } from './edm';
 import { HttpRequestError } from './error';
 import { createMetadataJSON } from './metadata';
-import { withODataHeader, withODataVersionVerify, withRequestId } from './middlewares';
+import { ensureODataContentType, ensureODataHeaders, withODataHeader, withODataVersionVerify, withRequestId } from './middlewares';
 import * as odata from './odata';
 // eslint-disable-next-line no-duplicate-imports
 import { IODataConnector, ODataBase } from './odata';
-import {
-  ODataMetadataType, ODataProcessor,
-  ODataProcessorOptions
-} from './processor';
+import { ODataMetadataType, ODataProcessor, ODataProcessorOptions } from './processor';
 import { ODataResult } from './result';
 
 /** HTTP context interface when using the server HTTP request handler */
@@ -39,60 +28,6 @@ export interface ODataHttpContext {
   response: express.Response & Writable
 }
 
-function ensureODataMetadataType(req, res) {
-  let metadata: ODataMetadataType = ODataMetadataType.minimal;
-  if (req.headers && req.headers.accept && req.headers.accept.indexOf('odata.metadata=') >= 0) {
-    if (req.headers.accept.indexOf('odata.metadata=full') >= 0) {
-      metadata = ODataMetadataType.full;
-    } else if (req.headers.accept.indexOf('odata.metadata=none') >= 0) {
-      metadata = ODataMetadataType.none;
-    }
-  }
-
-  res['metadata'] = metadata;
-}
-function ensureODataContentType(req, res, contentType?) {
-  contentType = contentType || 'application/json';
-  if (contentType.indexOf('odata.metadata=') < 0) {
-    contentType += `;odata.metadata=${ODataMetadataType[res['metadata']]}`;
-  }
-  if (contentType.indexOf('odata.streaming=') < 0) {
-    contentType += ';odata.streaming=true';
-  }
-  if (contentType.indexOf('IEEE754Compatible=') < 0) {
-    contentType += ';IEEE754Compatible=false';
-  }
-  if (req.headers.accept && req.headers.accept.indexOf('charset') > 0) {
-    contentType += `;charset=${res['charset']}`;
-  }
-  res.contentType(contentType);
-}
-function ensureODataHeaders(req, res, next?) {
-  res.setHeader('OData-Version', '4.0');
-
-  ensureODataMetadataType(req, res);
-  const charset = req.headers['accept-charset'] || 'utf-8';
-  res['charset'] = charset;
-  ensureODataContentType(req, res);
-
-  if ((req.headers.accept && req.headers.accept.indexOf('charset') < 0) || req.headers['accept-charset']) {
-    const bufferEncoding = {
-      'utf-8': 'utf8',
-      'utf-16': 'utf16le'
-    };
-    const origsend = res.send;
-    res.send = <any>((data) => {
-      if (typeof data == 'object') {
-        data = JSON.stringify(data);
-      }
-      origsend.call(res, Buffer.from(data, bufferEncoding[charset]));
-    });
-  }
-
-  if (typeof next == 'function') {
-    next();
-  }
-}
 
 /** ODataServer base class to be extended by concrete OData Server data sources */
 export class ODataServerBase extends Transform {
@@ -109,6 +44,7 @@ export class ODataServerBase extends Transform {
   static requestHandler() {
     return (req: express.Request, res: express.Response, next: express.NextFunction) => {
       try {
+
         ensureODataHeaders(req, res);
         const processor = this.createProcessor({
           url: req.url,
@@ -121,6 +57,7 @@ export class ODataServerBase extends Transform {
         }, <ODataProcessorOptions>{
           metadata: res['metadata']
         });
+
         processor.on('header', (headers) => {
           for (const prop in headers) {
             if (prop.toLowerCase() == 'content-type') {
@@ -131,6 +68,7 @@ export class ODataServerBase extends Transform {
           }
         });
         let hasError = false;
+
         processor.on('data', (chunk, encoding, done) => {
           if (!hasError) {
             res.write(chunk, encoding, done);
@@ -138,12 +76,14 @@ export class ODataServerBase extends Transform {
         });
 
         let body = req.body;
+
         // if chunked upload, will use request stream as body
         if (req.headers['transfer-encoding'] == 'chunked') {
           body = req;
         }
 
         const origStatus = res.statusCode;
+
         processor.execute(body).then((result: ODataResult) => {
           try {
             if (result) {
@@ -351,6 +291,7 @@ export class ODataServerBase extends Transform {
     return router;
   }
 }
+
 export class ODataServer extends ODataBase<ODataServerBase, typeof ODataServerBase>(ODataServerBase) { }
 
 /** ?????????? */

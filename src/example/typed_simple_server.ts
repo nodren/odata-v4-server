@@ -79,16 +79,18 @@ class Teacher extends BaseODataModel {
 }
 
 const run = async () => {
+
+  const entities = [Student, Class, Teacher, Profile]
   const conn = await createConnection({
     name: 'default',
     type: 'sqljs',
     synchronize: true,
     logging: true,
     cache: true,
-    entities: [Student, Class, Teacher, Profile]
+    entities
   });
 
-  const server = createTypedODataServer(conn.name, Student, Class, Teacher, Profile);
+  const server = createTypedODataServer(conn.name, ...entities);
 
   const s = server.create(50000);
 

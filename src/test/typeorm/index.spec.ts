@@ -1,23 +1,16 @@
 // @ts-nocheck
-import "reflect-metadata"
-import "light-odata/lib/polyfill"
-import { createConnection, Entity, PrimaryColumn, Column, ConnectionOptions, getConnection, BaseEntity, PrimaryGeneratedColumn } from "typeorm";
-import { Edm, odata, ODataServer, withController, ODataColumn, TypedController, transformQueryAst, transformFilterAst, FieldNameMapper, withConnection, createTypedODataServer, ODataModel, ODataNavigation } from "../lib/index"
-import { randomPort } from './utils/randomPort';
-import { ready, shutdown } from './utils/server';
-import * as req from 'request-promise';
 import { defaultParser } from '@odata/parser';
 import { OData } from "light-odata";
-
+import "light-odata/lib/polyfill";
+import "reflect-metadata";
+import * as req from 'request-promise';
+import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { createTypedODataServer, Edm, FieldNameMapper, odata, ODataColumn, ODataModel, ODataNavigation, ODataServer, transformFilterAst, transformQueryAst, TypedController, withConnection } from "../../lib/index";
+import { randomPort } from '../utils/randomPort';
+import { ready, shutdown } from '../utils/server';
+import { createTmpConnection } from './utils';
 
 describe('Typeorm Integration Test Suite', () => {
-
-  const createTmpConnection = (opt?: Partial<ConnectionOptions>) => createConnection({
-    type: "sqljs",
-    synchronize: true,
-    // logging: true,
-    ...opt
-  })
 
   it('should support CRUD by repository', async () => {
 
