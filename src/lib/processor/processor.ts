@@ -1,30 +1,28 @@
 // @ts-nocheck
 import { Token, TokenType } from '@odata/parser/lib/lexer';
-import * as url from 'url';
-import * as qs from 'qs';
-import * as util from 'util';
+import { findOne } from '@odata/parser/lib/utils';
 import * as deepmerge from 'deepmerge';
-import { Transform, TransformOptions, Readable } from 'stream';
+import * as qs from 'qs';
+import { Readable, Transform, TransformOptions } from 'stream';
+import * as url from 'url';
+import * as util from 'util';
+import { getControllerInstance, ODataController, ODataControllerBase } from '../controller';
+import * as Edm from '../edm';
+import { MethodNotAllowedError, NotImplementedError, ResourceNotFoundError, ServerInternalError } from '../error';
+import { IODataResult } from '../index';
+import * as odata from '../odata';
+import { ODataResult } from '../result';
+import { ODataHttpContext, ODataServer } from '../server';
 import {
   getFunctionParameters,
   isIterator,
   isPromise,
   isStream
 } from '../utils';
-import { ODataResult } from '../result';
-import { ODataController, ODataControllerBase, getControllerInstance } from '../controller';
 import {
-  ResourcePathVisitor,
   NavigationPart,
-  ODATA_TYPE,
-  ODATA_TYPENAME
+  ODATA_TYPE, ResourcePathVisitor
 } from '../visitor';
-import * as Edm from '../edm';
-import * as odata from '../odata';
-import { ResourceNotFoundError, MethodNotAllowedError, NotImplementedError, ServerInternalError } from '../error';
-import { ODataServer, ODataHttpContext } from '../server';
-import { IODataResult } from '../index';
-import { findOne } from '@odata/parser/lib/utils';
 
 const getODataRoot = function(context: ODataHttpContext) {
   return `${context.protocol || 'http'}://${context.host || 'localhost'}${context.base || ''}`;

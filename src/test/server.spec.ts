@@ -1,11 +1,9 @@
-import { TestServer, Foobar, AuthenticationServer, Image, Image2, User, Location, Music, DefTest, DefTestServer, Product2, Category2, UpsertTestEntity, ProductServer, CategoryServer, CategoryStream } from './test.model';
-import { Edm, odata, NotImplementedError } from '../lib/index';
-import { Product, Category } from './model/model';
-import { Meta, Media, TestEntity, MetaTestServer, CompoundKey, EmptyEntity, BaseMeta, Genre } from './metadata.spec';
-import { ProductPromise, CategoryPromise } from './model/ModelsForPromise';
-import { GeneratorProduct, GeneratorCategory } from './model/ModelsForGenerator';
 import { ObjectID } from 'mongodb';
-import { platform } from 'os';
+import { BaseMeta, CompoundKey, Genre, Media, Meta, MetaTestServer, TestEntity } from './metadata.spec';
+import { Category, Product } from './model/model';
+import { GeneratorCategory, GeneratorProduct } from './model/ModelsForGenerator';
+import { CategoryPromise, ProductPromise } from './model/ModelsForPromise';
+import { AuthenticationServer, Category2, CategoryServer, CategoryStream, DefTest, DefTestServer, Foobar, Image, Location, Music, Product2, ProductServer, TestServer, UpsertTestEntity, User } from './test.model';
 
 const categories = require('./model/categories');
 const products = require('./model/products');

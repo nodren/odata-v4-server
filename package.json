@@ -45,7 +45,8 @@
     "qs": "^6.9.4",
     "reflect-metadata": "^0.1.13",
     "tslib": "^2.0.0",
-    "typeorm": "^0.2.25"
+    "typeorm": "^0.2.25",
+    "uuid": "^8.3.0"
   },
   "devDependencies": {
     "@types/benchmark": "^1.0.33",
@@ -60,6 +61,7 @@
     "@types/qs": "^6.5.1",
     "@types/request": "^2.48.5",
     "@types/request-promise": "^4.1.42",
+    "@types/uuid": "^8.0.0",
     "@typescript-eslint/eslint-plugin": "^3.5.0",
     "@typescript-eslint/parser": "^3.5.0",
     "JSONStream": "^1.3.5",

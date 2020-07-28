@@ -1,33 +1,32 @@
 import {
-  ServiceMetadata,
   Edm as Metadata,
-  ServiceDocument
+  ServiceDocument, ServiceMetadata
 } from '@odata/metadata';
 import * as ODataParser from '@odata/parser';
-import { Token, TokenType } from '@odata/parser/lib/lexer';
-import * as express from 'express';
-import * as http from 'http';
+import { Token } from '@odata/parser/lib/lexer';
 import * as bodyParser from 'body-parser';
 import * as cors from 'cors';
+import * as express from 'express';
+import * as http from 'http';
 import {
-  Transform,
+  Readable, Transform,
   TransformOptions,
-  Readable,
+
   Writable
 } from 'stream';
-import { ODataResult } from './result';
 import { ODataController } from './controller';
-import * as odata from './odata';
-import { createMetadataJSON } from './metadata';
-import {
-  ODataProcessor,
-  ODataProcessorOptions,
-  ODataMetadataType
-} from './processor';
-import { HttpRequestError, UnsupportedMediaTypeError } from './error';
 import { ContainerBase } from './edm';
+import { HttpRequestError } from './error';
+import { createMetadataJSON } from './metadata';
+import { withODataHeader, withODataVersionVerify, withRequestId } from './middlewares';
+import * as odata from './odata';
 // eslint-disable-next-line no-duplicate-imports
 import { IODataConnector, ODataBase } from './odata';
+import {
+  ODataMetadataType, ODataProcessor,
+  ODataProcessorOptions
+} from './processor';
+import { ODataResult } from './result';
 
 /** HTTP context interface when using the server HTTP request handler */
 export interface ODataHttpContext {
@@ -312,36 +311,28 @@ export class ODataServerBase extends Transform {
   static create(path?: string | RegExp | number, port?: number | string, hostname?: string): http.Server | express.Router {
     const server = this;
     const router = express.Router();
-    router.use((req, _, next) => {
-      req.url = req.url.replace(/[\/]+/g, '/').replace(':/', '://');
-      if (req.headers['odata-maxversion'] && req.headers['odata-maxversion'] < '4.0') {
-        return next(new HttpRequestError(500, 'Only OData version 4.0 supported'));
-      }
-      next();
-    });
+
+    router.use(withODataVersionVerify);
+
     router.use(bodyParser.json());
+
     if ((<any>server).cors) {
       router.use(cors());
     }
-    router.use((req, res, next) => {
-      res.setHeader('OData-Version', '4.0');
-      if (req.headers.accept &&
-        req.headers.accept.indexOf('application/json') < 0 &&
-        req.headers.accept.indexOf('text/html') < 0 &&
-        req.headers.accept.indexOf('*/*') < 0 &&
-        req.headers.accept.indexOf('xml') < 0) {
-        next(new UnsupportedMediaTypeError());
-      } else {
-        next();
-      }
-    });
+
+    router.use(withRequestId);
+
+    router.use(withODataHeader);
+
     router.get('/', ensureODataHeaders, (req, _, next) => {
       if (typeof req.query == 'object' && Object.keys(req.query).length > 0) {
         return next(new HttpRequestError(500, 'Unsupported query'));
       }
       next();
     }, server.document().requestHandler());
+
     router.get('/\\$metadata', server.$metadata().requestHandler());
+
     router.use(server.requestHandler());
     router.use(server.errorHandler);
 
