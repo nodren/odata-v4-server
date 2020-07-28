@@ -17,7 +17,9 @@ export const clearHooks = () => {
  *
  * @param processor
  */
-export const registerHook = (processor: BaseHookProcessor | typeof BaseHookProcessor) => {
+export function registerHook(processor: BaseHookProcessor);
+export function registerHook(processor: typeof BaseHookProcessor);
+export function registerHook(processor: any) {
   if (processor instanceof BaseHookProcessor) {
     hooksStorage.add(processor);
   } else if (processor instanceof BaseHookProcessor.constructor) {

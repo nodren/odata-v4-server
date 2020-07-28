@@ -14,9 +14,9 @@ export abstract class BaseHookProcessor<T = any>  {
     return 0;
   };
 
-  abstract support(entityType?: T, hookType?: HookType): boolean
+  abstract support(entityType?: any, hookType?: HookType): boolean
 
-  abstract async execute(ctx: HookContext<T>): Promise<void>
+  abstract async execute(ctx: HookContext<any>): Promise<void>
 
 }
 

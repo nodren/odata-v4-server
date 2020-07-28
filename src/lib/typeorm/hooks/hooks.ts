@@ -1,7 +1,6 @@
 import { ODataHttpContext } from '../../server';
 import { BaseODataModel } from '../model';
 import { HookType } from './hook_type';
-import { registerHook } from './storage';
 
 export interface HookContext<T = any> {
   context: ODataHttpContext;
@@ -25,7 +24,6 @@ const KEY_HOOK_META = 'odata:hook';
 
 const createHookDecorator = <E extends typeof BaseODataModel>(hookType: HookType) => (entityType?: E, order: number = 0) => (target: any) => {
   Reflect.defineMetadata(KEY_HOOK_META, { hookType, entityType, order }, target);
-  registerHook(target);
 };
 
 interface HookMetadata { entityType: typeof BaseODataModel, hookType: HookType, order: number }

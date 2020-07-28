@@ -143,13 +143,15 @@ describe('Hooks Test Suite', () => {
     const entities = [Student]
 
     @beforeCreate(Student)
-    class StudentBeforeCreateHook extends HookProcessor<Student> {
+    class BeforeStudentCreationHook extends HookProcessor<Student> {
 
       async execute(ctx: HookContext<Student>): Promise<void> {
         ctx.data.age = DEFAULT_AGE
       }
 
     }
+
+    registerHook(BeforeStudentCreationHook)
 
     const conn = await createTmpConnection({
       name: "hook_class_test_conn",

@@ -1,7 +1,7 @@
-import { BaseEntity, getConnection } from 'typeorm';
-import { TypedController, withConnection } from './controller';
+import { BaseEntity } from 'typeorm';
 import { odata } from '..';
 import { ODataServer } from '../server';
+import { TypedController, withConnection } from './controller';
 import { TypedODataServer } from './server';
 
 export function createTypedODataServer(connectionName: string = 'default', ...entities: (typeof BaseEntity)[]): typeof ODataServer {
