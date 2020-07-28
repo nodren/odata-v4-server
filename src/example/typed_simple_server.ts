@@ -30,11 +30,7 @@ class Class extends BaseODataModel {
   @ODataColumn()
   desc: string
 
-  @ODataNavigation({
-    type: 'ManyToOne',
-    entity: () => Teacher,
-    foreignKey: "teacherOneId"
-  })
+  @ODataNavigation({ type: 'ManyToOne', entity: () => Teacher, foreignKey: "teacherOneId" })
   teacher: any
 
   @ODataColumn()
@@ -59,21 +55,13 @@ class Teacher extends BaseODataModel {
   @ODataColumn()
   name: string;
 
-  @ODataNavigation({
-    type: "OneToOne",
-    entity: () => Profile,
-    foreignKey: "profileId"
-  })
+  @ODataNavigation({ type: "OneToOne", entity: () => Profile, foreignKey: "profileId" })
   profile: Profile;
 
   @ODataColumn()
   profileId: number;
 
-  @ODataNavigation({
-    type: 'OneToMany',
-    entity: () => Class,
-    foreignKey: "teacherOneId"
-  })
+  @ODataNavigation({ type: 'OneToMany', entity: () => Class, foreignKey: "teacherOneId" })
   classes: Class[]
 
 }
