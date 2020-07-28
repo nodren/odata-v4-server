@@ -70,7 +70,7 @@ export class TypedController<T extends typeof BaseODataModel = any> extends ODat
   // odata patch will response no content
   @odata.PATCH
   async update(@odata.key key, @odata.body body, @odata.context ctx: ODataHttpContext) {
-    await this._executeHooks(ctx, HookType.beforeDelete, body, key);
+    await this._executeHooks(ctx, HookType.beforeUpdate, body, key);
     return this._getCurrentRepository().update(key, body);
   }
 
