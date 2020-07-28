@@ -13,13 +13,9 @@ import { transformQueryAst } from './visitor';
  */
 export class TypedController<T extends typeof BaseODataModel = any> extends ODataController {
 
-  /**
-   * typeorm connection name
-   */
-  private connectionName: string
 
   private _getConnection() {
-    return getConnection(this.connectionName);
+    return getConnection(getConnectName(this.constructor as typeof TypedController));
   }
 
   private _getCurrentRepository(): Repository<InstanceType<T>> {
@@ -110,6 +106,7 @@ export class TypedController<T extends typeof BaseODataModel = any> extends ODat
 
 }
 
+const KEY_CONN_NAME = 'odata:controller:connection';
 
 /**
  * indicate the controller use the connection name
@@ -119,7 +116,14 @@ export class TypedController<T extends typeof BaseODataModel = any> extends ODat
  */
 export function withConnection(connectionName: string = 'default') {
   return function(controller: typeof TypedController) {
-    // @ts-ignore
-    controller.prototype.connectionName = connectionName;
+    Reflect.defineMetadata(KEY_CONN_NAME, connectionName, controller);
   };
+}
+
+/**
+ * getConnectName for typed controller
+ * @param target
+ */
+export function getConnectName(target: typeof TypedController) {
+  return Reflect.getMetadata(KEY_CONN_NAME, target);
 }

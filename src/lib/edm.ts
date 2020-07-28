@@ -1,9 +1,9 @@
 import 'reflect-metadata';
 import * as util from 'util';
 import { ODataController } from './controller';
-import { ODataServer } from './server';
-import { getFunctionParameters, Decorator } from './utils';
 import * as odata from './odata';
+import { ODataServer } from './server';
+import { Decorator, getFunctionParameters } from './utils';
 
 const EdmProperties: string = 'edm:properties';
 const EdmKeyProperties: string = 'edm:keyproperties';

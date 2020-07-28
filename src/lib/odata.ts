@@ -460,6 +460,7 @@ export function getMethod(target, targetKey) {
   return Reflect.getMetadata(ODataMethod, target.prototype, targetKey);
 }
 
+
 /** Gives the entity key
  * @param name
  */

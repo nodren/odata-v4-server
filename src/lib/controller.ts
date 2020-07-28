@@ -8,9 +8,11 @@ const { ODataBase } = odata;
 export class ODataControllerBase {
 
   entitySetName: string
+
   elementType: typeof BaseODataModel
 
   static containerName: string
+
   static validator: (odataQuery: string | Token) => null;
 
   static on(method: string, fn: Function | string, ...keys: string[]) {
@@ -38,7 +40,9 @@ export class ODataControllerBase {
 
 }
 
-export class ODataController extends ODataBase<ODataControllerBase, typeof ODataControllerBase>(ODataControllerBase) { }
+export class ODataController extends ODataBase<ODataControllerBase, typeof ODataControllerBase>(ODataControllerBase) {
+
+}
 
 /**
  * get controller instance
