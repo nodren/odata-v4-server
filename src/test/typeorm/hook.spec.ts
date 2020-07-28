@@ -1,7 +1,7 @@
 import { OData } from 'light-odata';
 import "light-odata/lib/polyfill";
 import { isArray } from 'util';
-import { BaseHookProcessor, BaseODataModel, beforeCreate, createHookProcessor, createTypedODataServer, findHooks, HookContext, HookProcessor, HookType, ODataColumn, ODataModel, registerHooks } from "../../lib";
+import { BaseHookProcessor, BaseODataModel, beforeCreate, createHookProcessor, createTypedODataServer, findHooks, HookContext, HookProcessor, HookType, ODataColumn, ODataModel, registerHook } from "../../lib";
 import { randomPort } from '../utils/randomPort';
 import { ready, shutdown } from '../utils/server';
 import { createTmpConnection } from './utils';
@@ -42,11 +42,11 @@ describe('Hooks Test Suite', () => {
       }
     }
 
-    registerHooks(p1)
-    registerHooks(p2)
-    registerHooks(p3)
-    registerHooks(p4)
-    registerHooks(p5)
+    registerHook(p1)
+    registerHook(p2)
+    registerHook(p3)
+    registerHook(p4)
+    registerHook(p5)
 
     expect(findHooks(t1, HookType.afterLoad)).toHaveLength(3)
 
@@ -86,7 +86,7 @@ describe('Hooks Test Suite', () => {
 
     const entities = [Student]
 
-    registerHooks(
+    registerHook(
       createHookProcessor(
         async ({ data }) => { if (!isArray(data)) { data.age = DEFAULT_AGE } },
         Student,
@@ -143,9 +143,9 @@ describe('Hooks Test Suite', () => {
     const entities = [Student]
 
     @beforeCreate(Student)
-    class StudentBeforeCreateHook extends HookProcessor<typeof Student> {
+    class StudentBeforeCreateHook extends HookProcessor<Student> {
 
-      async execute(ctx: HookContext<typeof Student>): Promise<void> {
+      async execute(ctx: HookContext<Student>): Promise<void> {
         ctx.data.age = DEFAULT_AGE
       }
 

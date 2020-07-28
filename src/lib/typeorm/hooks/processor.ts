@@ -1,11 +1,11 @@
-import { BaseODataModel } from '../model';
+// @ts-nocheck
 import { getHookMetadata, HookContext } from './hooks';
 import { HookType } from './hook_type';
 
 /**
  * base class for hook
  */
-export abstract class BaseHookProcessor<T extends typeof BaseODataModel = any>  {
+export abstract class BaseHookProcessor<T = any>  {
 
   /**
    * the processor order
@@ -23,7 +23,7 @@ export abstract class BaseHookProcessor<T extends typeof BaseODataModel = any>  
 /**
  * base class for hook class with decorator
  */
-export abstract class HookProcessor<T extends typeof BaseODataModel = any> extends BaseHookProcessor<T> {
+export abstract class HookProcessor<T = any> extends BaseHookProcessor<T> {
 
   private _getMeta() {
     return getHookMetadata(this.constructor);
@@ -40,11 +40,11 @@ export abstract class HookProcessor<T extends typeof BaseODataModel = any> exten
 
 }
 
-interface HookHandler<T extends typeof BaseODataModel = any> {
+interface HookHandler<T = any> {
   (ctx: HookContext<T>): Promise<void>
 }
 
-export function createHookProcessor<T extends typeof BaseODataModel = any>(handler: HookHandler<T>, eType?: T, hType?: HookType, iOrder = 0): BaseHookProcessor<T> {
+export function createHookProcessor<T = any>(handler: HookHandler<InstanceType<T>>, eType?: T, hType?: HookType, iOrder = 0): BaseHookProcessor<T> {
   return new class extends BaseHookProcessor<T> {
 
     order() {

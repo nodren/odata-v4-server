@@ -17,7 +17,7 @@ export const clearHooks = () => {
  *
  * @param processor
  */
-export const registerHooks = (processor: BaseHookProcessor | typeof BaseHookProcessor) => {
+export const registerHook = (processor: BaseHookProcessor | typeof BaseHookProcessor) => {
   if (processor instanceof BaseHookProcessor) {
     hooksStorage.add(processor);
   } else if (processor instanceof BaseHookProcessor.constructor) {
@@ -26,6 +26,12 @@ export const registerHooks = (processor: BaseHookProcessor | typeof BaseHookProc
   }
 };
 
+/**
+ * find hooks by entity type and hook type
+ *
+ * @param entityType
+ * @param hookType
+ */
 export const findHooks = <T extends typeof BaseODataModel>(entityType: T, hookType: HookType): Array<BaseHookProcessor<T>> => {
 
   let rt: Array<BaseHookProcessor> = [];
