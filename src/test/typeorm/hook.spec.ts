@@ -2,7 +2,7 @@ import { OData } from 'light-odata';
 import "light-odata/lib/polyfill";
 import { Connection } from 'typeorm';
 import { isArray } from 'util';
-import { BaseHookProcessor, BaseODataModel, beforeCreate, createHookProcessor, createTypedODataServer, findHooks, HookContext, HookProcessor, HookType, ODataColumn, ODataModel, registerHook } from "../../lib";
+import { BaseHookProcessor, BaseODataModel, beforeCreate, createHookProcessor, createTypedODataServer, findHooks, HookContext, HookProcessor, HookType, ODataColumn, ODataEntitySetName, ODataModel, registerHook } from "../../lib";
 import { randomPort } from '../utils/randomPort';
 import { ready, shutdown } from '../utils/server';
 import { createTmpConnection } from './utils';
@@ -188,6 +188,7 @@ describe('Hooks Test Suite', () => {
 
 
     @ODataModel()
+    @ODataEntitySetName("Students2")
     class Student2 extends BaseODataModel {
 
       // generated id
@@ -226,7 +227,7 @@ describe('Hooks Test Suite', () => {
 
     const { server, client } = await createServerAndClient(conn, ...entities)
 
-    const es = client.getEntitySet<Student2>("Student2s")
+    const es = client.getEntitySet<Student2>("Students2")
 
     await expect(async () => { await es.create({ name2: "second" }) }).rejects.toThrowError("something wrong!")
 

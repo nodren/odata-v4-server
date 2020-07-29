@@ -6,6 +6,28 @@ import { Edm } from '..';
 import { NotImplementedError, ServerInternalError } from '../error';
 import { BaseODataModel } from './model';
 
+const KEY_ODATA_ENTITY_SET = 'odata.entity:entity_set_name';
+
+/**
+ * set entity set name for odata entity
+ *
+ * @param entitySetName
+ */
+export function ODataEntitySetName(entitySetName: string) {
+  return function(target) {
+    Reflect.defineMetadata(KEY_ODATA_ENTITY_SET, entitySetName, target);
+  };
+}
+
+/**
+ * set entity set name for odata entity
+ *
+ * @param target
+ */
+export function getODataEntitySetName(target: any): string {
+  return Reflect.getMetadata(KEY_ODATA_ENTITY_SET, target);
+}
+
 /**
  * ODataModel
  *
@@ -13,9 +35,12 @@ import { BaseODataModel } from './model';
  *
  * @param options
  */
-export function ODataModel(options: EntityOptions = {}) {
+export function ODataModel(options: EntityOptions = {}, entitySetName?: string) {
   return function(target: any): void {
     Entity(options)(target);
+    if (entitySetName) {
+      ODataEntitySetName(entitySetName)(target);
+    }
   };
 }
 

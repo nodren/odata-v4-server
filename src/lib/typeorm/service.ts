@@ -3,6 +3,7 @@ import { odata } from '..';
 import { ODataServer } from '../server';
 import { withConnection } from './connection';
 import { TypedController } from './controller';
+import { getODataEntitySetName } from './decorators';
 import { TypedODataServer } from './server';
 
 export async function createTypedODataServer(connectionOpt: ConnectionOptions, ...entities: (typeof BaseEntity)[]): Promise<typeof ODataServer>;
@@ -31,10 +32,10 @@ export async function createTypedODataServer(connection: any, ...entities: (type
 
   entities.forEach((entity) => {
     const ct = class extends TypedController { };
-    const entitySet = `${entity.name}s`;
-    Object.defineProperty(ct, 'name', { value: `${entitySet}Controller` }); // define controller name to use decorator
+    const entitySetName = getODataEntitySetName(entity) || `${entity.name}s`;
+    Object.defineProperty(ct, 'name', { value: `${entitySetName}Controller` }); // define controller name to use decorator
     withConnection(connName)(ct);
-    odata.withController(ct, entitySet, entity)(server); // default public controller
+    odata.withController(ct, entitySetName, entity)(server); // default public controller
   });
 
   return server;
