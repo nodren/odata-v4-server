@@ -1,6 +1,6 @@
 import { ObjectID } from 'mongodb';
 import { createFilter } from 'odata-v4-inmemory';
-import { odata, ODataController, ODataServer, ODataQuery } from '../lib/index';
+import { odata, ODataController, ODataQuery, ODataServer } from '../lib/index';
 
 const { GET, POST, PATCH, DELETE } = odata
 

@@ -1,12 +1,10 @@
 import * as fs from 'fs';
+import { Db, MongoClient, ObjectID } from 'mongodb';
+import { createFilter, createQuery } from 'odata-v4-mongodb';
 import * as path from 'path';
-import { Writable } from 'stream';
-import { MongoClient, Db, ObjectID } from 'mongodb';
-import { createQuery, createFilter } from 'odata-v4-mongodb';
-import { Readable, PassThrough } from 'stream';
-import { ODataServer, ODataController, Edm, odata, ODataStream, ODataQuery, ODataHttpContext } from '../lib';
+import { PassThrough, Readable, Writable } from 'stream';
+import { Edm, odata, ODataController, ODataHttpContext, ODataQuery, ODataServer, ODataStream } from '../lib';
 import { Category, Product } from './model';
-import { createMetadataJSON } from '../lib/metadata';
 
 const mongodb = async function (): Promise<Db> {
   return (await MongoClient.connect('mongodb://localhost:27017/odataserver')).db();

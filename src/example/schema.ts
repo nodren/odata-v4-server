@@ -7,7 +7,7 @@ export = {
         'entityType': [
           {
             'name': 'Product',
-            'key':  [
+            'key': [
               {
                 'propertyRef': [
                   {
@@ -51,7 +51,7 @@ export = {
           },
           {
             'name': 'Category',
-            'key':  [
+            'key': [
               {
                 'propertyRef': [
                   {

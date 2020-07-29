@@ -1,6 +1,6 @@
-import { createFilter } from 'odata-v4-inmemory';
 import { Token } from '@odata/parser/lib/lexer';
-import { ODataServer, ODataController, Edm, odata } from '../lib/index';
+import { createFilter } from 'odata-v4-inmemory';
+import { Edm, odata, ODataController, ODataServer } from '../lib/index';
 
 const schemaJson = {
   version: '4.0',

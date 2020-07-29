@@ -1,4 +1,4 @@
-import { Edm, odata, ODataController, ODataServer, ODataQuery } from "../lib";
+import { Edm, odata, ODataController, ODataQuery, ODataServer } from "../lib";
 
 class ServiceTicket {
 

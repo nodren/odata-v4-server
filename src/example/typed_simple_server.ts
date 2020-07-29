@@ -78,7 +78,7 @@ const run = async () => {
     entities
   });
 
-  const server =await createTypedODataServer(conn.name, ...entities);
+  const server = await createTypedODataServer(conn.name, ...entities);
 
   const s = server.create(50000);
 

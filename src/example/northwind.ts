@@ -1,7 +1,7 @@
-import { MongoClient, Db, ObjectID } from 'mongodb';
-import { createQuery } from 'odata-v4-mongodb';
 import { Token } from '@odata/parser/lib/lexer';
-import { ODataServer, ODataController, odata } from '../lib/index';
+import { Db, MongoClient, ObjectID } from 'mongodb';
+import { createQuery } from 'odata-v4-mongodb';
+import { odata, ODataController, ODataServer } from '../lib/index';
 const schemaJson = require('./schema');
 const categories = require('./categories');
 const products = require('./products');

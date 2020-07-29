@@ -1,8 +1,8 @@
-import { MongoClient, ObjectID, Db } from 'mongodb';
+import { Db, MongoClient } from 'mongodb';
 import { createQuery } from 'odata-v4-mongodb';
-import { Edm, odata, ODataController, ODataServer, ODataQuery, createODataServer, ODataErrorHandler } from '../lib/index';
-import { Category, Product, NorthwindTypes } from './model';
 import { Writable } from 'stream';
+import { createODataServer, Edm, odata, ODataController, ODataErrorHandler, ODataQuery, ODataServer } from '../lib/index';
+import { Category, NorthwindTypes, Product } from './model';
 const categories = require('./categories');
 const products = require('./products');
 
@@ -13,7 +13,7 @@ const mongodb = async function (): Promise<Db> {
 @odata.type(Product)
 @Edm.EntitySet('Products')
 export class ProductsController extends ODataController {
-  
+
   @odata.GET
   async find(@odata.query query: ODataQuery, @odata.stream stream: Writable) {
     const mongodbQuery = createQuery(query);
@@ -28,10 +28,10 @@ export class ProductsController extends ODataController {
     });
   }
 
-  /*@odata.GET("Category")
-    async getCategory(@odata.result result:any){
-        return (await mongodb()).collection("Categories").findOne({ _id: result.CategoryId });
-    }*/
+  // @odata.GET("Category")
+  // async getCategory(@odata.result result: any) {
+  //   return (await mongodb()).collection("Categories").findOne({ _id: result.CategoryId });
+  // }
 }
 
 @odata.type(Category)
@@ -51,12 +51,12 @@ export class CategoriesController extends ODataController {
     });
   }
 
-  /*@odata.GET("Products")
-    async getProducts(@odata.result result:any, @odata.query query:ODataQuery, @odata.stream stream:Writable){
-        let mongodbQuery = createQuery(query);
-        mongodbQuery.query = { $and: [mongodbQuery.query, { CategoryId: result._id }] };
-        return (await mongodb()).collection("Products").find(mongodbQuery.query, mongodbQuery.projection, mongodbQuery.skip, mongodbQuery.limit).stream().pipe(stream);
-    }*/
+  // @odata.GET("Products")
+  // async getProducts(@odata.result result: any, @odata.query query: ODataQuery, @odata.stream stream: Writable) {
+  //   let mongodbQuery = createQuery(query);
+  //   mongodbQuery.query = { $and: [mongodbQuery.query, { CategoryId: result._id }] };
+  //   return (await mongodb()).collection("Products").find(mongodbQuery.query, mongodbQuery.projection, mongodbQuery.skip, mongodbQuery.limit).stream().pipe(stream);
+  // }
 }
 
 @odata.namespace('Northwind')

@@ -1,5 +1,5 @@
 import * as es from 'event-stream';
-import { ODataServer, ODataController, odata } from '../lib/index';
+import { odata, ODataController, ODataServer } from '../lib/index';
 
 class TestController extends ODataController {
   @odata.GET
