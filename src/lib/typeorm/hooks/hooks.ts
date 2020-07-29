@@ -1,3 +1,4 @@
+import { EntityManager } from 'typeorm';
 import { ODataHttpContext } from '../../server';
 import { BaseODataModel } from '../model';
 import { HookType } from './hook_type';
@@ -18,6 +19,10 @@ export interface HookContext<T = any> {
    * key for update/delete/read
    */
   key?: any;
+  /**
+   * transaction entity manager
+   */
+  em: EntityManager;
 }
 
 const KEY_HOOK_META = 'odata:hook';
