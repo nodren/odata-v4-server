@@ -70,16 +70,16 @@ export class ODataResult<T = {}> {
     }
   }
 
-  static Created = function Created(result: any, contentType?: string): Promise<ODataResult> {
-    if (result && typeof result.then == 'function') {
-      return result.then((result) => new ODataResult(201, contentType, result));
+  static Created = async function Created(result: any, contentType?: string): Promise<ODataResult> {
+    if (result instanceof Promise) {
+      result = await result;
     }
     return Promise.resolve(new ODataResult(201, contentType, result));
   }
 
   static Ok = async function Ok(result: any, contentType?: string): Promise<ODataResult> {
     let inlinecount;
-    if (result && typeof result.then == 'function') {
+    if (result instanceof Promise) {
       result = await result;
     }
     if (result && Array.isArray(result)) {
@@ -99,9 +99,9 @@ export class ODataResult<T = {}> {
     return Promise.resolve(new ODataResult(200, contentType, result));
   };
 
-  static NoContent = function NoContent(result?: any, contentType?: string): Promise<ODataResult> {
-    if (result && typeof result.then == 'function') {
-      return result.then((_) => new ODataResult(204, contentType));
+  static NoContent = async function NoContent(result?: any, contentType?: string): Promise<ODataResult> {
+    if (result instanceof Promise) {
+      result = await result;
     }
     return Promise.resolve(new ODataResult(204, contentType));
   }
