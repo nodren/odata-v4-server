@@ -28,9 +28,9 @@ export class TypedController<T extends typeof BaseODataModel = any> extends ODat
    * @param runner transaction runner
    */
   protected async _tx<X>(runner: TXRunner<T, X>): Promise<X> {
-    return new Promise(async(resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       try {
-        await this._getConnection().transaction(async(em) => {
+        await this._getConnection().transaction(async (em) => {
           const repo = em.getRepository(this.elementType);
           // @ts-ignore
           resolve(await runner(repo, em));
@@ -55,7 +55,7 @@ export class TypedController<T extends typeof BaseODataModel = any> extends ODat
       ctx.entityType = this.elementType;
     }
     if (ctx.em == undefined) {
-      ctx.em = this._getConnection().manager;
+      throw new ServerInternalError('Please set parameter [em] (transaction entity manager) in controller method');
     }
     if (ctx.hookType == undefined) {
       throw new ServerInternalError('Hook Type must be specify by controller');
@@ -86,7 +86,7 @@ export class TypedController<T extends typeof BaseODataModel = any> extends ODat
 
   @odata.GET
   async findOne(@odata.key key, @odata.context ctx: ODataHttpContext) {
-    return this._tx(async(repo, em) => {
+    return this._tx(async (repo, em) => {
       const data = await repo.findOne(key);
       await this._executeHooks({
         context: ctx, hookType: HookType.afterLoad, data, em, entityType: this.elementType
@@ -97,7 +97,7 @@ export class TypedController<T extends typeof BaseODataModel = any> extends ODat
 
   @odata.GET
   async find(@odata.query query, @odata.context ctx: ODataHttpContext) {
-    return this._tx(async(repo, em) => {
+    return this._tx(async (repo, em) => {
       const conn = em.connection;
       let data = [];
 
@@ -129,8 +129,8 @@ export class TypedController<T extends typeof BaseODataModel = any> extends ODat
 
   @odata.POST
   async create(@odata.body body, @odata.context ctx: ODataHttpContext) {
-    return this._tx(async(repo) => {
-      await this._executeHooks({ context: ctx, hookType: HookType.beforeCreate, data: body });
+    return this._tx(async (repo, em) => {
+      await this._executeHooks({ context: ctx, hookType: HookType.beforeCreate, data: body, em });
       return repo.save(body);
     });
   }
@@ -138,8 +138,8 @@ export class TypedController<T extends typeof BaseODataModel = any> extends ODat
   // odata patch will response no content
   @odata.PATCH
   async update(@odata.key key, @odata.body body, @odata.context ctx: ODataHttpContext) {
-    return this._tx(async(repo) => {
-      await this._executeHooks({ context: ctx, hookType: HookType.beforeUpdate, data: body, key });
+    return this._tx(async (repo, em) => {
+      await this._executeHooks({ context: ctx, hookType: HookType.beforeUpdate, data: body, key, em });
       return repo.update(key, body);
     });
   }
@@ -147,8 +147,8 @@ export class TypedController<T extends typeof BaseODataModel = any> extends ODat
   // odata delete will response no content
   @odata.DELETE
   async delete(@odata.key key, @odata.context ctx: ODataHttpContext) {
-    return this._tx(async(repo) => {
-      await this._executeHooks({ context: ctx, hookType: HookType.beforeDelete, key });
+    return this._tx(async (repo, em) => {
+      await this._executeHooks({ context: ctx, hookType: HookType.beforeDelete, key, em });
       return repo.delete(key);
     });
   }

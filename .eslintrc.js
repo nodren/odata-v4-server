@@ -72,8 +72,6 @@ module.exports = {
 
     'space-before-blocks': ['error', 'always'],
 
-    'space-before-function-paren': ['error', 'never'],
-
     'space-in-parens': ['error', 'never'],
 
     'space-unary-ops': ['error', {
