@@ -228,7 +228,7 @@ describe('Hooks Test Suite', () => {
 
     const es = client.getEntitySet<Student2>("Student2s")
 
-    await expect(async () => { await es.create({ name2: "second" }) }).rejects.toThrow()
+    await expect(async () => { await es.create({ name2: "second" }) }).rejects.toThrowError("something wrong!")
 
     const count = await es.count()
 
