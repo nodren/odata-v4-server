@@ -1,5 +1,6 @@
 import { OData } from 'light-odata';
 import "light-odata/lib/polyfill";
+import { Connection } from 'typeorm';
 import { isArray } from 'util';
 import { BaseHookProcessor, BaseODataModel, beforeCreate, createHookProcessor, createTypedODataServer, findHooks, HookContext, HookProcessor, HookType, ODataColumn, ODataModel, registerHook } from "../../lib";
 import { randomPort } from '../utils/randomPort';
@@ -8,6 +9,20 @@ import { createTmpConnection } from './utils';
 
 
 describe('Hooks Test Suite', () => {
+
+  const createServerAndClient = async (connection: Connection, ...entities: any[]) => {
+
+    const s = await createTypedODataServer(connection.name, ...entities)
+    const httpServer = s.create(randomPort())
+    const port = await ready(httpServer)
+    const client = OData.New4({ metadataUri: `http://127.0.0.1:${port}/$metadata`, processCsrfToken: false })
+
+    return {
+      server: httpServer,
+      client
+    }
+
+  }
 
   it('should register hooks', () => {
 
@@ -99,11 +114,7 @@ describe('Hooks Test Suite', () => {
       entities
     })
 
-    const s = createTypedODataServer(conn.name, ...entities)
-    const httpServer = s.create(randomPort())
-    const port = await ready(httpServer)
-
-    const client = OData.New4({ metadataUri: `http://127.0.0.1:${port}/$metadata`, processCsrfToken: false })
+    const { server, client } = await createServerAndClient(conn, ...entities)
 
     const es = client.getEntitySet<Student>("Students")
 
@@ -116,7 +127,7 @@ describe('Hooks Test Suite', () => {
     expect(u1.name).toEqual(TEST_USERNAME)
     expect(u1.age).toEqual(DEFAULT_AGE)
 
-    await shutdown(httpServer)
+    await shutdown(server)
 
   });
 
@@ -158,24 +169,76 @@ describe('Hooks Test Suite', () => {
       entities
     })
 
-    const s = createTypedODataServer(conn.name, ...entities)
-    const httpServer = s.create(randomPort())
-    const port = await ready(httpServer)
-
-    const client = OData.New4({ metadataUri: `http://127.0.0.1:${port}/$metadata`, processCsrfToken: false })
+    const { server, client } = await createServerAndClient(conn, ...entities)
 
     const es = client.getEntitySet<Student>("Students")
 
-    await es.create({
-      name: TEST_USERNAME
-    })
+    await es.create({ name: TEST_USERNAME })
 
     const u1 = (await es.find({ name: TEST_USERNAME }))[0]
 
     expect(u1.name).toEqual(TEST_USERNAME)
     expect(u1.age).toEqual(DEFAULT_AGE)
 
-    await shutdown(httpServer)
+    await shutdown(server)
+
+  });
+
+  it('should integrated with transaction', async () => {
+
+
+    @ODataModel()
+    class Student2 extends BaseODataModel {
+
+      // generated id
+      @ODataColumn({ primary: true, generated: "increment" })
+      id2: number;
+
+      @ODataColumn({ nullable: true })
+      name2: string;
+
+      @ODataColumn({ nullable: true })
+      age2: number;
+
+    }
+
+    const entities = [Student2]
+
+    const hookInvokeSeq = []
+
+    const h1 = createHookProcessor(async (ctx) => {
+      hookInvokeSeq.push('h1')
+      ctx.em.getRepository(Student2).save({ name2: "first" })
+    }, Student2, HookType.beforeCreate, 0)
+
+    const h2 = createHookProcessor(async (ctx) => {
+      hookInvokeSeq.push('h2')
+      throw new Error("something wrong!")
+    }, Student2, HookType.beforeCreate, 1)
+
+    registerHook(h1)
+    registerHook(h2)
+
+    const conn = await createTmpConnection({
+      name: "hook_class_tx_conn",
+      entities
+    })
+
+    const { server, client } = await createServerAndClient(conn, ...entities)
+
+    const es = client.getEntitySet<Student2>("Student2s")
+
+    await expect(async () => { await es.create({ name2: "second" }) }).rejects.toThrow()
+
+    const count = await es.count()
+
+    // nothing should be created
+    expect(count).toBe(0)
+
+    // assert running order of hooks
+    expect(hookInvokeSeq).toStrictEqual(['h1', 'h2'])
+
+    await shutdown(server)
 
   });
 

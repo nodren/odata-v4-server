@@ -77,29 +77,13 @@ export class ODataResult<T = {}> {
     return Promise.resolve(new ODataResult(201, contentType, result));
   }
 
-  static Ok = function Ok(result: any, contentType?: string): Promise<ODataResult> {
+  static Ok = async function Ok(result: any, contentType?: string): Promise<ODataResult> {
     let inlinecount;
     if (result && typeof result.then == 'function') {
-      return result.then((result) => {
-        if (result && Array.isArray(result)) {
-          if (result && (<any>result).inlinecount && typeof (<any>result).inlinecount == 'number') {
-            inlinecount = (<any>result).inlinecount;
-            delete (<any>result).inlinecount;
-          }
-          result = { value: result };
-          if (typeof inlinecount != 'undefined') {
-            result['@odata.count'] = inlinecount;
-          }
-        } else {
-          if (typeof result == 'object' && result && typeof inlinecount == 'number') {
-            result['@odata.count'] = inlinecount;
-          }
-        }
-        return new ODataResult(200, contentType, result);
-      });
+      result = await result;
     }
     if (result && Array.isArray(result)) {
-      if (result && (<any>result).inlinecount && typeof (<any>result).inlinecount == 'number') {
+      if (result && typeof (<any>result).inlinecount == 'number') {
         inlinecount = (<any>result).inlinecount;
         delete (<any>result).inlinecount;
       }

@@ -4,6 +4,7 @@ import { odata } from '..';
 import { ODataController } from '../controller';
 import { ServerInternalError } from '../error';
 import { ODataHttpContext } from '../server';
+import { getConnectionName } from './connection';
 import { findHooks, HookContext, HookType } from './hooks';
 import { BaseODataModel } from './model';
 import { transformQueryAst } from './visitor';
@@ -14,10 +15,15 @@ import { transformQueryAst } from './visitor';
 export class TypedController<T extends typeof BaseODataModel = any> extends ODataController {
 
   private _getConnection() {
-    return getConnection(getConnectName(this.constructor as typeof TypedController));
+    return getConnection(getConnectionName(this.constructor as typeof TypedController));
   }
 
-  private async _tx<X>(runner: (repo: Repository<InstanceType<T>>, em: EntityManager,) => Promise<X>): Promise<X> {
+  /**
+   * transaction scope
+   *
+   * @param runner transaction runner
+   */
+  protected async _tx<X>(runner: (repo: Repository<InstanceType<T>>, em: EntityManager,) => Promise<X>): Promise<X> {
     return new Promise(async(resolve, reject) => {
       try {
         await this._getConnection().transaction(async(em) => {
@@ -83,7 +89,9 @@ export class TypedController<T extends typeof BaseODataModel = any> extends ODat
         const sql = `select ${sFields} from ${tableName} ${sqlQuery};`;
         data = await repo.query(sql);
         if (count) {
-          const [{ total }] = await repo.query(`select count(1) as total from ${tableName} where ${where}`);
+          let sql = `select count(1) as total from ${tableName}`;
+          if (where) { sql += ` where ${where}`; }
+          const [{ total }] = await repo.query(sql);
           data['inlinecount'] = total;
         }
       } else {
@@ -126,26 +134,4 @@ export class TypedController<T extends typeof BaseODataModel = any> extends ODat
   }
 
 
-}
-
-const KEY_CONN_NAME = 'odata:controller:connection';
-
-/**
- * indicate the controller use the connection name
- * if user not use this decorator, or set empty connection name, the controller will use the 'default' connection of typeorm
- *
- * @param connectionName typeorm connection name
- */
-export function withConnection(connectionName: string = 'default') {
-  return function(controller: typeof TypedController) {
-    Reflect.defineMetadata(KEY_CONN_NAME, connectionName, controller);
-  };
-}
-
-/**
- * getConnectName for typed controller
- * @param target
- */
-export function getConnectName(target: typeof TypedController) {
-  return Reflect.getMetadata(KEY_CONN_NAME, target);
 }

@@ -169,7 +169,7 @@ describe('Typeorm Integration Test Suite', () => {
 
     const conn = await createTmpConnection({ name: connectionName, entities: [Student, Class] })
 
-    const OServer = createTypedODataServer(connectionName, Student, Class)
+    const OServer = await createTypedODataServer(connectionName, Student, Class)
 
     const s = OServer.create(randomPort())
     const port = await ready(s)

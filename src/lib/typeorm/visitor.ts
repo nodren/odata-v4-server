@@ -1,7 +1,7 @@
-import { ODataQuery } from '..';
-import { Traverser, traverseAst, traverseAstDeepFirst, Token } from '@odata/parser';
-import { NotImplementedError } from '../error';
 import { identity } from '@newdash/newdash/.internal/identity';
+import { Token, traverseAst, traverseAstDeepFirst, Traverser } from '@odata/parser';
+import { ODataQuery } from '..';
+import { NotImplementedError } from '../error';
 
 /**
  * transformFilterAst to where sql
@@ -109,7 +109,7 @@ export const transformQueryAst = (node: ODataQuery, nameMapper: FieldNameMapper 
 
   traverseAst(traverser, node);
 
-  if (where) {
+  if (where && where.trim().length > 0) {
     sqlQuery += ` WHERE ${where}`;
   }
   if (offset || limit) {
