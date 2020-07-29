@@ -11,7 +11,7 @@
   "scripts": {
     "prebuild": "rimraf lib",
     "build": "tsc",
-    "lint": "eslint src/lib --fix",
+    "lint": "eslint src --fix",
     "test": "jest --runInBand",
     "coverage": "npm test -- --coverage --no-cache",
     "prepublishOnly": "npm test && npm run build",

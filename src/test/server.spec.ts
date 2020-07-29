@@ -1202,12 +1202,12 @@ export function testFactory(createTest: any) {
     });
   });
 
-  let d = describe.skip
-  
+  const d = describe.skip;
+
   // if (platform() == "linux") {
   //   d = describe
   // }
-  
+
   d('Stream properties', () => {
     createTest('should return stream property entity set result', TestServer, 'GET /ImagesControllerEntitySet', {
       statusCode: 200,

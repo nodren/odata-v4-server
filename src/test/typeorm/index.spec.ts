@@ -1,21 +1,21 @@
 // @ts-nocheck
 import { defaultParser } from '@odata/parser';
-import { OData } from "light-odata";
-import "light-odata/lib/polyfill";
-import "reflect-metadata";
+import { OData } from 'light-odata';
+import 'light-odata/lib/polyfill';
+import 'reflect-metadata';
 import * as req from 'request-promise';
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from "typeorm";
-import { createTypedODataServer, Edm, FieldNameMapper, odata, ODataColumn, ODataModel, ODataNavigation, ODataServer, transformFilterAst, transformQueryAst, TypedController, withConnection } from "../../lib/index";
+import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { createTypedODataServer, Edm, FieldNameMapper, odata, ODataColumn, ODataModel, ODataNavigation, ODataServer, transformFilterAst, transformQueryAst, TypedController, withConnection } from '../../lib/index';
 import { randomPort } from '../utils/randomPort';
 import { ready, shutdown } from '../utils/server';
 import { createTmpConnection } from './utils';
 
 describe('Typeorm Integration Test Suite', () => {
 
-  it('should support CRUD by repository', async () => {
+  it('should support CRUD by repository', async() => {
 
     // example entity
-    @Entity({ name: "t_products" })
+    @Entity({ name: 't_products' })
     class Product extends BaseEntity {
 
       @Edm.Key
@@ -29,18 +29,18 @@ describe('Typeorm Integration Test Suite', () => {
 
     }
 
-    const tmpConn = await createTmpConnection({ name: "typeorm-test1", entities: [Product] })
+    const tmpConn = await createTmpConnection({ name: 'typeorm-test1', entities: [Product] });
 
-    const tmpRepo = tmpConn.getRepository(Product)
+    const tmpRepo = tmpConn.getRepository(Product);
 
     // ensure typeorm works
-    await tmpRepo.save({ id: 2, desc: "123" })
-    expect(await tmpRepo.findOne({ id: 2 })).not.toBeUndefined()
+    await tmpRepo.save({ id: 2, desc: '123' });
+    expect(await tmpRepo.findOne({ id: 2 })).not.toBeUndefined();
 
     // example service
     @odata.type(Product)
-    @odata.entitySet("Products")
-    @withConnection("typeorm-test1")
+    @odata.entitySet('Products')
+    @withConnection('typeorm-test1')
     class C4 extends TypedController<Product> {
 
     }
@@ -49,86 +49,86 @@ describe('Typeorm Integration Test Suite', () => {
     @odata.withController(C4, true)
     class TmpServer extends ODataServer { }
 
-    const server = TmpServer.create(randomPort())
+    const server = TmpServer.create(randomPort());
 
-    const port = await ready(server)
+    const port = await ready(server);
 
-    let res = await req.post(`http://127.0.0.1:${port}/Products`, { json: { id: 1, desc: "description" } })
+    let res = await req.post(`http://127.0.0.1:${port}/Products`, { json: { id: 1, desc: 'description' } });
 
-    expect(res['@odata.id']).not.toBeUndefined()
+    expect(res['@odata.id']).not.toBeUndefined();
 
-    const v = await tmpRepo.findOne(1)
+    const v = await tmpRepo.findOne(1);
 
-    expect(v).not.toBeUndefined()
+    expect(v).not.toBeUndefined();
 
     // query
-    res = await req.get(`http://127.0.0.1:${port}/Products?$filter=id eq 1`, { json: true })
-    expect(res.value).toHaveLength(1)
-    expect(res.value[0]?.desc).toEqual('description')
+    res = await req.get(`http://127.0.0.1:${port}/Products?$filter=id eq 1`, { json: true });
+    expect(res.value).toHaveLength(1);
+    expect(res.value[0]?.desc).toEqual('description');
 
     // update
     // no content
-    await req.patch(`http://127.0.0.1:${port}/Products(1)`, { json: { id: 1, desc: "updated" } })
+    await req.patch(`http://127.0.0.1:${port}/Products(1)`, { json: { id: 1, desc: 'updated' } });
 
     // assert
-    res = await req.get(`http://127.0.0.1:${port}/Products(1)`, { json: true })
-    expect(res['desc']).toEqual('updated')
+    res = await req.get(`http://127.0.0.1:${port}/Products(1)`, { json: true });
+    expect(res['desc']).toEqual('updated');
 
-    res = await req.delete(`http://127.0.0.1:${port}/Products(1)`)
+    res = await req.delete(`http://127.0.0.1:${port}/Products(1)`);
 
     // not found
-    await expect(async () => req.get(`http://127.0.0.1:${port}/Products(1)`)).rejects.toThrow()
+    await expect(async() => req.get(`http://127.0.0.1:${port}/Products(1)`)).rejects.toThrow();
 
     // no limit query
-    res = await req.get(`http://127.0.0.1:${port}/Products`, { json: true })
+    res = await req.get(`http://127.0.0.1:${port}/Products`, { json: true });
 
     // still have a '2' record
-    expect(res.value).toHaveLength(1)
+    expect(res.value).toHaveLength(1);
 
-    await shutdown(server)
-    await tmpConn.close()
+    await shutdown(server);
+    await tmpConn.close();
 
   });
 
   it('should support converting odata query to sql', () => {
 
-    const ast = defaultParser.query("$format=json&$select=A,B,C&$top=10&$skip=30&$filter=A eq 1&$orderby=A desc,V asc")
-    const { selectedFields, sqlQuery } = transformQueryAst(ast)
+    const ast = defaultParser.query('$format=json&$select=A,B,C&$top=10&$skip=30&$filter=A eq 1&$orderby=A desc,V asc');
+    const { selectedFields, sqlQuery } = transformQueryAst(ast);
 
-    expect(sqlQuery.trim()).toEqual("WHERE A = 1 LIMIT 30, 10 ORDERBY A DESC, V ASC")
-    expect(selectedFields).toEqual(["A", "B", "C"])
+    expect(sqlQuery.trim()).toEqual('WHERE A = 1 LIMIT 30, 10 ORDERBY A DESC, V ASC');
+    expect(selectedFields).toEqual(['A', 'B', 'C']);
 
   });
 
   it('should visit $count', () => {
-    const ast = defaultParser.query("$count=true")
-    const { count } = transformQueryAst(ast)
-    expect(count).toBeTruthy()
+    const ast = defaultParser.query('$count=true');
+    const { count } = transformQueryAst(ast);
+    expect(count).toBeTruthy();
   });
 
   it('should support converting odata query to sql with name mapper', () => {
 
-    const ast = defaultParser.query("$format=json&$select=A,B,C&$top=10&$skip=30&$filter=A eq 1&$orderby=A desc,V asc")
-    const nameMapper: FieldNameMapper = (fieldName) => `table.${fieldName}`
-    const { selectedFields, sqlQuery } = transformQueryAst(ast, nameMapper)
+    const ast = defaultParser.query('$format=json&$select=A,B,C&$top=10&$skip=30&$filter=A eq 1&$orderby=A desc,V asc');
+    const nameMapper: FieldNameMapper = (fieldName) => `table.${fieldName}`;
+    const { selectedFields, sqlQuery } = transformQueryAst(ast, nameMapper);
 
-    expect(sqlQuery.trim()).toEqual("WHERE table.A = 1 LIMIT 30, 10 ORDERBY table.A DESC, table.V ASC")
-    expect(selectedFields).toEqual(["table.A", "table.B", "table.C"])
+    expect(sqlQuery.trim()).toEqual('WHERE table.A = 1 LIMIT 30, 10 ORDERBY table.A DESC, table.V ASC');
+    expect(selectedFields).toEqual(['table.A', 'table.B', 'table.C']);
 
   });
 
   it('should support converting data query to sql', () => {
 
-    const ast = defaultParser.filter("(A eq 3) and (B eq 4 or B eq 5) and (C ge 3 and D lt 5)")
-    const sql = transformFilterAst(ast)
+    const ast = defaultParser.filter('(A eq 3) and (B eq 4 or B eq 5) and (C ge 3 and D lt 5)');
+    const sql = transformFilterAst(ast);
 
-    expect(sql).toEqual('(A = 3) AND (B = 4 OR B = 5) AND (C >= 3 AND D < 5)')
+    expect(sql).toEqual('(A = 3) AND (B = 4 OR B = 5) AND (C >= 3 AND D < 5)');
 
   });
 
-  it('should support shortcut to create a service', async () => {
+  it('should support shortcut to create a service', async() => {
 
-    const connectionName = 'shortcut'
+    const connectionName = 'shortcut';
 
     // define models
     @Entity()
@@ -167,38 +167,38 @@ describe('Typeorm Integration Test Suite', () => {
 
     }
 
-    const conn = await createTmpConnection({ name: connectionName, entities: [Student, Class] })
+    const conn = await createTmpConnection({ name: connectionName, entities: [Student, Class] });
 
-    const OServer = await createTypedODataServer(connectionName, Student, Class)
+    const OServer = await createTypedODataServer(connectionName, Student, Class);
 
-    const s = OServer.create(randomPort())
-    const port = await ready(s)
+    const s = OServer.create(randomPort());
+    const port = await ready(s);
 
-    const client = OData.New4({ metadataUri: `http://127.0.0.1:${port}/$metadata`, processCsrfToken: false })
+    const client = OData.New4({ metadataUri: `http://127.0.0.1:${port}/$metadata`, processCsrfToken: false });
 
-    const students = client.getEntitySet<Student>("Students")
+    const students = client.getEntitySet<Student>('Students');
 
     const created = await students.create({
-      name: "theo",
+      name: 'theo',
       age: 12
-    })
+    });
 
-    expect(created).not.toBeUndefined()
+    expect(created).not.toBeUndefined();
 
-    await students.update(created.id, { name: "theo sun" })
+    await students.update(created.id, { name: 'theo sun' });
 
-    const updated = await students.retrieve(created.id)
+    const updated = await students.retrieve(created.id);
 
-    expect(updated.name).toEqual("theo sun")
+    expect(updated.name).toEqual('theo sun');
 
-    const total = await students.count(OData.newFilter().field("name").eq("theo sun"))
+    const total = await students.count(OData.newFilter().field('name').eq('theo sun'));
 
-    expect(total).toEqual(1)
+    expect(total).toEqual(1);
 
-    await students.delete(created.id)
+    await students.delete(created.id);
 
-    await shutdown(s)
-    await conn.close()
+    await shutdown(s);
+    await conn.close();
 
 
   });
@@ -225,9 +225,9 @@ describe('Typeorm Integration Test Suite', () => {
       f5: 'a' | 'b'
 
       @ODataNavigation({
-        type: "OneToMany",
+        type: 'OneToMany',
         entity: () => A,
-        foreignKey: "a"
+        foreignKey: 'a'
       })
       f6: A[]
 

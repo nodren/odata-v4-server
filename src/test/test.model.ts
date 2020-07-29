@@ -11,7 +11,7 @@ import { processQueries, doOrderby, doSkip, doTop } from './utils/queryOptions';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as streamBuffers from 'stream-buffers';
-import { randomPort } from './utils/randomPort'
+import { randomPort } from './utils/randomPort';
 
 const categories = require('./model/categories').slice();
 const products = require('./model/products').slice();
@@ -481,7 +481,7 @@ export class CategoriesStreamingController extends ODataController {
 
 const toObjectID = (_id) => _id && !(_id instanceof ObjectID) ? ObjectID.createFromHexString(_id) : _id;
 
-const delay = async function (ms: number): Promise<any> {
+const delay = async function(ms: number): Promise<any> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 };
 
@@ -561,10 +561,10 @@ export class Category2 {
     term: 'UI.DisplayName',
     string: 'Category2 identifier'
   },
-    {
-      term: 'UI.ControlHint',
-      string: 'ReadOnly'
-    })
+  {
+    term: 'UI.ControlHint',
+    string: 'ReadOnly'
+  })
   _id: ObjectID
 
   @Edm.String
@@ -575,10 +575,10 @@ export class Category2 {
     term: 'UI.DisplayName',
     string: 'Category2 name'
   },
-    {
-      term: 'UI.ControlHint',
-      string: 'ShortText'
-    })
+  {
+    term: 'UI.ControlHint',
+    string: 'ShortText'
+  })
   Name: string
 
   @Edm.ForeignKey('CategoryId')
@@ -726,13 +726,13 @@ export class CategoriesPromiseGeneratorController extends ODataController {
     return yield Promise.resolve(products2.filter((product) => product.CategoryId && product.CategoryId.toString() === result._id.toString()));
   }
 }
-const getAllProducts = async () => await products2;
-const getProductsByFilter = async (filter: Token) => await products2
+const getAllProducts = async() => await products2;
+const getProductsByFilter = async(filter: Token) => await products2
   .map((product) => Object.assign({}, product, { _id: product._id.toString(), CategoryId: product.CategoryId && product.CategoryId.toString() }))
   .filter(createFilter(filter));
-const getProductByKey = async (key: string) => await products2.find((p) => p._id.toString() == key) || null;
-const getCategoryOfProduct = async (result: GeneratorProduct) => await categories2.find((c) => c && c._id.toString() === result.CategoryId.toString()) || null;
-const getCategoryByFilterOfProduct = async (filter: Token, result: GeneratorProduct) => await categories2
+const getProductByKey = async(key: string) => await products2.find((p) => p._id.toString() == key) || null;
+const getCategoryOfProduct = async(result: GeneratorProduct) => await categories2.find((c) => c && c._id.toString() === result.CategoryId.toString()) || null;
+const getCategoryByFilterOfProduct = async(filter: Token, result: GeneratorProduct) => await categories2
   .filter((c) => c._id.toString() === result.CategoryId.toString())
   .map((category) => Object.assign({}, category, { _id: category._id.toString() }))
   .filter(createFilter(filter));
@@ -758,14 +758,14 @@ export class ProductsAdvancedGeneratorController extends ODataController {
   }
 }
 
-const getAllCategories = async () => await categories2;
-const getCategoriesByFilter = async (filter: Token) => await categories2
+const getAllCategories = async() => await categories2;
+const getCategoriesByFilter = async(filter: Token) => await categories2
   .map((category) => Object.assign({}, category, { _id: category._id.toString() }))
   .filter(createFilter(filter));
-const getCategoryByKey = async (key: string) => await categories2.find((category) => category._id.toString() === key) || null;
-const getProductOfCategory = async (key: string, result: GeneratorCategory) => await products2.filter((product) => product.CategoryId && product.CategoryId.toString() === result._id.toString() && product._id.toString() === key.toString());
-const getProductsOfCategory = async (result: GeneratorCategory) => await products2.filter((product) => product.CategoryId && product.CategoryId.toString() === result._id.toString());
-const getProductsByFilterOfCategory = async (filter: Token, result: GeneratorCategory) => await products2
+const getCategoryByKey = async(key: string) => await categories2.find((category) => category._id.toString() === key) || null;
+const getProductOfCategory = async(key: string, result: GeneratorCategory) => await products2.filter((product) => product.CategoryId && product.CategoryId.toString() === result._id.toString() && product._id.toString() === key.toString());
+const getProductsOfCategory = async(result: GeneratorCategory) => await products2.filter((product) => product.CategoryId && product.CategoryId.toString() === result._id.toString());
+const getProductsByFilterOfCategory = async(filter: Token, result: GeneratorCategory) => await products2
   .filter((p) => p.CategoryId.toString() === result._id.toString())
   .map((product) => Object.assign({}, product, { _id: product._id.toString(), CategoryId: product.CategoryId && product.CategoryId.toString() }))
   .filter(createFilter(filter));

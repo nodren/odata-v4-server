@@ -21,5 +21,5 @@ describe('Code coverage', () => {
   }, (err) => {
     expect(err.message).toEqual('Not implemented.');
   }));
-  
+
 });

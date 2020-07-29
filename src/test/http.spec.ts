@@ -84,8 +84,7 @@ describe('OData HTTP', () => {
 
     serverCacheArray.push(MetaTestServer.create(3003, 'localhost'));
     serverCache.set(MetaTestServer, 3003);
-  })
-
+  });
 
 
   describe('accept header', () => {
@@ -601,7 +600,7 @@ describe('OData HTTP', () => {
     });
   })));
 
-  let d = describe.skip
+  const d = describe.skip;
 
   // if (platform() == "linux") {
   //   d = describe

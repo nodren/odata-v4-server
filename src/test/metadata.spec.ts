@@ -3,7 +3,7 @@ import { PassThrough } from 'stream';
 import { ObjectID } from 'mongodb';
 import * as fs from 'fs';
 import * as path from 'path';
-import { randomPort } from './utils/randomPort'
+import { randomPort } from './utils/randomPort';
 
 const beautify = require('xml-beautifier');
 
@@ -205,10 +205,10 @@ export class Meta extends BaseMeta {
     term: 'UI.DisplayName',
     string: 'Identifier'
   },
-    {
-      term: 'UI.ControlHint',
-      string: 'ReadOnly'
-    })
+  {
+    term: 'UI.ControlHint',
+    string: 'ReadOnly'
+  })
   Id: number
 
   @Edm.TypeDefinition(ObjectID)
@@ -876,12 +876,12 @@ export class MetaTestServer extends ODataServer {
   FunctionImport(
     @Edm.String
     @Edm.Required
-    message: string,
+      message: string,
 
     @Edm.Collection(Edm.Int32)
     @Edm.Required
     @Edm.Nullable
-    value: number[]) {
+      value: number[]) {
     return `Server FunctionImport ${message}`;
   }
 
@@ -892,7 +892,7 @@ export class MetaTestServer extends ODataServer {
     @Edm.String
     @Edm.Nullable
     @Edm.Required
-    message: string) {
+      message: string) {
     return `Server FunctionImport ${message}`;
   }
 
@@ -902,18 +902,18 @@ export class MetaTestServer extends ODataServer {
     @Edm.String
     @Edm.MaxLength(8)
     @Edm.Unicode
-    message: string,
+      message: string,
 
     @Edm.Decimal
     @Edm.Required
     @Edm.Nullable
     @Edm.Precision(13)
     @Edm.Scale(2)
-    value: number[],
+      value: number[],
 
     @Edm.GeometryPoint
     @Edm.SRID(1)
-    geo: any) {
+      geo: any) {
     return `Server FunctionImport ${message}`;
   }
 
@@ -1055,7 +1055,7 @@ export class ActionFunctionServer extends ODataServer {
   @Edm.String
   action6(
     @Edm.EnumType(FuncEnum3)
-    enumValue: FuncEnum3
+      enumValue: FuncEnum3
   ) {
     return FuncEnum3[enumValue];
   }
@@ -1094,7 +1094,7 @@ export class ActionFunctionServer extends ODataServer {
   @Edm.String
   func6(
     @Edm.EnumType(FuncEnum4)
-    enumValue: FuncEnum4
+      enumValue: FuncEnum4
   ) {
     return FuncEnum4[enumValue];
   }
@@ -1103,7 +1103,7 @@ export class ActionFunctionServer extends ODataServer {
   @Edm.String
   func7(
     @Edm.TypeDefinition(Foobar)
-    foobar: Foobar
+      foobar: Foobar
   ) {
     return foobar;
   }
@@ -1151,7 +1151,7 @@ if (typeof describe == 'function') {
 
   describe('Root', () => {
     it('should return root result', () => {
-      expect(MetaTestServer.document().document("json")).toEqual({
+      expect(MetaTestServer.document().document('json')).toEqual({
         // "@odata.context": "http://localhost:randomPort()/$metadata",
         '@odata.context': undefined,
         'value': [

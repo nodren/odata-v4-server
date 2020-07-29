@@ -1,14 +1,13 @@
-import { TestServer, Foobar } from './test.model';
-import { ODataServer, NotImplementedError } from '../lib/index';
-import { testFactory } from './server.spec';
-import { Product, Category } from './model/model';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as streamBuffers from 'stream-buffers';
-import { platform } from 'os';
+import { NotImplementedError, ODataServer } from '../lib/index';
+import { Category } from './model/model';
+import { testFactory } from './server.spec';
+import { Foobar, TestServer } from './test.model';
 
 
-const extend = Object.assign
+const extend = Object.assign;
 const categories = require('./model/categories');
 const products = require('./model/products');
 
@@ -290,9 +289,9 @@ describe('OData execute', () => {
       });
     });
   });
-  
-  let d = describe.skip
-  
+
+  const d = describe.skip;
+
   // if (platform() == "linux") {
   //   d = describe
   // }

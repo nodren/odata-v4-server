@@ -1,13 +1,12 @@
-import { TestServer, Foobar, AuthenticationServer, Image, User, Location, Music } from './test.model';
-import { Product, Category } from './model/model';
-import { ODataServer } from '../lib/index';
-import { testFactory } from './server.spec';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as streamBuffers from 'stream-buffers';
-import { platform } from 'os';
+import { ODataServer } from '../lib/index';
+import { Category } from './model/model';
+import { testFactory } from './server.spec';
+import { Foobar, TestServer } from './test.model';
 
-const extend = Object.assign
+const extend = Object.assign;
 const categories = require('./model/categories');
 
 function createTest(testcase: string, server: typeof ODataServer, command: string, compare: any, body?: any) {
@@ -472,12 +471,12 @@ if (typeof describe == 'function') {
       });
     });
 
-    let d = describe.skip
-  
+    const d = describe.skip;
+
     // if (platform() == "linux") {
     //   d = describe
     // }
-    
+
     d('Stream properties', () => {
       it('stream property POST', () => {
         const testServer = new TestServer();
@@ -516,7 +515,7 @@ if (typeof describe == 'function') {
         });
       });
 
-      it('stream property with ODataStream POST', async () => {
+      it('stream property with ODataStream POST', async() => {
         const testServer = new TestServer();
 
         return new Promise((resolve, reject) => {
