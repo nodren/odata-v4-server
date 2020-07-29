@@ -5,9 +5,13 @@ import { ODataController } from '../controller';
 import { ServerInternalError } from '../error';
 import { ODataHttpContext } from '../server';
 import { getConnectionName } from './connection';
-import { findHooks, HookContext, HookType } from './hooks';
+import { findHooks, HookContext, HookEvents, HookType } from './hooks';
 import { BaseODataModel } from './model';
 import { transformQueryAst } from './visitor';
+
+
+// @ts-ignore
+type TXRunner<T, X> = (repo: Repository<InstanceType<T>>, em: EntityManager) => Promise<X>
 
 /**
  * Typeorm Controller
@@ -23,7 +27,7 @@ export class TypedController<T extends typeof BaseODataModel = any> extends ODat
    *
    * @param runner transaction runner
    */
-  protected async _tx<X>(runner: (repo: Repository<InstanceType<T>>, em: EntityManager,) => Promise<X>): Promise<X> {
+  protected async _tx<X>(runner: TXRunner<T, X>): Promise<X> {
     return new Promise(async(resolve, reject) => {
       try {
         await this._getConnection().transaction(async(em) => {
@@ -46,20 +50,36 @@ export class TypedController<T extends typeof BaseODataModel = any> extends ODat
    * @param key key for update/delete
    */
   private async _executeHooks(ctx: Partial<HookContext>) {
+
+    if (ctx.entityType == undefined) {
+      ctx.entityType = this.elementType;
+    }
+    if (ctx.em == undefined) {
+      ctx.em = this._getConnection().manager;
+    }
+    if (ctx.hookType == undefined) {
+      throw new ServerInternalError('Hook Type must be specify by controller');
+    }
+
+    const isEvent = HookEvents.includes(ctx.hookType);
+
     const hooks = findHooks(this.elementType, ctx.hookType);
+
     for (let idx = 0; idx < hooks.length; idx++) {
       const hook = hooks[idx];
-      if (ctx.entityType == undefined) {
-        ctx.entityType = this.elementType;
+
+      if (isEvent) {
+        // is event, just trigger executor but not wait it finished
+        // @ts-ignore
+        hook.execute(ctx).catch((error) => {
+          // logger here
+        });
+      } else {
+        // is hook, wait them executed
+        // @ts-ignore
+        await hook.execute(ctx);
       }
-      if (ctx.em == undefined) {
-        ctx.em = this._getConnection().manager;
-      }
-      if (ctx.hookType == undefined) {
-        throw new ServerInternalError('Hook Type must be specify by controller');
-      }
-      // @ts-ignore
-      await hook.execute(ctx);
+
     }
   }
 

@@ -51,7 +51,11 @@ export const beforeUpdate = createHookDecorator(HookType.beforeUpdate);
 export const beforeDelete = createHookDecorator(HookType.beforeDelete);
 
 /**
- * before data response, after data load from databaes
+ * before data response, after data load from database
  */
 export const afterLoad = createHookDecorator(HookType.afterLoad);
 
+/**
+ * after data has been saved to database (committed)
+ */
+export const afterSave = createHookDecorator(HookType.afterSave);
