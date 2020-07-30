@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { BaseODataModel } from '../model';
 import { getHookMetadata, HookContext } from './hooks';
 import { HookType } from './hook_type';
 
@@ -44,7 +45,7 @@ interface HookHandler<T = any> {
   (ctx: HookContext<T>): Promise<void>
 }
 
-export function createHookProcessor<T = any>(handler: HookHandler<InstanceType<T>>, eType?: T, hType?: HookType, iOrder = 0): BaseHookProcessor<T> {
+export function createHookProcessor<T extends typeof BaseODataModel = any>(handler: HookHandler<InstanceType<T>>, eType?: T, hType?: HookType, iOrder = 0): BaseHookProcessor<T> {
   return new class extends BaseHookProcessor<T> {
 
     order() {
