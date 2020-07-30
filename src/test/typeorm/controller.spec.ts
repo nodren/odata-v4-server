@@ -1,6 +1,6 @@
 import { ODataFilter, ODataQueryParam } from '@odata/parser';
 import { v4 } from 'uuid';
-import { BaseODataModel, beforeCreate, getEntityController, HookContext, HookProcessor, ODataColumn, ODataModel } from '../../lib';
+import { BaseODataModel, beforeCreate, HookContext, HookProcessor, ODataColumn, ODataModel } from '../../lib';
 import { shutdown } from '../utils/server';
 import { createServerAndClient, createTmpConnection } from './utils';
 
@@ -50,7 +50,7 @@ describe('Typed Controller Test Suite', () => {
 
       async execute(ctx: HookContext<A1>): Promise<void> {
 
-        const ct = getEntityController(A2);
+        const ct = ctx.getController(A2);
         const items = await ct.find(
           ODataQueryParam.New().filter(ODataFilter.New().field('name').eq(testUserName)),
           ctx.context

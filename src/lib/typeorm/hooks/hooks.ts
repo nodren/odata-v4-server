@@ -1,5 +1,6 @@
 import { EntityManager } from 'typeorm';
 import { ODataHttpContext } from '../../server';
+import { TypedController } from '../controller';
 import { BaseODataModel } from '../model';
 import { HookType } from './hook_type';
 
@@ -23,6 +24,12 @@ export interface HookContext<T = any> {
    * transaction entity manager
    */
   em: EntityManager;
+
+  /**
+   * get controller instance for entity
+   */
+  getController: <E extends typeof BaseODataModel>(entity: E) => TypedController<E>;
+
 }
 
 const KEY_HOOK_META = 'odata:hook';
