@@ -26,9 +26,9 @@ export interface HookContext<T = any> {
   em: EntityManager;
 
   /**
-   * get controller instance for entity
+   * get controller (service) instance for entity
    */
-  getController: <E extends typeof BaseODataModel>(entity: E) => TypedController<E>;
+  getService: <E extends typeof BaseODataModel>(entity: E) => TypedController<E>;
 
 }
 

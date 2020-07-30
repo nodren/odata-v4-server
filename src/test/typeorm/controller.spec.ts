@@ -48,17 +48,17 @@ describe('Typed Controller Test Suite', () => {
     @beforeCreate(A1)
     class BeforeA1CreationHook extends HookProcessor<A1> {
 
-      async execute(ctx: HookContext<A1>): Promise<void> {
+      async execute(hookCtx: HookContext<A1>): Promise<void> {
 
-        const ct = ctx.getController(A2);
+        const ct = hookCtx.getService(A2);
         const items = await ct.find(
           ODataQueryParam.New().filter(ODataFilter.New().field('name').eq(testUserName)),
-          ctx.context
+          hookCtx.context
         );
 
         if (items.length > 0) {
           // overwrite A1 value by A2 with same name
-          ctx.data.desc = items[0].desc;
+          hookCtx.data.desc = items[0].desc;
         }
 
       }

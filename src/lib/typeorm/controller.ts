@@ -51,8 +51,8 @@ export class TypedController<T extends typeof BaseODataModel = any> extends ODat
     if (ctx.hookType == undefined) {
       throw new ServerInternalError('Hook Type must be specify by controller');
     }
-    if (ctx.getController == undefined) {
-      ctx.getController = getEntityController;
+    if (ctx.getService == undefined) {
+      ctx.getService = getEntityController;
     }
 
     const isEvent = HookEvents.includes(ctx.hookType);
