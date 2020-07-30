@@ -47,6 +47,7 @@ describe('Typed Controller Test Suite', () => {
 
     @beforeCreate(A1)
     class BeforeA1CreationHook extends HookProcessor<A1> {
+
       async execute(ctx: HookContext<A1>): Promise<void> {
 
         const ct = getEntityController(A2);
@@ -54,6 +55,7 @@ describe('Typed Controller Test Suite', () => {
           ODataQueryParam.New().filter(ODataFilter.New().field('name').eq(testUserName)),
           ctx.context
         );
+
         if (items.length > 0) {
           // overwrite A1 value by A2 with same name
           ctx.data.desc = items[0].desc;
@@ -74,6 +76,7 @@ describe('Typed Controller Test Suite', () => {
 
     const items = await esA1.find({ name: testUserName });
 
+    // expect A1.student[theo].desc has been copied from A2.student[theo].desc
     expect(items[0].desc).toBe(expectedDescription);
 
     await shutdown(server);
