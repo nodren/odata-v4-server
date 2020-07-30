@@ -1,5 +1,5 @@
-import { NoServer, AuthenticationServer } from './test.model';
-import { Edm, odata } from '../lib/index';
+import { odata } from '../lib/index';
+import { AuthenticationServer, NoServer } from './test.model';
 
 
 describe('Code coverage', () => {
@@ -7,13 +7,10 @@ describe('Code coverage', () => {
     expect(odata.getPublicControllers(NoServer)).toEqual({});
   });
 
-  it('should not allow non-OData methods', () => {
-    try {
-      NoServer.execute('/dev/null', 'MERGE');
-      throw new Error('MERGE should not be allowed');
-    } catch (err) {
-      expect(err.message).toEqual('Method not allowed.');
-    }
+  it('should not allow non-OData methods', async () => {
+
+    await expect(async () => NoServer.execute('/dev/null', 'MERGE')).rejects.toThrowError('Method not allowed.');
+
   });
 
   it('should throw resource not found error', () => AuthenticationServer.execute('/Users', 'DELETE').then(() => {

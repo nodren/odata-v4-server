@@ -16,6 +16,7 @@ import * as odata from './odata';
 import { IODataConnector, ODataBase } from './odata';
 import { ODataMetadataType, ODataProcessor, ODataProcessorOptions } from './processor';
 import { ODataResult } from './result';
+import { commitTransaction, rollbackTransaction } from './typeorm/transaction';
 
 /** HTTP context interface when using the server HTTP request handler */
 export interface ODataHttpContext {
@@ -42,19 +43,25 @@ export class ODataServerBase extends Transform {
   private serverType: typeof ODataServer
 
   static requestHandler() {
-    return (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    return async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+
+      const ctx: ODataHttpContext = {
+        url: req.url,
+        method: req.method,
+        protocol: req.secure ? 'https' : 'http',
+        host: req.headers.host,
+        base: req.baseUrl,
+        request: req,
+        response: res
+      };
+
+      let hasError = false;
+
       try {
 
         ensureODataHeaders(req, res);
-        const processor = this.createProcessor({
-          url: req.url,
-          method: req.method,
-          protocol: req.secure ? 'https' : 'http',
-          host: req.headers.host,
-          base: req.baseUrl,
-          request: req,
-          response: res
-        }, <ODataProcessorOptions>{
+
+        const processor = this.createProcessor(ctx, <ODataProcessorOptions>{
           metadata: res['metadata']
         });
 
@@ -67,7 +74,6 @@ export class ODataServerBase extends Transform {
             }
           }
         });
-        let hasError = false;
 
         processor.on('data', (chunk, encoding, done) => {
           if (!hasError) {
@@ -84,40 +90,40 @@ export class ODataServerBase extends Transform {
 
         const origStatus = res.statusCode;
 
-        processor.execute(body).then((result: ODataResult) => {
-          try {
-            if (result) {
-              res.status((origStatus != res.statusCode && res.statusCode) || result.statusCode || 200);
-              if (!res.headersSent) {
-                ensureODataContentType(req, res, result.contentType || 'text/plain');
-              }
-              if (typeof result.body != 'undefined') {
-                if (typeof result.body != 'object') {
-                  res.send(`${result.body}`);
-                } else if (!res.headersSent) {
-                  res.send(result.body);
-                }
-              }
-            }
-            res.end();
-          } catch (err) {
-            hasError = true;
-            next(err);
+        const result = await processor.execute(body);
+
+        if (result) {
+          res.status((origStatus != res.statusCode && res.statusCode) || result.statusCode || 200);
+          if (!res.headersSent) {
+            ensureODataContentType(req, res, result.contentType || 'text/plain');
           }
-        }, (err) => {
-          hasError = true;
-          next(err);
-        });
+          if (typeof result.body != 'undefined') {
+            if (typeof result.body != 'object') {
+              res.send(`${result.body}`);
+            } else if (!res.headersSent) {
+              res.send(result.body);
+            }
+          }
+        }
+
+        await commitTransaction(ctx);
+        res.end();
+
       } catch (err) {
+
+        await rollbackTransaction(ctx);
+        hasError = true;
         next(err);
       }
     };
   }
 
-  static execute<T>(url: string, body?: object): Promise<ODataResult<T>>;
-  static execute<T>(url: string, method?: string, body?: object): Promise<ODataResult<T>>;
-  static execute<T>(context: object, body?: object): Promise<ODataResult<T>>;
-  static execute<T>(url: string | object, method?: string | object, body?: object): Promise<ODataResult<T>> {
+  static async execute<T>(url: string, body?: object): Promise<ODataResult<T>>;
+  static async execute<T>(url: string, method?: string, body?: object): Promise<ODataResult<T>>;
+  static async execute<T>(context: object, body?: object): Promise<ODataResult<T>>;
+  static async execute<T>(url: string | object, method?: string | object, body?: object): Promise<ODataResult<T>> {
+
+    // format context
     let context: any = {};
     if (typeof url == 'object') {
       context = Object.assign(context, url);
@@ -136,29 +142,39 @@ export class ODataServerBase extends Transform {
     }
     context.method = context.method || 'GET';
     context.request = context.request || body;
-    const processor = this.createProcessor(context, <ODataProcessorOptions>{
-      objectMode: true,
-      metadata: context.metadata || ODataMetadataType.minimal
-    });
-    const values = [];
-    let flushObject;
-    let response = '';
-    if (context.response instanceof Writable) {
-      processor.pipe(context.response);
-    }
-    processor.on('data', (chunk: any) => {
-      if (!(typeof chunk == 'string' || chunk instanceof Buffer)) {
-        if (chunk['@odata.context'] && chunk.value && Array.isArray(chunk.value) && chunk.value.length == 0) {
-          flushObject = chunk;
-          flushObject.value = values;
-        } else {
-          values.push(chunk);
-        }
-      } else {
-        response += chunk.toString();
+
+    try {
+
+      const processor = this.createProcessor(context, <ODataProcessorOptions>{
+        objectMode: true,
+        metadata: context.metadata || ODataMetadataType.minimal
+      });
+
+      const values = [];
+
+      let flushObject;
+      let response = '';
+
+      if (context.response instanceof Writable) {
+        processor.pipe(context.response);
       }
-    });
-    return processor.execute(context.body || body).then((result: ODataResult<T>) => {
+
+      processor.on('data', (chunk: any) => {
+        if (!(typeof chunk == 'string' || chunk instanceof Buffer)) {
+          if (chunk['@odata.context'] && chunk.value && Array.isArray(chunk.value) && chunk.value.length == 0) {
+            flushObject = chunk;
+            flushObject.value = values;
+          } else {
+            values.push(chunk);
+          }
+        } else {
+          response += chunk.toString();
+        }
+      });
+
+      // @ts-ignore
+      const result: ODataResult<T> = await processor.execute(context.body || body);
+
       if (flushObject) {
         result.body = flushObject;
         if (!result.elementType || typeof result.elementType == 'object') {
@@ -169,8 +185,13 @@ export class ODataServerBase extends Transform {
       } else if (result && response) {
         result.body = <any>response;
       }
+      await commitTransaction(context);
       return result;
-    });
+    } catch (error) {
+      await rollbackTransaction(context);
+      throw error;
+    }
+
   }
 
   constructor(opts?: TransformOptions) {

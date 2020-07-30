@@ -52,13 +52,15 @@ export class ODataController extends ODataBase<ODataControllerBase, typeof OData
  * @param ct
  * @param args
  */
-export function getControllerInstance(ct: typeof ODataController, ...args: any[]) {
+export function getControllerInstance(ct: typeof ODataController, ...args: any[]): ODataController {
+  if (ct == undefined) {
+    throw new Error('must provide controller type');
+  }
   if (!getControllerInstance.cache.has(ct)) {
     // @ts-ignore
     getControllerInstance.cache.set(ct, new ct(...args));
   }
   return getControllerInstance.cache.get(ct);
-
 }
 
 getControllerInstance['cache'] = new Map();

@@ -1,37 +1,21 @@
-import { OData } from 'light-odata';
 import 'light-odata/lib/polyfill';
-import { Connection } from 'typeorm';
 import { isArray } from 'util';
-import { BaseHookProcessor, BaseODataModel, beforeCreate, createHookProcessor, createTypedODataServer, findHooks, HookContext, HookProcessor, HookType, ODataColumn, ODataEntitySetName, ODataModel, registerHook } from '../../lib';
-import { randomPort } from '../utils/randomPort';
-import { ready, shutdown } from '../utils/server';
-import { createTmpConnection } from './utils';
+import { BaseHookProcessor, BaseODataModel, beforeCreate, createHookProcessor, findHooks, HookContext, HookProcessor, HookType, ODataColumn, ODataEntitySetName, ODataModel, registerHook } from '../../lib';
+import { shutdown } from '../utils/server';
+import { createServerAndClient, createTmpConnection } from './utils';
 
 
 describe('Hooks Test Suite', () => {
 
-  const createServerAndClient = async(connection: Connection, ...entities: any[]) => {
-
-    const s = await createTypedODataServer(connection.name, ...entities);
-    const httpServer = s.create(randomPort());
-    const port = await ready(httpServer);
-    const client = OData.New4({ metadataUri: `http://127.0.0.1:${port}/$metadata`, processCsrfToken: false });
-
-    return {
-      server: httpServer,
-      client
-    };
-
-  };
 
   it('should register hooks', () => {
 
     const t1 = class extends BaseODataModel { };
     const t2 = class extends BaseODataModel { };
 
-    const p1 = createHookProcessor(async(ctx) => { });
-    const p2 = createHookProcessor(async(ctx) => { });
-    const p3 = createHookProcessor(async(ctx) => { }, t1);
+    const p1 = createHookProcessor(async (ctx) => { });
+    const p2 = createHookProcessor(async (ctx) => { });
+    const p3 = createHookProcessor(async (ctx) => { }, t1);
 
     const p4 = class extends BaseHookProcessor {
       order() {
@@ -79,7 +63,7 @@ describe('Hooks Test Suite', () => {
 
   });
 
-  it('should support hooks process', async() => {
+  it('should support hooks process', async () => {
 
     const DEFAULT_AGE = 18;
     const TEST_USERNAME = 'Theo';
@@ -103,7 +87,7 @@ describe('Hooks Test Suite', () => {
 
     registerHook(
       createHookProcessor(
-        async({ data }) => { if (!isArray(data)) { data.age = DEFAULT_AGE; } },
+        async ({ data }) => { if (!isArray(data)) { data.age = DEFAULT_AGE; } },
         Student,
         HookType.beforeCreate
       )
@@ -131,7 +115,7 @@ describe('Hooks Test Suite', () => {
 
   });
 
-  it('should support register hook by decorator', async() => {
+  it('should support register hook by decorator', async () => {
 
     const DEFAULT_AGE = 18;
     const TEST_USERNAME = 'Theo';
@@ -184,7 +168,7 @@ describe('Hooks Test Suite', () => {
 
   });
 
-  it('should integrated with transaction', async() => {
+  it('should integrated with transaction', async () => {
 
 
     @ODataModel()
@@ -207,18 +191,16 @@ describe('Hooks Test Suite', () => {
 
     const hookInvokeSeq = [];
 
-    const h1 = createHookProcessor(async(ctx) => {
+    const h1 = createHookProcessor(async (ctx) => {
       hookInvokeSeq.push('h1');
       await ctx.em.getRepository(Student2).save({ name2: 'first' });
     }, Student2, HookType.beforeCreate, 0);
 
-    const h2 = createHookProcessor(async(ctx) => {
+    const h2 = createHookProcessor(async (ctx) => {
       hookInvokeSeq.push('h2');
       throw new Error('something wrong!');
     }, Student2, HookType.beforeCreate, 1);
 
-    registerHook(h1);
-    registerHook(h2);
 
     const conn = await createTmpConnection({
       name: 'hook_class_tx_conn',
@@ -226,11 +208,11 @@ describe('Hooks Test Suite', () => {
       entities
     });
 
-    const { server, client } = await createServerAndClient(conn, ...entities);
+    const { server, client } = await createServerAndClient(conn, h1, h2, ...entities);
 
     const es = client.getEntitySet<Student2>('Students2');
 
-    await expect(async() => { await es.create({ name2: 'second' }); }).rejects.toThrowError('something wrong!');
+    await expect(async () => { await es.create({ name2: 'second' }); }).rejects.toThrowError('something wrong!');
 
     const count = await es.count();
 

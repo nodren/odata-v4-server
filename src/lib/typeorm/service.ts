@@ -1,14 +1,20 @@
+// @ts-nocheck
 import { BaseEntity, Connection, ConnectionOptions, createConnection } from 'typeorm';
 import { odata } from '..';
 import { ODataServer } from '../server';
 import { withConnection } from './connection';
-import { TypedController } from './controller';
+import { registerController, TypedController } from './controller';
 import { getODataEntitySetName } from './decorators';
+import { BaseHookProcessor, registerHook } from './hooks';
+import { BaseODataModel } from './model';
 import { TypedODataServer } from './server';
 
-export async function createTypedODataServer(connectionOpt: ConnectionOptions, ...entities: (typeof BaseEntity)[]): Promise<typeof ODataServer>;
-export async function createTypedODataServer(connectionName: string, ...entities: (typeof BaseEntity)[]): Promise<typeof ODataServer>;
-export async function createTypedODataServer(connection: any, ...entities: (typeof BaseEntity)[]): Promise<typeof ODataServer> {
+type TypedODataItems = typeof BaseEntity | typeof BaseHookProcessor
+
+export async function createTypedODataServer(connectionOpt: Connection, ...configurations: Array<TypedODataItems>): Promise<typeof ODataServer>;
+export async function createTypedODataServer(connectionOpt: ConnectionOptions, ...configurations: Array<TypedODataItems>): Promise<typeof ODataServer>;
+export async function createTypedODataServer(connectionName: string, ...configurations: Array<TypedODataItems>): Promise<typeof ODataServer>;
+export async function createTypedODataServer(connection: any, ...configurations: Array<TypedODataItems>): Promise<typeof ODataServer> {
 
   let connName: string = 'default';
 
@@ -30,12 +36,21 @@ export async function createTypedODataServer(connection: any, ...entities: (type
 
   const server = class extends TypedODataServer { };
 
-  entities.forEach((entity) => {
-    const ct = class extends TypedController { };
-    const entitySetName = getODataEntitySetName(entity) || `${entity.name}s`;
-    Object.defineProperty(ct, 'name', { value: `${entitySetName}Controller` }); // define controller name to use decorator
-    withConnection(connName)(ct);
-    odata.withController(ct, entitySetName, entity)(server); // default public controller
+  configurations.forEach((configuration) => {
+
+    if (configuration.prototype instanceof BaseODataModel || configuration.prototype instanceof BaseEntity) {
+      const ct = class extends TypedController { };
+      const entitySetName = getODataEntitySetName(configuration) || `${configuration.name}s`;
+      // define controller name to use decorator
+      Object.defineProperty(ct, 'name', { value: `${entitySetName}Controller` });
+      withConnection(connName)(ct);
+      // default public controller
+      odata.withController(ct, entitySetName, configuration)(server);
+      registerController(configuration, ct);
+    } else if (configuration.prototype instanceof BaseHookProcessor || configuration instanceof BaseHookProcessor) {
+      registerHook(configuration);
+    }
+
   });
 
   return server;
