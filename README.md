@@ -14,12 +14,12 @@ NodeJS OData(V4) Server Implementation
 
 ## Features
 
-* OASIS Standard OData Version 4.0 server
+* OASIS Standard OData Version **4.0** server
 * usable as a standalone server, as an Express router, as a node.js stream or as a library
-* expose service document and service metadata - $metadata
+* expose service document and service metadata - `$metadata`
 * setup metadata using decorators or [@odata/metadata](https://github.com/Soontao/odata-v4-metadata)
 * supported data types are Edm primitives, complex types, navigation properties
-* support `create`, `read`, `update`, and `delete` entity sets, action imports, function imports, collection and entity bound actions and functions
+* support `create`, `read`, `update`, and `delete` entity sets, `action imports`, `function imports`, collection and `entity bound actions` and `functions`
 * support for full OData query language using [@odata/parser](https://github.com/Soontao/odata-v4-parser)
   * filtering entities - `$filter`
   * sorting - `$orderby`
@@ -27,7 +27,7 @@ NodeJS OData(V4) Server Implementation
   * projection of entities - `$select`
   * expanding entities - `$expand`
   * count records - `$count`
-* support async controller functions using Promise, async/await or ES6 generator functions
+* support async controller functions using `Promise`, `async/await` or ES6 generator functions
 
 ## Controller and server functions parameter injection decorators
 
@@ -38,3 +38,19 @@ NodeJS OData(V4) Server Implementation
 * @odata.body
 * ~~@odata.result~~ -- **NOT stable**
 * ~~@odata.stream~~ -- **NOT stable**
+
+## Model
+
+Define model class, it will be transformed to database schema.
+
+## Hook
+
+Define `hooks` to implement the business logics for entity.
+
+## Service (TypedController)
+
+Use other `services` in `hook`, keep the business consistence for single domain model.
+
+## Transaction
+
+Each `ODataHTTPContext` will share a database transaction (connection).
