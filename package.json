@@ -42,8 +42,10 @@
     "cors": "^2.8.5",
     "deepmerge": "^4.2.2",
     "express": "^4.17.1",
+    "odata2openapi": "^1.3.2",
     "qs": "^6.9.4",
     "reflect-metadata": "^0.1.13",
+    "swagger-ui-express": "^4.1.4",
     "tslib": "^2.0.0",
     "typeorm": "^0.2.25",
     "uuid": "^8.3.0"

@@ -6,11 +6,12 @@ import * as cors from 'cors';
 import * as express from 'express';
 import * as http from 'http';
 import { Readable, Transform, TransformOptions, Writable } from 'stream';
+import * as swaggerUi from 'swagger-ui-express';
 import { ODataController } from './controller';
 import { ContainerBase } from './edm';
 import { HttpRequestError } from './error';
 import { createMetadataJSON } from './metadata';
-import { ensureODataContentType, ensureODataHeaders, withODataHeader, withODataVersionVerify, withRequestId } from './middlewares';
+import { ensureODataContentType, ensureODataHeaders, withODataHeader, withODataVersionVerify, withRequestId, withSwaggerDocument } from './middlewares';
 import * as odata from './odata';
 // eslint-disable-next-line no-duplicate-imports
 import { IODataConnector, ODataBase } from './odata';
@@ -294,7 +295,12 @@ export class ODataServerBase extends Transform {
 
     router.get('/\\$metadata', server.$metadata().requestHandler());
 
+    // enable swagger ui
+    router.use('/api-docs', withSwaggerDocument(server.$metadata()), swaggerUi.serve, swaggerUi.setup());
+
+    // all request handler
     router.use(server.requestHandler());
+
     router.use(server.errorHandler);
 
     if (typeof path == 'number') {

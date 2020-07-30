@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { isUndefined } from '@newdash/newdash/isUndefined';
 import { Token, TokenType } from '@odata/parser/lib/lexer';
 import { findOne } from '@odata/parser/lib/utils';
 import * as deepmerge from 'deepmerge';
@@ -17,11 +18,11 @@ import { isIterator, isPromise, isStream } from '../utils';
 import { NavigationPart, ODATA_TYPE, ResourcePathVisitor } from '../visitor';
 import { fnCaller } from './fnCaller';
 
-const getODataRoot = function(context: ODataHttpContext) {
+const getODataRoot = function (context: ODataHttpContext) {
   return `${context.protocol || 'http'}://${context.host || 'localhost'}${context.base || ''}`;
 };
 
-const createODataContext = function(context: ODataHttpContext, entitySets, server: typeof ODataServer, resourcePath, processor) {
+const createODataContext = function (context: ODataHttpContext, entitySets, server: typeof ODataServer, resourcePath, processor) {
   const odataContextBase = `${getODataRoot(context)}/$metadata#`;
   let odataContext = '';
   let prevResource = null;
@@ -520,7 +521,7 @@ export class ODataProcessor extends Transform {
     const entitySets = this.entitySets = odata.getPublicControllers(this.serverType);
 
     this.workflow = [
-      async(body) => {
+      async (body) => {
         const resourcePath = this.resourcePath = await new ResourcePathVisitor(this.serverType, this.entitySets).Visit(ast);
         this.odataContext = createODataContext(context, entitySets, server, resourcePath, this);
 
@@ -702,10 +703,13 @@ export class ODataProcessor extends Transform {
   }
 
   private __EntityCollectionNavigationProperty(part: NavigationPart): Function {
-    return async(result) => {
+    return async (result) => {
       try {
 
         const resultType = result.elementType;
+        if (isUndefined(resultType)) {
+          throw new ResourceNotFoundError();
+        }
         const elementType = <Function>Edm.getType(resultType, part.name, this.serverType.container);
         const partIndex = this.resourcePath.navigation.indexOf(part);
         const method = writeMethods.indexOf(this.method) >= 0 && partIndex < this.resourcePath.navigation.length - 1
@@ -752,7 +756,7 @@ export class ODataProcessor extends Transform {
         result.foreignKeys = {};
 
         // create filter string for navigation
-        const foreignFilter = (await Promise.all(foreignKeys.map(async(key) => {
+        const foreignFilter = (await Promise.all(foreignKeys.map(async (key) => {
           result.foreignKeys[key] = result.body[typeKeys[0]];
           return `${key} eq ${await Edm.escape(result.body[typeKeys[0]], Edm.getTypeName(elementType, key, this.serverType.container))}`;
         }))).join(' and ');
@@ -771,7 +775,7 @@ export class ODataProcessor extends Transform {
   }
 
   private __EntityNavigationProperty(part: NavigationPart): Function {
-    return async(result) => {
+    return async (result) => {
       const resultType = result.elementType;
       const elementType = <Function>Edm.getType(resultType, part.name, this.serverType.container);
       const partIndex = this.resourcePath.navigation.indexOf(part);
@@ -829,7 +833,7 @@ export class ODataProcessor extends Transform {
   }
 
   private __PrimitiveProperty(part: NavigationPart): Function {
-    return async(result) => {
+    return async (result) => {
       this.__enableStreaming(part);
 
       let currentResult;
@@ -1139,7 +1143,7 @@ export class ODataProcessor extends Transform {
   private __actionOrFunctionImport(part: NavigationPart): Function {
 
     const fn = this.serverType.prototype[part.name];
-    return async(data) => {
+    return async (data) => {
       this.__enableStreaming(part);
 
       const returnType = <Function>Edm.getReturnType(this.serverType, part.name, this.serverType.container);
@@ -1178,7 +1182,7 @@ export class ODataProcessor extends Transform {
   }
 
   private __actionOrFunction(part: NavigationPart): Function {
-    return (result: ODataResult) => new Promise(async(resolve, reject) => {
+    return (result: ODataResult) => new Promise(async (resolve, reject) => {
       try {
         this.__enableStreaming(part);
         if (!result) {
@@ -1343,7 +1347,7 @@ export class ODataProcessor extends Transform {
               this.serverType.container
             ));
         } else {
-          id = (await Promise.all(keys.map(async(it) =>
+          id = (await Promise.all(keys.map(async (it) =>
             `${it}=${
               await Edm.escape(
                 body[it],
@@ -1428,7 +1432,7 @@ export class ODataProcessor extends Transform {
         const ctrl = this.ctrl && this.ctrl.prototype.elementType == ctrlType ? this.ctrl : this.serverType.getController(ctrlType);
         if (result.body.value && Array.isArray(result.body.value)) {
           context.value = [];
-          await Promise.all(result.body.value.map((entity, i) => (async(entity, i) => {
+          await Promise.all(result.body.value.map((entity, i) => (async (entity, i) => {
             if (typeof entity == 'object') {
               const item = {};
               if (ctrl) {
@@ -1522,7 +1526,7 @@ export class ODataProcessor extends Transform {
       }
     };
     resolveBaseType(elementType);
-    const entityType = function() { };
+    const entityType = function () { };
     util.inherits(entityType, elementType);
     result = Object.assign(new entityType(), result || {});
 
@@ -1539,11 +1543,11 @@ export class ODataProcessor extends Transform {
 
     if (props.length > 0) {
       const metadata = {};
-      await Promise.all(props.map((prop) => (async(prop) => {
+      await Promise.all(props.map((prop) => (async (prop) => {
         const type: any = Edm.getType(elementType, prop, this.serverType.container);
         let itemType;
         if (typeof type == 'function' && !Edm.isTypeDefinition(elementType, prop)) {
-          itemType = function() { };
+          itemType = function () { };
           util.inherits(itemType, type);
         }
         const converter: Function = Edm.getSerializer(elementType, prop, type, this.serverType.container) || Edm.getConverter(elementType, prop);
@@ -1671,7 +1675,7 @@ export class ODataProcessor extends Transform {
           const typeKeys = Edm.getKeyProperties(navigationType);
           result.foreignKeys = {};
           const part: any = {};
-          const foreignFilter = (await Promise.all(foreignKeys.map(async(key) => {
+          const foreignFilter = (await Promise.all(foreignKeys.map(async (key) => {
             result.foreignKeys[key] = result[typeKeys[0]];
             return `${key} eq ${await Edm.escape(result[typeKeys[0]], Edm.getTypeName(navigationType, key, this.serverType.container))}`;
           }))).join(' and ');
