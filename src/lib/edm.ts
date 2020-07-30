@@ -227,7 +227,7 @@ export const GeometryCollection = (function GeometryCollection() {
   return typeDecoratorFactory('Edm.GeometryCollection');
 })();
 
-/** ?????????? */
+
 /** Edm.Collection decorator for describing properties as collections */
 export function Collection(elementType: Function): Decorator {
   return function(target, targetKey, parameterIndex?: number) {
@@ -292,7 +292,7 @@ export function Collection(elementType: Function): Decorator {
   };
 }
 
-/** ?????????? */
+
 export function getTypeName(target: Function, propertyKey: string, container?: ContainerBase): string {
   let type = Reflect.getMetadata(EdmType, target) || Reflect.getMetadata(EdmType, target.prototype, propertyKey) || Reflect.getMetadata(EdmType, target.prototype);
   let elementType = Reflect.getMetadata(EdmElementType, target) || Reflect.getMetadata(EdmElementType, target.prototype, propertyKey) || Reflect.getMetadata(EdmElementType, target.prototype);
@@ -348,7 +348,7 @@ export function getTypeName(target: Function, propertyKey: string, container?: C
   return elementType ? `${type}(${elementType})` : type;
 }
 
-/** ?????????? */
+
 export function getType(target: Function, propertyKey: string, container?: ContainerBase): Function | string {
   let type = !propertyKey ? Reflect.getMetadata(EdmType, target) : Reflect.getMetadata(EdmType, target.prototype, propertyKey);
   let elementType = !propertyKey ? Reflect.getMetadata(EdmElementType, target) : Reflect.getMetadata(EdmElementType, target.prototype, propertyKey);
@@ -396,7 +396,7 @@ export function isCollection(target: Function, propertyKey: string): boolean {
   return Reflect.getMetadata(EdmType, target.prototype, propertyKey) == 'Collection';
 }
 
-/** ?????????? */
+
 export function getProperties(target: Function): string[] {
   try {
     return Reflect.getOwnMetadata(EdmProperties, target) || [];
@@ -405,7 +405,7 @@ export function getProperties(target: Function): string[] {
   }
 }
 
-/** ?????????? */
+
 export function getParameters(target: Function, targetKey: string): any[] {
   const params = [];
   let __proto__ = target.prototype;
@@ -801,7 +801,7 @@ export function _Action(target?: any, targetKey?: string) {
 }
 export const Action = _Action;
 
-/** ?????????? */
+
 /** Edm.FunctionImport decorator for describing unbound actions callable from the service root */
 export function FunctionImport();
 export function FunctionImport(returnType?: any);
@@ -813,7 +813,7 @@ export function FunctionImport(target?: any, targetKey?: string) {
   return operationDecoratorFactory(EdmFunction, target);
 }
 
-/** ?????????? */
+
 /** Edm.Function decorator for describing actions */
 export function _Function();
 export function _Function(returnType?: any);
@@ -826,18 +826,18 @@ export function _Function(target?: any, targetKey?: string) {
 }
 export const Function = _Function;
 
-/** ?????????? */
+
 export function getOperations(target: Function): string[] {
   return Reflect.getOwnMetadata(EdmOperations, target.prototype) || [];
 }
 
-/** ?????????? */
+
 export function getReturnTypeName(target: Function, propertyKey: string, container?: ContainerBase): string {
   const returnType = Reflect.getMetadata(EdmReturnType, target.prototype, propertyKey);
   return getTypeName(returnType, EdmReturnType, container) || getTypeName(target, propertyKey, container);
 }
 
-/** ?????????? */
+
 export function getReturnType(target: Function, propertyKey: string, container?: ContainerBase): Function | string {
   const returnType = Reflect.getMetadata(EdmReturnType, target.prototype, propertyKey);
   return getType(returnType, EdmReturnType, container) || getType(target, propertyKey, container);
@@ -931,7 +931,7 @@ export function isMediaEntity(target: Function) {
   return Reflect.hasMetadata(EdmMediaEntity, target);
 }
 
-/** ?????????? */
+
 export function getContentType(target: Function, targetKey?: string) {
   return Reflect.getMetadata(EdmMediaEntity, target, targetKey);
 }
@@ -946,7 +946,7 @@ export function isOpenType(target: Function) {
   return Reflect.hasMetadata(EdmOpenType, target) || false;
 }
 
-/** ?????????? */
+
 /** Edm.EntityType decorator for describing entity types */
 export function EntityType(type?: Function | string) {
   return function(target: any, targetKey?: string, parameterIndex?: any) {
@@ -1106,14 +1106,14 @@ export function isTypeDefinition(target: any, propertyKey?: string): boolean {
     : Reflect.hasMetadata(EdmTypeDefinition, target);
 }
 
-/** ?????????? */
+
 export function register(type: Function) {
   if (EdmContainer.indexOf(type) < 0) {
     EdmContainer.push(type);
   }
 }
 
-/** ?????????? */
+
 export function Convert(converter: Function) {
   return function(target, targetKey) {
     if (typeof target == 'function') {
@@ -1123,12 +1123,12 @@ export function Convert(converter: Function) {
   };
 }
 
-/** ?????????? */
+
 export function getConverter(target: Function, propertyKey: string): Function {
   return Reflect.getMetadata(EdmConverter, target.prototype, propertyKey);
 }
 
-/** ?????????? */
+
 export function Serialize(converter: Function) {
   return function(target, targetKey) {
     if (typeof target == 'function') {
@@ -1138,13 +1138,13 @@ export function Serialize(converter: Function) {
   };
 }
 
-/** ?????????? */
+
 export function getSerializer(target: Function, propertyKey: string, type?: any, container?: ContainerBase): Function {
   return Reflect.getMetadata(EdmSerializer, target.prototype, propertyKey) ||
     (type && container && Reflect.getMetadata(EdmSerializer, Object.getPrototypeOf(container), container.resolve(type)));
 }
 
-/** ?????????? */
+
 export function Deserialize(converter: Function) {
   return function(target, targetKey) {
     if (typeof target == 'function') {
@@ -1154,13 +1154,13 @@ export function Deserialize(converter: Function) {
   };
 }
 
-/** ?????????? */
+
 export function getDeserializer(target: Function, propertyKey: string, type?: any, container?: ContainerBase): Function {
   return Reflect.getMetadata(EdmDeserializer, target.prototype, propertyKey) ||
     (type && container && Reflect.getMetadata(EdmDeserializer, Object.getPrototypeOf(container), container.resolve(type)));
 }
 
-/** ?????????? */
+
 export function URLSerialize(converter: Function) {
   return function(target, targetKey) {
     if (typeof target == 'function') {
@@ -1170,13 +1170,13 @@ export function URLSerialize(converter: Function) {
   };
 }
 
-/** ?????????? */
+
 export function getURLSerializer(target: Function, propertyKey: string, type?: any, container?: ContainerBase): Function {
   return Reflect.getMetadata(EdmURLSerializer, target.prototype, propertyKey) ||
     (type && container && Reflect.getMetadata(EdmURLSerializer, Object.getPrototypeOf(container), container.resolve(type)));
 }
 
-/** ?????????? */
+
 export function URLDeserialize(converter: Function) {
   return function(target, targetKey) {
     if (typeof target == 'function') {
@@ -1186,13 +1186,13 @@ export function URLDeserialize(converter: Function) {
   };
 }
 
-/** ?????????? */
+
 export function getURLDeserializer(target: Function, propertyKey: string, type?: any, container?: ContainerBase): Function {
   return Reflect.getMetadata(EdmURLDeserializer, target.prototype, propertyKey) ||
     (type && container && Reflect.getMetadata(EdmURLDeserializer, Object.getPrototypeOf(container), container.resolve(type)));
 }
 
-/** ?????????? */
+
 export function Annotate(...annotation: any[]) {
   return function(target: any, targetKey?: string) {
     if (typeof target == 'function') {
@@ -1204,7 +1204,7 @@ export function Annotate(...annotation: any[]) {
   };
 }
 
-/** ?????????? */
+
 export function getAnnotations(target: Function, targetKey?: string): any[] {
   try {
     return Reflect.getOwnMetadata(EdmAnnotations, target.prototype, targetKey) || Reflect.getOwnMetadata(EdmAnnotations, target, targetKey) || [];
@@ -1213,7 +1213,7 @@ export function getAnnotations(target: Function, targetKey?: string): any[] {
   }
 }
 
-/** ?????????? */
+
 /** Edm.ForeignKey decorator for describing properties as foreign keys */
 export function ForeignKey(...keys: string[]) {
   return function(target: any, targetKey?: string) {
@@ -1226,24 +1226,24 @@ export function ForeignKey(...keys: string[]) {
   };
 }
 
-/** ?????????? */
+
 /** Edm.ForeignKey decorator for describing properties as foreign keys */
 export function getForeignKeys(target: Function, targetKey?: string): string[] {
   return Reflect.getOwnMetadata(EdmForeignKeys, target.prototype, targetKey) || Reflect.getOwnMetadata(EdmForeignKeys, target, targetKey) || [];
 }
 
-/** ?????????? */
+
 /** Returns property names that are foreign keys (names of properties decorated by Edm.ForeignKey) */
 export function Partner(property: string) {
   return Reflect.metadata(EdmPartnerProperty, property);
 }
 
-/** ?????????? */
+
 export function getPartner(target: any, targetKey: string) {
   return Reflect.getMetadata(EdmPartnerProperty, target, targetKey) || Reflect.getMetadata(EdmPartnerProperty, target.prototype, targetKey);
 }
 
-/** ?????????? */
+
 /** Edm.EntitySet decorator for describing entity sets */
 export function EntitySet(name: string) {
   return function(controller: typeof ODataController) {

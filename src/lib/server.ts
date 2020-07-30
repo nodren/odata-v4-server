@@ -321,7 +321,7 @@ export class ODataServerBase extends Transform {
 
 export class ODataServer extends ODataBase<ODataServerBase, typeof ODataServerBase>(ODataServerBase) { }
 
-/** ?????????? */
+
 /** Create Express middleware for OData error handling */
 export function ODataErrorHandler(err, _, res, next) {
   if (err) {
