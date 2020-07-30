@@ -140,24 +140,41 @@ export class TypedController<T extends typeof BaseODataModel = any> extends ODat
   @odata.POST
   async create(@odata.body body, @odata.context ctx: ODataHttpContext) {
     const repo = await this._getRepository(ctx);
-    await this._executeHooks({ context: ctx, hookType: HookType.beforeCreate, data: body  });
-    return repo.save(body);
+    await this._executeHooks({ context: ctx, hookType: HookType.beforeCreate, data: body });
+    // query the created item
+    const { identifiers: [id] } = await repo.insert(body);
+    // and return it
+    return this.findOne(id, ctx);
   }
 
-  // odata patch will response no content
+  // create or update
+  @odata.PUT
+  async save(@odata.key key, @odata.body body, @odata.context ctx: ODataHttpContext) {
+    const repo = await this._getRepository(ctx);
+    if (key) {
+      const item = await repo.findOne(key);
+      // if exist
+      if (item) {
+        return this.update(key, body, ctx);
+      }
+    }
+    return this.create(body, ctx);
+  }
+
+  // odata patch will not response any content
   @odata.PATCH
   async update(@odata.key key, @odata.body body, @odata.context ctx: ODataHttpContext) {
     const repo = await this._getRepository(ctx);
-    await this._executeHooks({ context: ctx, hookType: HookType.beforeUpdate, data: body, key  });
-    return repo.update(key, body);
+    await this._executeHooks({ context: ctx, hookType: HookType.beforeUpdate, data: body, key });
+    await repo.update(key, body);
   }
 
-  // odata delete will response no content
+  // odata delete will not response any content
   @odata.DELETE
   async delete(@odata.key key, @odata.context ctx: ODataHttpContext) {
     const repo = await this._getRepository(ctx);
-    await this._executeHooks({ context: ctx, hookType: HookType.beforeDelete, key  });
-    return repo.delete(key);
+    await this._executeHooks({ context: ctx, hookType: HookType.beforeDelete, key });
+    await repo.delete(key);
   }
 
 }
