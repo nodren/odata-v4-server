@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.16](https://github.com/Soontao/odata-v4-server/compare/v0.2.15...v0.2.16) (2020-07-30)
+
+
+### Features
+
+* [#14](https://github.com/Soontao/odata-v4-server/issues/14) swagger & swagger UI ([3a3d66c](https://github.com/Soontao/odata-v4-server/commit/3a3d66c0e4e8a7c43a6abfdf7d4a23a6ac058fc1))
+* [#4](https://github.com/Soontao/odata-v4-server/issues/4) add event hook ([f0c2ed1](https://github.com/Soontao/odata-v4-server/commit/f0c2ed123db742f708bd26ed0fef79ac247a476d))
+* [#4](https://github.com/Soontao/odata-v4-server/issues/4), [#15](https://github.com/Soontao/odata-v4-server/issues/15) transaction ([8f20e0e](https://github.com/Soontao/odata-v4-server/commit/8f20e0ea4513e483395ea28c441d52dfeca1d054))
+
+
+### Bug Fixes
+
+* **hook:** transaction ([4f1e7ea](https://github.com/Soontao/odata-v4-server/commit/4f1e7ea5d300f6bbec61fd804f8217bb4ec2b35b))
+* **hook:** unit test order ([b0b3d56](https://github.com/Soontao/odata-v4-server/commit/b0b3d568767bc04a4167a9bc4a080ab44659e429))
+
 ### [0.2.15](https://github.com/Soontao/odata-v4-server/compare/v0.2.14...v0.2.15) (2020-07-29)
 
 
