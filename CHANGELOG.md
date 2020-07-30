@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.17](https://github.com/Soontao/odata-v4-server/compare/v0.2.16...v0.2.17) (2020-07-30)
+
+
+### Bug Fixes
+
+* **type:** for hook processor ([5938a88](https://github.com/Soontao/odata-v4-server/commit/5938a88b9add03c5dd656f151ddd052a8ca49859))
+
 ### [0.2.16](https://github.com/Soontao/odata-v4-server/compare/v0.2.15...v0.2.16) (2020-07-30)
 
 
