@@ -56,11 +56,11 @@ export function getControllerInstance(ct: typeof ODataController, ...args: any[]
   if (ct == undefined) {
     throw new Error('must provide controller type');
   }
-  if (!getControllerInstance.cache.has(ct)) {
+  if (!getControllerInstance.registry.has(ct)) {
     // @ts-ignore
-    getControllerInstance.cache.set(ct, new ct(...args));
+    getControllerInstance.registry.set(ct, new ct(...args));
   }
-  return getControllerInstance.cache.get(ct);
+  return getControllerInstance.registry.get(ct);
 }
 
-getControllerInstance['cache'] = new Map();
+getControllerInstance['registry'] = new Map();

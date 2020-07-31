@@ -1,5 +1,5 @@
 import { createConnection } from 'typeorm';
-import { TypedController } from './controller';
+import { TypedService } from './controller';
 import { BaseODataModel } from './model';
 
 const KEY_CONN_NAME = 'odata:controller:connection';
@@ -11,7 +11,7 @@ const KEY_CONN_NAME = 'odata:controller:connection';
  * @param connectionName typeorm connection name
  */
 export function withConnection(connectionName: string = 'default') {
-  return function(controller: typeof TypedController) {
+  return function(controller: typeof TypedService) {
     Reflect.defineMetadata(KEY_CONN_NAME, connectionName, controller);
   };
 }
@@ -20,7 +20,7 @@ export function withConnection(connectionName: string = 'default') {
  * getConnectName for typed controller
  * @param target
  */
-export function getConnectionName(target: typeof TypedController | typeof BaseODataModel) {
+export function getConnectionName(target: typeof TypedService | typeof BaseODataModel) {
   return Reflect.getMetadata(KEY_CONN_NAME, target);
 }
 

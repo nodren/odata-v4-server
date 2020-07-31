@@ -5,7 +5,7 @@ import 'light-odata/lib/polyfill';
 import 'reflect-metadata';
 import * as req from 'request-promise';
 import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
-import { createTypedODataServer, Edm, FieldNameMapper, odata, ODataColumn, ODataModel, ODataNavigation, ODataServer, transformFilterAst, transformQueryAst, TypedController, withConnection } from '../../lib/index';
+import { createTypedODataServer, Edm, FieldNameMapper, odata, ODataColumn, ODataModel, ODataNavigation, ODataServer, transformFilterAst, transformQueryAst, TypedService, withConnection } from '../../lib/index';
 import { randomPort } from '../utils/randomPort';
 import { ready, shutdown } from '../utils/server';
 import { createTmpConnection } from './utils';
@@ -41,7 +41,7 @@ describe('Typeorm Integration Test Suite', () => {
     @odata.type(Product)
     @odata.entitySet('Products')
     @withConnection('typeorm-test1')
-    class C4 extends TypedController<Product> {
+    class C4 extends TypedService<Product> {
 
     }
 

@@ -73,18 +73,20 @@ class Teacher extends BaseODataModel {
   // }
   @Edm.Action
   async addClass(@Edm.Int32 classId: number, @odata.context ctx: ODataHttpContext) {
-    const repo = await this._getRepository(ctx, Class)
-    const c = await repo.findOne(classId)
+    const classService = this._gerService(Class)
+    const c = await classService.findOne(classId, ctx)
+    
     if (isUndefined(c)) {
       throw new ResourceNotFoundError(`not found instance class[${classId}]`)
     }
     c.teacherOneId = this.id
-    await c.save()
+   
+    await classService.save(c.id, c, ctx) // save with hooks lifecycle, suggested
+    // await c.save() // save to DB directly
   }
 
   // GET http://localhost:50000/Teachers(1)/Default.queryClass()
-  @Edm.Collection(Edm.String)
-  @Edm.Function
+  @Edm.Function(Edm.Collection(Edm.String))
   async queryClass(@odata.context ctx) {
     const qr = await this._getQueryRunner(ctx);
     // run native SQL query

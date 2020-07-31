@@ -1,9 +1,14 @@
 import { BaseEntity, getConnection, Repository } from 'typeorm';
 import { ODataHttpContext } from '../server';
 import { getConnectionName } from './connection';
+import { getEntityController, TypedService } from './controller';
 import { getOrCreateTransaction } from './transaction';
 
 export class BaseODataModel extends BaseEntity {
+
+  protected _gerService<E extends typeof BaseODataModel>(entity: E): TypedService<E> {
+    return getEntityController(entity);
+  };
 
   protected async _getConnection(ctx: ODataHttpContext) {
     return (await this._getQueryRunner(ctx)).connection;

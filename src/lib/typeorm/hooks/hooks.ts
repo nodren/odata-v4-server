@@ -1,6 +1,6 @@
 import { EntityManager } from 'typeorm';
 import { ODataHttpContext } from '../../server';
-import { TypedController } from '../controller';
+import { TypedService } from '../controller';
 import { BaseODataModel } from '../model';
 import { HookType } from './hook_type';
 
@@ -28,7 +28,7 @@ export interface HookContext<T = any> {
   /**
    * get controller (service) instance for entity
    */
-  getService: <E extends typeof BaseODataModel>(entity: E) => TypedController<E>;
+  getService: <E extends typeof BaseODataModel>(entity: E) => TypedService<E>;
 
 }
 

@@ -43,13 +43,19 @@ NodeJS OData(V4) Server Implementation
 
 Define model class, it will be transformed to database schema.
 
+## Action & Function
+
+Define `Action/Function` on you Domain Model, focus business logic on micro-level.
+
 ## Hook
 
-Define `hooks` to implement the business logics for entity.
+Define `Hooks` to implement the business logics for entity.
 
 ## Service (TypedController)
 
-Use other `services` in `hook`, keep the business consistence for single domain model.
+Using `services` in `hook`/`action`/`function`, keep the business consistence for single domain model.
+
+Each model will have its own standard `CRUD` service which enhanced with `hooks` logic.
 
 ## Transaction
 

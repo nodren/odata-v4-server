@@ -1,7 +1,8 @@
 import isEmpty from '@newdash/newdash/isEmpty';
 import { defaultParser, ODataQueryParam } from '@odata/parser';
 import 'reflect-metadata';
-import { getConnection } from 'typeorm';
+import { getConnection, Repository } from 'typeorm';
+import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 import { odata, ODataQuery } from '..';
 import { getControllerInstance, ODataController } from '../controller';
 import { ResourceNotFoundError, ServerInternalError } from '../error';
@@ -13,9 +14,9 @@ import { getOrCreateTransaction } from './transaction';
 import { transformQueryAst } from './visitor';
 
 /**
- * Typeorm Controller
+ * Typeorm Service (Controller)
  */
-export class TypedController<T extends typeof BaseODataModel = any> extends ODataController {
+export class TypedService<T extends typeof BaseODataModel = any> extends ODataController {
 
   protected async _getConnection(ctx: ODataHttpContext) {
     return (await this._getQueryRunner(ctx)).connection;
@@ -26,12 +27,17 @@ export class TypedController<T extends typeof BaseODataModel = any> extends ODat
   }
 
   protected async _getQueryRunner(ctx: ODataHttpContext) {
-    return getOrCreateTransaction(getConnection(getConnectionName(this.constructor as typeof TypedController)), ctx);
+    return getOrCreateTransaction(getConnection(getConnectionName(this.constructor as typeof TypedService)), ctx);
   }
 
-  protected async _getRepository(ctx: ODataHttpContext) {
+  protected async _getRepository(ctx: ODataHttpContext): Promise<Repository<InstanceType<T>>> {
+    // @ts-ignore
     return (await this._getConnection(ctx)).getRepository(this.elementType);
   }
+
+  protected _gerService<E extends typeof BaseODataModel>(entity: E): TypedService<E> {
+    return getEntityController(entity);
+  };
 
   /**
    * execute hooks for data processor
@@ -80,7 +86,7 @@ export class TypedController<T extends typeof BaseODataModel = any> extends ODat
 
 
   @odata.GET
-  async findOne(@odata.key key, @odata.context ctx: ODataHttpContext) {
+  async findOne(@odata.key key, @odata.context ctx: ODataHttpContext): Promise<InstanceType<T>> {
     const repo = await this._getRepository(ctx);
     const data = await repo.findOne(key);
     if (isEmpty(data)) {
@@ -143,7 +149,7 @@ export class TypedController<T extends typeof BaseODataModel = any> extends ODat
   }
 
   @odata.POST
-  async create(@odata.body body, @odata.context ctx: ODataHttpContext) {
+  async create(@odata.body body: QueryDeepPartialEntity<InstanceType<T>>, @odata.context ctx: ODataHttpContext) {
     const repo = await this._getRepository(ctx);
     await this._executeHooks({ context: ctx, hookType: HookType.beforeCreate, data: body });
     // query the created item
@@ -154,7 +160,7 @@ export class TypedController<T extends typeof BaseODataModel = any> extends ODat
 
   // create or update
   @odata.PUT
-  async save(@odata.key key, @odata.body body, @odata.context ctx: ODataHttpContext) {
+  async save(@odata.key key, @odata.body body: QueryDeepPartialEntity<InstanceType<T>>, @odata.context ctx: ODataHttpContext) {
     const repo = await this._getRepository(ctx);
     if (key) {
       const item = await repo.findOne(key);
@@ -168,7 +174,7 @@ export class TypedController<T extends typeof BaseODataModel = any> extends ODat
 
   // odata patch will not response any content
   @odata.PATCH
-  async update(@odata.key key, @odata.body body, @odata.context ctx: ODataHttpContext) {
+  async update(@odata.key key, @odata.body body: QueryDeepPartialEntity<InstanceType<T>>, @odata.context ctx: ODataHttpContext) {
     const repo = await this._getRepository(ctx);
     await this._executeHooks({ context: ctx, hookType: HookType.beforeUpdate, data: body, key });
     await repo.update(key, body);
@@ -184,7 +190,10 @@ export class TypedController<T extends typeof BaseODataModel = any> extends ODat
 
 }
 
-const entityControllers = new Map<typeof BaseODataModel, typeof TypedController>();
+/**
+ * service registry for entities
+ */
+const entityServicesRegistry = new Map<typeof BaseODataModel, typeof TypedService>();
 
 /**
  * register controller for entity
@@ -192,11 +201,11 @@ const entityControllers = new Map<typeof BaseODataModel, typeof TypedController>
  * @param entity
  * @param controller
  */
-export function registerController(entity: typeof BaseODataModel, controller: typeof TypedController): void {
-  if (entityControllers.has(entity)) {
+export function registerController(entity: typeof BaseODataModel, controller: typeof TypedService): void {
+  if (entityServicesRegistry.has(entity)) {
     throw new Error('the controller has been generated for entity. (one entity - one controller)');
   }
-  entityControllers.set(entity, controller);
+  entityServicesRegistry.set(entity, controller);
 }
 
 /**
@@ -204,7 +213,7 @@ export function registerController(entity: typeof BaseODataModel, controller: ty
  *
  * @param entity
  */
-export function getEntityController<E extends typeof BaseODataModel>(entity: E): TypedController<E> {
+export function getEntityController<E extends typeof BaseODataModel>(entity: E): TypedService<E> {
   // @ts-ignore
-  return getControllerInstance(entityControllers.get(entity));
+  return getControllerInstance(entityServicesRegistry.get(entity));
 }

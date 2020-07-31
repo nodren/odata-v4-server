@@ -3,7 +3,7 @@ import { BaseEntity, Connection, ConnectionOptions, createConnection } from 'typ
 import { odata } from '..';
 import { ODataServer } from '../server';
 import { withConnection } from './connection';
-import { registerController, TypedController } from './controller';
+import { registerController, TypedService } from './controller';
 import { getODataEntitySetName } from './decorators';
 import { BaseHookProcessor, registerHook } from './hooks';
 import { BaseODataModel } from './model';
@@ -40,7 +40,7 @@ export async function createTypedODataServer(connection: any, ...configurations:
 
     if (configuration.prototype instanceof BaseODataModel || configuration.prototype instanceof BaseEntity) {
 
-      const ct = class extends TypedController { };
+      const ct = class extends TypedService { };
       const entitySetName = getODataEntitySetName(configuration) || `${configuration.name}s`;
 
       // define controller name to use decorator
