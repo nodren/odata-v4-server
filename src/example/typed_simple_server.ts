@@ -13,8 +13,11 @@ class Student extends BaseODataModel {
   @ODataColumn()
   name: string;
 
-  @ODataColumn()
+  @ODataColumn({ nullable: true })
   age: number;
+
+  @ODataNavigation({ type: 'OneToMany', entity: () => RelStudentClassAssignment, foreignKey: "studentId" })
+  classes: any;
 
 }
 
@@ -37,7 +40,10 @@ class Class extends BaseODataModel {
   teacherOneId: number;
 
   @ODataNavigation({ type: 'ManyToOne', entity: () => Teacher, foreignKey: "teacherOneId" })
-  teacher: any
+  teacher: any;
+
+  @ODataNavigation({ type: 'OneToMany', entity: () => RelStudentClassAssignment, foreignKey: "classId" })
+  students: any;
 
 }
 
@@ -75,12 +81,12 @@ class Teacher extends BaseODataModel {
   async addClass(@Edm.Int32 classId: number, @odata.context ctx: ODataHttpContext) {
     const classService = this._gerService(Class)
     const c = await classService.findOne(classId, ctx)
-    
+
     if (isUndefined(c)) {
       throw new ResourceNotFoundError(`not found instance class[${classId}]`)
     }
     c.teacherOneId = this.id
-   
+
     await classService.save(c.id, c, ctx) // save with hooks lifecycle, suggested
     // await c.save() // save to DB directly
   }
@@ -96,9 +102,30 @@ class Teacher extends BaseODataModel {
 
 }
 
+@ODataModel()
+class RelStudentClassAssignment extends BaseODataModel {
+
+  @ODataColumn({ primary: true, generated: "uuid" })
+  uuid: string;
+
+  @ODataColumn()
+  studentId: number;
+
+  @ODataColumn()
+  classId: number;
+
+  @ODataNavigation({ entity: () => Student, foreignKey: "studentId", type: "ManyToOne" })
+  student: Student;
+
+  @ODataNavigation({ entity: () => Class, foreignKey: "classId", type: "ManyToOne" })
+  clazz: Class;
+
+}
+
 const run = async () => {
 
-  const entities = [Student, Class, Teacher, Profile]
+  const entities = [Student, Class, Teacher, Profile, RelStudentClassAssignment]
+
   const server = await createTypedODataServer({
     name: 'default',
     type: 'sqljs',

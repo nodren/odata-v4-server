@@ -1713,7 +1713,7 @@ export class ODataProcessor extends Transform {
         ctrl = this.serverType.getController(navigationType);
         if (isCollection) {
           const foreignKeys = Edm.getForeignKeys(elementType, include.navigationProperty);
-          const typeKeys = Edm.getKeyProperties(navigationType);
+          const typeKeys = Edm.getKeyProperties(elementType);
           result.foreignKeys = {};
           const part: any = {};
           const foreignFilter = (await Promise.all(foreignKeys.map(async (key) => {
