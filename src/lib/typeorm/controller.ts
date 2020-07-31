@@ -132,7 +132,7 @@ export class TypedController<T extends typeof BaseODataModel = any> extends ODat
       data = await repo.find();
     }
 
-    if (data.length >0) {
+    if (data.length > 0) {
       await this._executeHooks({
         context: ctx, hookType: HookType.afterLoad, data
       });

@@ -57,7 +57,7 @@ describe('OData execute', () => {
     });
 
     return TestServer.execute('/EntitySet(1)', 'GET').then((result) => {
-      expect(result).toEqual({
+      expect(result).toMatchObject({
         statusCode: 200,
         body: {
           '@odata.context': 'http://localhost/$metadata#EntitySet/$entity',
@@ -80,7 +80,7 @@ describe('OData execute', () => {
     });
 
     return TestServer.execute('/EntitySet(1)', 'GET').then((result) => {
-      expect(result).toEqual({
+      expect(result).toMatchObject({
         statusCode: 200,
         body: {
           '@odata.context': 'http://localhost/$metadata#EntitySet/$entity',
@@ -100,7 +100,7 @@ describe('OData execute', () => {
       statusCode: 204
     });
     return TestServer.execute("/Products('578f2b8c12eaebabec4af242')/Category", 'GET').then((result) => {
-      expect(result).toEqual({
+      expect(result).toMatchObject({
         statusCode: 200,
         body: extend({
           '@odata.context': 'http://localhost/$metadata#Categories/$entity'
@@ -130,7 +130,7 @@ describe('OData execute', () => {
       statusCode: 204
     });
     return TestServer.execute("/Products('578f2b8c12eaebabec4af242')/Category", 'GET').then((result) => {
-      expect(result).toEqual({
+      expect(result).toMatchObject({
         statusCode: 200,
         body: extend({
           '@odata.context': 'http://localhost/$metadata#Categories/$entity'
@@ -161,7 +161,7 @@ describe('OData execute', () => {
       statusCode: 204
     });
     return TestServer.execute("/Products('578f2b8c12eaebabec4af284')/Category", 'GET').then((result) => {
-      expect(result).toEqual({
+      expect(result).toMatchObject({
         statusCode: 200,
         body: extend({
           '@odata.context': 'http://localhost/$metadata#Categories/$entity'
@@ -182,7 +182,7 @@ describe('OData execute', () => {
       statusCode: 204
     });
     return TestServer.execute("/Products('578f2b8c12eaebabec4af286')/Category", 'GET').then((result) => {
-      expect(result).toEqual({
+      expect(result).toMatchObject({
         statusCode: 200,
         body: extend({
           '@odata.context': 'http://localhost/$metadata#Categories/$entity'
@@ -217,7 +217,7 @@ describe('OData execute', () => {
       statusCode: 204
     });
     return TestServer.execute("/Products('578f2b8c12eaebabec4af286')/Category", 'GET').then((result) => {
-      expect(result).toEqual({
+      expect(result).toMatchObject({
         statusCode: 200,
         body: extend({
           '@odata.context': 'http://localhost/$metadata#Categories/$entity'
@@ -244,7 +244,7 @@ describe('OData execute', () => {
         ctx.url = '/EntitySet(1)';
         ctx.method = 'GET';
         return TestServer.execute(ctx).then((result) => {
-          expect(result).toEqual({
+          expect(result).toMatchObject({
             statusCode: 200,
             body: {
               '@odata.context': 'http://localhost/$metadata#EntitySet/$entity',
@@ -273,7 +273,7 @@ describe('OData execute', () => {
         ctx.url = '/EntitySet(1)';
         ctx.method = 'GET';
         return TestServer.execute(ctx).then((result) => {
-          expect(result).toEqual({
+          expect(result).toMatchObject({
             statusCode: 200,
             body: {
               '@odata.context': 'http://localhost/$metadata#EntitySet/$entity',
@@ -320,7 +320,7 @@ describe('OData execute', () => {
     });
 
     it('stream property with ODataStream POST', () => TestServer.execute('/ImagesControllerEntitySet(1)/Data2', 'POST', fs.createReadStream(path.join(__dirname, 'fixtures', 'logo_jaystack.png'))).then((result) => {
-      expect(result).toEqual({
+      expect(result).toMatchObject({
         statusCode: 204
       });
       expect(fs.readFileSync(path.join(__dirname, 'fixtures', 'logo_jaystack.png'))).toEqual(fs.readFileSync(path.join(__dirname, 'fixtures', 'tmp.png')));
@@ -351,7 +351,7 @@ describe('OData execute', () => {
     });
 
     it('should return 204 after POST Data2 using generator function that yields stream', () => TestServer.execute('/Images2ControllerEntitySet(1)/Data2', 'POST', fs.createReadStream(path.join(__dirname, 'fixtures', 'logo_jaystack.png'))).then((result) => {
-      expect(result).toEqual({
+      expect(result).toMatchObject({
         statusCode: 204
       });
       expect(fs.readFileSync(path.join(__dirname, 'fixtures', 'logo_jaystack.png'))).toEqual(fs.readFileSync(path.join(__dirname, 'fixtures', 'tmp.png')));

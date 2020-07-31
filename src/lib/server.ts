@@ -335,9 +335,9 @@ export function ODataErrorHandler(err, _, res, next) {
     res.send({
       error: {
         code: statusCode,
-        message: err.message
+        message: err.message,
         // logger
-        // stack: process.env.ODATA_V4_DISABLE_STACKTRACE ? undefined : err.stack
+        stack: process.env.ODATA_V4_ENABLE_STACKTRACE ? undefined : err.stack
       }
     });
   } else {

@@ -1,5 +1,4 @@
-import { ODataServer, ODataController, odata, Edm, ODataMetadataType } from '../lib/index';
-import * as request from 'request-promise';
+import { Edm, odata, ODataController, ODataMetadataType, ODataServer } from '../lib/index';
 
 
 class Address {
@@ -45,7 +44,7 @@ class UsersController extends ODataController {
 class TestServer extends ODataServer {}
 
 describe('OData projection', () => {
-  it('should return projected entities when using $select', () => TestServer.execute('/Users?$select=Id').then((result) => expect(result).toEqual({
+  it('should return projected entities when using $select', () => TestServer.execute('/Users?$select=Id').then((result) => expect(result).toMatchObject({
     statusCode: 200,
     body: {
       '@odata.context': 'http://localhost/$metadata#Users(Id)',
@@ -58,7 +57,7 @@ describe('OData projection', () => {
     elementType: User
   })));
 
-  it('should return projected entities with complex type when using $select', () => TestServer.execute('/Users?$select=Address').then((result) => expect(result).toEqual({
+  it('should return projected entities with complex type when using $select', () => TestServer.execute('/Users?$select=Address').then((result) => expect(result).toMatchObject({
     statusCode: 200,
     body: {
       '@odata.context': 'http://localhost/$metadata#Users(Address)',
@@ -76,7 +75,7 @@ describe('OData projection', () => {
     elementType: User
   })));
 
-  it('should return projected entities with projected complex type when using $select', () => TestServer.execute('/Users?$select=Address/City').then((result) => expect(result).toEqual({
+  it('should return projected entities with projected complex type when using $select', () => TestServer.execute('/Users?$select=Address/City').then((result) => expect(result).toMatchObject({
     statusCode: 200,
     body: {
       '@odata.context': 'http://localhost/$metadata#Users(Address/City)',
@@ -94,7 +93,7 @@ describe('OData projection', () => {
   it('should return projected entities with projected complex type when using $select and odata.metadata=full', () => TestServer.execute({
     url: '/Users?$select=Address/City,Address/Nr',
     metadata: ODataMetadataType.full
-  }).then((result) => expect(result).toEqual({
+  }).then((result) => expect(result).toMatchObject({
     statusCode: 200,
     body: {
       '@odata.context': 'http://localhost/$metadata#Users(Address/City,Address/Nr)',

@@ -1,6 +1,6 @@
+import isUndefined from '@newdash/newdash/isUndefined';
 import 'reflect-metadata';
-import { createConnection } from 'typeorm';
-import { BaseODataModel, createTypedODataServer, Edm, odata, ODataColumn, ODataEntitySetName, ODataHttpContext, ODataModel, ODataNavigation } from '../lib';
+import { BaseODataModel, createTypedODataServer, Edm, odata, ODataColumn, ODataEntitySetName, ODataHttpContext, ODataModel, ODataNavigation, ResourceNotFoundError } from '../lib';
 
 
 @ODataModel()
@@ -69,8 +69,21 @@ class Teacher extends BaseODataModel {
 
   @Edm.Action
   async addClass(@Edm.Int32 classId: number, @odata.context ctx: ODataHttpContext) {
-    // 'this' is bounded odata response object, is not entity instance 
-    console.log(classId)
+    const repo = await this._getRepository(ctx, Class)
+    const c = await repo.findOne(classId)
+    if (isUndefined(c)) {
+      throw new ResourceNotFoundError(`not found instance class[${classId}]`)
+    }
+    c.teacherOneId = this.id
+    await c.save()
+  }
+
+  @Edm.Collection(Edm.String)
+  @Edm.Function
+  async queryClass(@odata.context ctx) {
+    const qr = await this._getQueryRunner(ctx);
+    const items = await qr.query(`select name from class where teacherOneId = :id`, [this.id])
+    return items.map(item => item.name)
   }
 
 }
@@ -78,16 +91,14 @@ class Teacher extends BaseODataModel {
 const run = async () => {
 
   const entities = [Student, Class, Teacher, Profile]
-  const conn = await createConnection({
+  const server = await createTypedODataServer({
     name: 'default',
     type: 'sqljs',
     synchronize: true,
     logging: true,
     cache: true,
     entities
-  });
-
-  const server = await createTypedODataServer(conn.name, ...entities);
+  }, ...entities);
 
   const s = server.create(50000);
 

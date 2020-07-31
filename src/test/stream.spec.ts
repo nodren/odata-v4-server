@@ -63,7 +63,7 @@ if (typeof describe == 'function') {
               testServer.on('error', (err) => { reject(err); });
             })
               .then((result) => {
-                expect(result).toEqual({
+                expect(result).toMatchObject({
                   statusCode: 200,
                   body: {
                     '@odata.context': 'http://localhost/$metadata#EntitySet/$entity',
@@ -146,7 +146,7 @@ if (typeof describe == 'function') {
               testServer.on('error', (err) => { reject(err); });
             })
               .then((result) => {
-                expect(result).toEqual({
+                expect(result).toMatchObject({
                   statusCode: 200,
                   body: {
                     '@odata.context': 'http://localhost/$metadata#EntitySet/$entity',
@@ -187,7 +187,7 @@ if (typeof describe == 'function') {
               testServer.on('error', (err) => { reject(err); });
             })
               .then((result) => {
-                expect(result).toEqual({
+                expect(result).toMatchObject({
                   statusCode: 200,
                   body: extend({
                     '@odata.context': 'http://localhost/$metadata#Categories/$entity'
@@ -260,7 +260,7 @@ if (typeof describe == 'function') {
               testServer.on('error', (err) => { reject(err); });
             })
               .then((result) => {
-                expect(result).toEqual({
+                expect(result).toMatchObject({
                   statusCode: 200,
                   body: extend({
                     '@odata.context': 'http://localhost/$metadata#Categories/$entity'
@@ -333,7 +333,7 @@ if (typeof describe == 'function') {
               testServer.on('error', (err) => { reject(err); });
             })
               .then((result) => {
-                expect(result).toEqual({
+                expect(result).toMatchObject({
                   statusCode: 200,
                   body: extend({
                     '@odata.context': 'http://localhost/$metadata#Categories/$entity'
@@ -376,7 +376,7 @@ if (typeof describe == 'function') {
               testServer.on('error', (err) => { reject(err); });
             })
               .then((result) => {
-                expect(result).toEqual({
+                expect(result).toMatchObject({
                   statusCode: 200,
                   body: extend({
                     '@odata.context': 'http://localhost/$metadata#Categories/$entity'
@@ -455,7 +455,7 @@ if (typeof describe == 'function') {
               testServer.on('error', (err) => { reject(err); });
             })
               .then((result) => {
-                expect(result).toEqual({
+                expect(result).toMatchObject({
                   statusCode: 200,
                   body: extend({
                     '@odata.context': 'http://localhost/$metadata#Categories/$entity'

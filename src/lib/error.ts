@@ -22,29 +22,25 @@ export class ServerInternalError extends HttpRequestError {
 }
 
 export class NotImplementedError extends HttpRequestError {
-  static MESSAGE: string = 'Not implemented.';
-  constructor(message?: string) {
-    super(501, message || NotImplementedError.MESSAGE);
+  constructor(message: string = 'Not implemented.') {
+    super(501, message);
   }
 }
 
 export class ResourceNotFoundError extends HttpRequestError {
-  static MESSAGE: string = 'Resource not found.';
-  constructor() {
-    super(404, ResourceNotFoundError.MESSAGE);
+  constructor(message = 'Resource not found.') {
+    super(404, message);
   }
 }
 
 export class MethodNotAllowedError extends HttpRequestError {
-  static MESSAGE: string = 'Method not allowed.';
-  constructor() {
-    super(405, MethodNotAllowedError.MESSAGE);
+  constructor(message = 'Method not allowed.') {
+    super(405, message);
   }
 }
 
 export class UnsupportedMediaTypeError extends HttpRequestError {
-  static MESSAGE: string = 'Unsupported media type.';
-  constructor() {
-    super(415, UnsupportedMediaTypeError.MESSAGE);
+  constructor(message = 'Unsupported media type.') {
+    super(415, message);
   }
 }

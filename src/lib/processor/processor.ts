@@ -14,6 +14,7 @@ import { IODataResult } from '../index';
 import * as odata from '../odata';
 import { ODataResult } from '../result';
 import { ODataHttpContext, ODataServer } from '../server';
+import { BaseODataModel } from '../typeorm';
 import { isIterator, isPromise, isStream } from '../utils';
 import { NavigationPart, ODATA_TYPE, ResourcePathVisitor } from '../visitor';
 import { fnCaller } from './fnCaller';
@@ -1207,8 +1208,16 @@ export class ODataProcessor extends Transform {
         // entity bound operation
         // e.g. POST /Teachers(1)/Default.addClass {payload}
         if (entityBoundOp) {
-          scope = result.body;
+
+          // use original result for typed odata model
+          if (result.elementType && result.elementType.prototype instanceof BaseODataModel) {
+            scope = result.getOriginalResult();
+          } else {
+            scope = result.body;
+          }
+
           returnType = <Function>Edm.getReturnType(elementType, boundOpName, this.serverType.container);
+
           if (Edm.isAction(elementType, boundOpName) ||
             schemas.some((schema) =>
               schema.actions.some((action) =>
@@ -1454,6 +1463,7 @@ export class ODataProcessor extends Transform {
     const context: any = {
       '@odata.context': this.options.metadata != ODataMetadataType.none ? this.odataContext : undefined
     };
+
     const elementType = result.elementType = jsPrimitiveTypes.indexOf(result.elementType) >= 0 || result.elementType == String || typeof result.elementType != 'function' ? ctrlType : result.elementType;
     if (typeof result.body == 'object' && result.body) {
       if (typeof result.body['@odata.count'] == 'number') {

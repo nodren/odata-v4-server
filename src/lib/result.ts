@@ -59,6 +59,8 @@ export class ODataResult<T = {}> {
   contentType: string
   stream?: any
 
+  private _originalResult?: any
+
   constructor(statusCode: number, contentType?: string, result?: any) {
     this.statusCode = statusCode;
     if (typeof result != 'undefined') {
@@ -68,6 +70,11 @@ export class ODataResult<T = {}> {
       }
       this.contentType = contentType || 'application/json';
     }
+    this._originalResult = result;
+  }
+
+  public getOriginalResult() {
+    return this._originalResult;
   }
 
   static Created = async function Created(result: any, contentType?: string): Promise<ODataResult> {
@@ -105,4 +112,5 @@ export class ODataResult<T = {}> {
     }
     return Promise.resolve(new ODataResult(204, contentType));
   }
+
 }
