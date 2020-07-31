@@ -1807,7 +1807,7 @@ export class ODataProcessor extends Transform {
 
       if (typeof queryAst == 'string') {
         queryAst = this.serverType.parser.query(queryAst, {
-          metadata: this.resourcePath.ast.metadata || this.serverType.$metadata().edmx
+          // metadata: this.resourcePath.ast.metadata || this.serverType.$metadata().edmx
         });
 
         if (!include) {
@@ -1842,7 +1842,7 @@ export class ODataProcessor extends Transform {
         filterAst = qs.parse(filterAst).$filter;
         if (typeof filterAst == 'string') {
           filterAst = this.serverType.parser.filter(filterAst, {
-            metadata: this.resourcePath.ast.metadata || this.serverType.$metadata().edmx
+            // metadata: this.resourcePath.ast.metadata || this.serverType.$metadata().edmx
           });
           const lastNavigationPath = this.resourcePath.navigation[this.resourcePath.navigation.length - 1];
           const queryType = lastNavigationPath.type == 'QualifiedEntityTypeName' ?

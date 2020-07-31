@@ -13,9 +13,9 @@ export const createTmpConnection = (opt?: Partial<ConnectionOptions>) => createC
   ...opt
 });
 
-export const createServerAndClient = async(connection: Connection, ...entities: any[]) => {
+export const createServerAndClient = async(conn, ...entities: any[]) => {
 
-  const s = await createTypedODataServer(connection.name, ...entities);
+  const s = await createTypedODataServer(conn, ...entities);
   const httpServer = s.create(randomPort());
   const port = await ready(httpServer);
   const client = OData.New4({ metadataUri: `http://127.0.0.1:${port}/$metadata`, processCsrfToken: false });

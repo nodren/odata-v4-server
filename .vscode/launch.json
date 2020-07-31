@@ -5,7 +5,7 @@
       "type": "node",
       "request": "launch",
       "name": "Typed Example Server",
-      "program": "${workspaceFolder}/node_modules/.bin/ts-node",
+      "program": "${workspaceFolder}/node_modules/ts-node/dist/bin.js",
       "args": [
         "src/example/typed_simple_server"
       ],

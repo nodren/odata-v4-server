@@ -107,7 +107,11 @@ export const transformQueryAst = (node: ODataQuery, nameMapper: FieldNameMapper 
     }
   };
 
-  traverseAst(traverser, node);
+  // only first level options
+  node.value.options.forEach((option) => {
+    traverseAst(traverser, option);
+  });
+
 
   if (where && where.trim().length > 0) {
     sqlQuery += ` WHERE ${where}`;

@@ -42,6 +42,7 @@ class Class extends BaseODataModel {
   @ODataNavigation({ type: 'ManyToOne', entity: () => Teacher, foreignKey: "teacherOneId" })
   teacher: any;
 
+  // GET http://localhost:50000/Classes?$expand=students($expand=student)
   @ODataNavigation({ type: 'OneToMany', entity: () => RelStudentClassAssignment, foreignKey: "classId" })
   students: any;
 

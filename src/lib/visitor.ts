@@ -1,9 +1,9 @@
 import { Token, TokenType } from '@odata/parser/lib/lexer';
-import { Literal } from './literal';
 import * as qs from 'qs';
-import { ODataServer } from './server';
 import { ODataController } from './controller';
 import * as Edm from './edm';
+import { Literal } from './literal';
+import { ODataServer } from './server';
 
 export interface KeyValuePair {
   name: string
@@ -121,7 +121,7 @@ export class ResourcePathVisitor {
   }
 
   protected async VisitQueryOptions(node: Token, context: any, type: any) {
-    await Promise.all(node.value.options.map(async(option) => await this.Visit(option, Object.assign({}, context), type)));
+    await Promise.all(node.value.options.map(async (option) => await this.Visit(option, Object.assign({}, context), type)));
   }
 
   protected VisitSelect(node: Token, context: any, type: any) {
@@ -244,14 +244,19 @@ export class ResourcePathVisitor {
   }
 
   protected async VisitExpand(node: Token, context: any, type: any) {
-    await Promise.all(node.value.items.map(async(item) => {
-      const expandPath = item.value.path.raw;
+    await Promise.all(node.value.items.map(async (item) => {
+
+      const part = item.value.path.value[0];
+      const expandPath = part.raw;
       let visitor = this.includes[expandPath];
+
       if (!visitor) {
         visitor = new ResourcePathVisitor(node[ODATA_TYPE], this.entitySets);
         this.includes[expandPath] = visitor;
       }
+
       await visitor.Visit(item, Object.assign({}, context), type);
+
     }));
   }
 
@@ -263,7 +268,7 @@ export class ResourcePathVisitor {
       this.ast.type = TokenType.QueryOptions;
       this.ast.raw = node.value.options.map((n) => n.raw).join('&');
       this.query = qs.parse(this.ast.raw);
-      await Promise.all(node.value.options.map(async(item) => await this.Visit(item, Object.assign({}, context), type)));
+      await Promise.all(node.value.options.map(async (item) => await this.Visit(item, Object.assign({}, context), type)));
     }
     if (node.value.ref) {
       await this.Visit(node.value.ref, Object.assign({}, context), type);
@@ -360,7 +365,7 @@ export class ResourcePathVisitor {
   protected async VisitCompoundKey(node: Token, _: any, type: any) {
     this.path += '(\\(';
     const lastNavigationPart = this.navigation[this.navigation.length - 1];
-    lastNavigationPart.key = await Promise.all<KeyValuePair>(node.value.map(async(pair, i) => {
+    lastNavigationPart.key = await Promise.all<KeyValuePair>(node.value.map(async (pair, i) => {
       this.path += i == node.value.length - 1 ? '([^,]+)' : '([^,]+,)';
       node[ODATA_TYPENAME] = Edm.getTypeName(type, pair.value.key.value.name, this.serverType.container);
       node[ODATA_TYPE] = Edm.getType(type, pair.value.key.value.name, this.serverType.container);
@@ -469,7 +474,7 @@ export class ResourcePathVisitor {
       type = this.serverType.getController(type);
     }
     context.parameters = Edm.getParameters(type, part.name.split('.').pop());
-    await Promise.all(node.value.params.value.map(async(param, i) => {
+    await Promise.all(node.value.params.value.map(async (param, i) => {
       await this.Visit(param, context);
       if (i < node.value.params.value.length - 1) {
         this.path += ',';
@@ -490,7 +495,7 @@ export class ResourcePathVisitor {
     this.path += `/${part.name}`;
     this.path += '(\\(';
     context.parameters = Edm.getParameters(node[ODATA_TYPE], part.name);
-    await Promise.all(node.value.params.map(async(param) => await this.Visit(param, Object.assign({}, context))));
+    await Promise.all(node.value.params.map(async (param) => await this.Visit(param, Object.assign({}, context))));
     delete context.parameters;
     this.path += '\\))';
   }

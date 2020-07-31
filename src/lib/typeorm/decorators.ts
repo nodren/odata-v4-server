@@ -7,14 +7,21 @@ import { NotImplementedError, ServerInternalError } from '../error';
 import { BaseODataModel } from './model';
 
 const KEY_ODATA_ENTITY_SET = 'odata.entity:entity_set_name';
+const KEY_ODATA_PROP_NAVIGATION = 'odata.entity:entity_prop_navigation';
 
+/**
+ * define odata action for entity
+ *
+ * @alias Edm.Action
+ */
+export const ODataAction = Edm.Action;
 /**
  * set entity set name for odata entity
  *
  * @param entitySetName
  */
 export function ODataEntitySetName(entitySetName: string) {
-  return function(target) {
+  return function (target) {
     Reflect.defineMetadata(KEY_ODATA_ENTITY_SET, entitySetName, target);
   };
 }
@@ -36,7 +43,7 @@ export function getODataEntitySetName(target: any): string {
  * @param options
  */
 export function ODataModel(options: EntityOptions = {}, entitySetName?: string) {
-  return function(target: any): void {
+  return function (target: any): void {
     Entity(options)(target);
     if (entitySetName) {
       ODataEntitySetName(entitySetName)(target);
@@ -52,7 +59,7 @@ export function ODataModel(options: EntityOptions = {}, entitySetName?: string) 
  * @param options
  */
 export function ODataColumn(options: ColumnOptions = {}) {
-  return function(object: any, propertyName: string): void {
+  return function (object: any, propertyName: string): void {
     const { primary, length, precision, nullable } = options;
 
     Column(options)(object, propertyName);
@@ -134,29 +141,31 @@ export interface NavigationOptions<T extends typeof BaseODataModel> {
  * @param options
  */
 export function ODataNavigation<T extends typeof BaseODataModel>(options: NavigationOptions<T>) {
-  return function(object: any, propertyName: string): void {
+  return function (target: any, propertyName: string): void {
 
     if (isEmpty(options.foreignKey)) {
-      throw new ServerInternalError(`OneToMany navigation must define the ref 'foreign key' in ${object?.constructor?.name} ${propertyName}`);
+      throw new ServerInternalError(`OneToMany navigation must define the ref 'foreign key' in ${target?.constructor?.name} ${propertyName}`);
     }
+
+    Reflect.defineMetadata(KEY_ODATA_PROP_NAVIGATION, options, target, propertyName);
 
     switch (options.type) {
       case 'OneToMany':
-        OneToMany(options.entity, options.foreignKey)(object, propertyName);
-        Edm.Collection(Edm.EntityType(Edm.ForwardRef(options.entity)))(object, propertyName);
-        Edm.ForeignKey(options.foreignKey)(object, propertyName);
+        OneToMany(options.entity, options.foreignKey)(target, propertyName);
+        Edm.Collection(Edm.EntityType(Edm.ForwardRef(options.entity)))(target, propertyName);
+        Edm.ForeignKey(options.foreignKey)(target, propertyName);
         break;
       case 'ManyToOne':
-        ManyToOne(options.entity)(object, propertyName);
-        JoinColumn({ name: options.foreignKey })(object, propertyName);
-        Edm.EntityType(Edm.ForwardRef(options.entity))(object, propertyName);
-        Edm.ForeignKey(options.foreignKey)(object, propertyName);
+        ManyToOne(options.entity)(target, propertyName);
+        JoinColumn({ name: options.foreignKey })(target, propertyName);
+        Edm.EntityType(Edm.ForwardRef(options.entity))(target, propertyName);
+        Edm.ForeignKey(options.foreignKey)(target, propertyName);
         break;
       case 'OneToOne':
-        OneToOne(options.entity)(object, propertyName);
-        Edm.EntityType(Edm.ForwardRef(options.entity))(object, propertyName);
-        JoinColumn({ name: options.foreignKey })(object, propertyName);
-        Edm.ForeignKey(options.foreignKey)(object, propertyName);
+        OneToOne(options.entity)(target, propertyName);
+        Edm.EntityType(Edm.ForwardRef(options.entity))(target, propertyName);
+        JoinColumn({ name: options.foreignKey })(target, propertyName);
+        Edm.ForeignKey(options.foreignKey)(target, propertyName);
       default:
         break;
     }
