@@ -39,16 +39,25 @@ export async function createTypedODataServer(connection: any, ...configurations:
   configurations.forEach((configuration) => {
 
     if (configuration.prototype instanceof BaseODataModel || configuration.prototype instanceof BaseEntity) {
+
       const ct = class extends TypedController { };
       const entitySetName = getODataEntitySetName(configuration) || `${configuration.name}s`;
+
       // define controller name to use decorator
       Object.defineProperty(ct, 'name', { value: `${entitySetName}Controller` });
+
+      // attach connection metadata
+      withConnection(connName)(configuration);
       withConnection(connName)(ct);
+
       // default public controller
       odata.withController(ct, entitySetName, configuration)(server);
       registerController(configuration, ct);
+
     } else if (configuration.prototype instanceof BaseHookProcessor || configuration instanceof BaseHookProcessor) {
+
       registerHook(configuration);
+
     }
 
   });

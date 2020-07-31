@@ -1184,7 +1184,9 @@ export class ODataProcessor extends Transform {
   private __actionOrFunction(part: NavigationPart): Function {
     return (result: ODataResult) => new Promise(async (resolve, reject) => {
       try {
+
         this.__enableStreaming(part);
+
         if (!result) {
           return resolve();
         }
@@ -1198,6 +1200,9 @@ export class ODataProcessor extends Transform {
         let returnType: any = Object;
         let isAction = false;
         const schemas = this.serverType.$metadata().edmx.dataServices.schemas;
+
+        // entity bound operation
+        // e.g. POST /Teachers(1)/Default.addClass {payload}
         if (entityBoundOp) {
           scope = result.body;
           returnType = <Function>Edm.getReturnType(elementType, boundOpName, this.serverType.container);
@@ -1228,6 +1233,7 @@ export class ODataProcessor extends Transform {
           scope = result;
           part.params['processor'] = this;
         }
+
         const boundOp = entityBoundOp || ctrlBoundOp || expOp;
         let opResult = fnCaller(scope, boundOp, part.params);
 
@@ -1283,7 +1289,7 @@ export class ODataProcessor extends Transform {
           }
         }, reject);
       } catch (err) {
-        return Promise.reject(err);
+        return reject(err);
       }
     });
   }

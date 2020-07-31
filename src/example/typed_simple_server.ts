@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 import { createConnection } from 'typeorm';
-import { BaseODataModel, createTypedODataServer, ODataColumn, ODataModel, ODataNavigation } from '../lib';
+import { BaseODataModel, createTypedODataServer, Edm, odata, ODataColumn, ODataEntitySetName, ODataHttpContext, ODataModel, ODataNavigation } from '../lib';
+
 
 @ODataModel()
 class Student extends BaseODataModel {
@@ -18,6 +19,8 @@ class Student extends BaseODataModel {
 }
 
 
+// indicate the entity set name for entity
+@ODataEntitySetName("Classes")
 @ODataModel()
 class Class extends BaseODataModel {
 
@@ -30,11 +33,11 @@ class Class extends BaseODataModel {
   @ODataColumn()
   desc: string
 
+  @ODataColumn({ nullable: true })
+  teacherOneId: number;
+
   @ODataNavigation({ type: 'ManyToOne', entity: () => Teacher, foreignKey: "teacherOneId" })
   teacher: any
-
-  @ODataColumn()
-  teacherOneId: number;
 
 }
 
@@ -55,14 +58,19 @@ class Teacher extends BaseODataModel {
   @ODataColumn()
   name: string;
 
+  @ODataColumn({ nullable: true })
+  profileId: number;
+
   @ODataNavigation({ type: "OneToOne", entity: () => Profile, foreignKey: "profileId" })
   profile: Profile;
 
-  @ODataColumn()
-  profileId: number;
-
   @ODataNavigation({ type: 'OneToMany', entity: () => Class, foreignKey: "teacherOneId" })
-  classes: Class[]
+  classes: Class[];
+
+  @Edm.Action
+  async addClass(@Edm.Int32 classId: number, @odata.context ctx: ODataHttpContext) {
+    console.log(classId)
+  }
 
 }
 

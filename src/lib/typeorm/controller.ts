@@ -1,9 +1,10 @@
+import isEmpty from '@newdash/newdash/isEmpty';
 import { defaultParser, ODataQueryParam } from '@odata/parser';
 import 'reflect-metadata';
 import { getConnection } from 'typeorm';
 import { odata, ODataQuery } from '..';
 import { getControllerInstance, ODataController } from '../controller';
-import { ServerInternalError } from '../error';
+import { ResourceNotFoundError, ServerInternalError } from '../error';
 import { ODataHttpContext } from '../server';
 import { getConnectionName } from './connection';
 import { findHooks, HookContext, HookEvents, HookType } from './hooks';
@@ -82,6 +83,9 @@ export class TypedController<T extends typeof BaseODataModel = any> extends ODat
   async findOne(@odata.key key, @odata.context ctx: ODataHttpContext) {
     const repo = await this._getRepository(ctx);
     const data = await repo.findOne(key);
+    if (isEmpty(data)) {
+      throw new ResourceNotFoundError();
+    }
     await this._executeHooks({
       context: ctx, hookType: HookType.afterLoad, data, entityType: this.elementType
     });
@@ -96,7 +100,6 @@ export class TypedController<T extends typeof BaseODataModel = any> extends ODat
 
     const conn = await this._getConnection(ctx);
     const repo = await this._getRepository(ctx);
-
 
     let data = [];
 
@@ -129,9 +132,11 @@ export class TypedController<T extends typeof BaseODataModel = any> extends ODat
       data = await repo.find();
     }
 
-    await this._executeHooks({
-      context: ctx, hookType: HookType.afterLoad, data
-    });
+    if (data.length >0) {
+      await this._executeHooks({
+        context: ctx, hookType: HookType.afterLoad, data
+      });
+    }
 
     return data;
 

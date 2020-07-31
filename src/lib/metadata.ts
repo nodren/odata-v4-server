@@ -1,7 +1,7 @@
 import { ODataController } from './controller';
-import { ODataServer } from './server';
 import * as Edm from './edm';
 import * as odata from './odata';
+import { ODataServer } from './server';
 import { getAllPropertyNames } from './utils';
 
 export function createMetadataJSON(server: typeof ODataServer) {
@@ -415,11 +415,13 @@ export function createMetadataJSON(server: typeof ODataServer) {
         }
 
         const resolvedType = resolveType(elementType, server, i);
+
         if (resolvedType && !resolvedType.schema.entityType.filter((et) => et.name == resolvedType.definition.name)[0]) {
           resolvedType.schema.entityType.push(resolvedType.definition);
         }
 
         const operations: any = getAllOperations(ctrl);
+
         Object.keys(operations).forEach((operation) => {
           const namespace = operations[operation].prototype[operation].namespace || elementType.namespace || server.namespace;
           const elementTypeNamespace = elementType.namespace || server.namespace;
