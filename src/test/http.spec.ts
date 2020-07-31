@@ -1,26 +1,23 @@
-import { ODataServer, createODataServer, NotImplementedError } from '../lib/index';
-import { testFactory } from './server.spec';
-import { MetaTestServer } from './metadata.spec';
-import { TestServer, Foobar } from './test.model';
-import { Product, Category } from './model/model';
-import { ObjectID } from 'mongodb';
-import * as request from 'request-promise';
-import * as streamBuffers from 'stream-buffers';
 import * as fs from 'fs';
 import * as path from 'path';
-import { platform } from 'os';
-
-const categories = require('./model/categories');
-const products = require('./model/products');
+import * as request from 'request-promise';
+import * as streamBuffers from 'stream-buffers';
+import { NotImplementedError, ODataServer } from '../lib/index';
+import { MetaTestServer } from './metadata.spec';
+import { testFactory } from './server.spec';
+import { TestServer } from './test.model';
+import { ready, shutdown } from './utils/server';
 
 const serverCache = new WeakMap<typeof ODataServer, number>();
 const serverCacheArray = [];
 let serverPort = 5000;
 
 if (typeof afterAll == 'function') {
-  afterAll(() => {
-    serverCacheArray.forEach((server) => server.close());
+
+  afterAll(async () => {
+    await Promise.all(serverCacheArray.map(shutdown));
   });
+
 }
 
 function createTestFactory(it) {
@@ -77,13 +74,17 @@ createTest.only = createTestFactory(it.only);
 
 describe('OData HTTP', () => {
 
-  beforeAll(() => {
-    serverCacheArray.push(TestServer.create(3002));
+  beforeAll(async () => {
+    const s1 = TestServer.create(3002);
+    serverCacheArray.push(s1);
     serverCache.set(TestServer, 3002);
+    await ready(s1);
     testFactory(createTest);
 
-    serverCacheArray.push(MetaTestServer.create(3003, 'localhost'));
+    const s2 = MetaTestServer.create(3003, 'localhost');
+    serverCacheArray.push(s2);
     serverCache.set(MetaTestServer, 3003);
+    await ready(s2);
   });
 
 
