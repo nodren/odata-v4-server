@@ -84,7 +84,7 @@ export class TypedController<T extends typeof BaseODataModel = any> extends ODat
     const repo = await this._getRepository(ctx);
     const data = await repo.findOne(key);
     if (isEmpty(data)) {
-      throw new ResourceNotFoundError();
+      throw new ResourceNotFoundError(`Resource not found: ${this.elementType?.name}[${key}]`);
     }
     await this._executeHooks({
       context: ctx, hookType: HookType.afterLoad, data, entityType: this.elementType

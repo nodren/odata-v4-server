@@ -67,6 +67,10 @@ class Teacher extends BaseODataModel {
   @ODataNavigation({ type: 'OneToMany', entity: () => Class, foreignKey: "teacherOneId" })
   classes: Class[];
 
+  // POST http://localhost:50000/Teachers(1)/Default.addClass
+  // {
+  //  "classId": 1
+  // }
   @Edm.Action
   async addClass(@Edm.Int32 classId: number, @odata.context ctx: ODataHttpContext) {
     const repo = await this._getRepository(ctx, Class)
@@ -78,10 +82,12 @@ class Teacher extends BaseODataModel {
     await c.save()
   }
 
+  // GET http://localhost:50000/Teachers(1)/Default.queryClass()
   @Edm.Collection(Edm.String)
   @Edm.Function
   async queryClass(@odata.context ctx) {
     const qr = await this._getQueryRunner(ctx);
+    // run native SQL query
     const items = await qr.query(`select name from class where teacherOneId = :id`, [this.id])
     return items.map(item => item.name)
   }
