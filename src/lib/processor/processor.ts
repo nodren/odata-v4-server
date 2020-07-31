@@ -528,12 +528,15 @@ export class ODataProcessor extends Transform {
         if (resourcePath.navigation.length == 0) {
           throw new ResourceNotFoundError();
         }
+
         this.workflow.push(...resourcePath.navigation.map((part, i) => {
+
           const next = resourcePath.navigation[i + 1];
           if (next && next.type == TokenType.RefExpression) {
             return null;
           }
           const fn = getResourcePartFunction(part.type) || (`__${part.type}`);
+
           switch (fn) {
             case '__actionOrFunction':
               return this.__actionOrFunction.call(this, part);
@@ -548,6 +551,8 @@ export class ODataProcessor extends Transform {
             case '__ComplexCollectionProperty':
             case '__PrimitiveProperty':
               return this.__PrimitiveProperty.call(this, part);
+
+            // read entity
             case '__EntitySetName':
               return this.__EntitySetName.call(this, part);
             case '__EntityCollectionNavigationProperty':
@@ -562,9 +567,7 @@ export class ODataProcessor extends Transform {
         this.workflow.push((result) => {
           if (result && result.statusCode && result.statusCode == 201) {
             if (result.body['@odata.id']) {
-              this.emit('header', {
-                'Location': result.body['@odata.id']
-              });
+              this.emit('header', { 'Location': result.body['@odata.id'] });
             } else {
               this.emit('error', new ServerInternalError('instance created, but service logic not return the created instance id'));
             }
@@ -1242,54 +1245,76 @@ export class ODataProcessor extends Transform {
         }
 
         if (boundOp == expOp) {
-          const expResult = Promise.resolve(boundOpName == '$count' ? opResult || this.resultCount : opResult);
+
+          let expResult = Promise.resolve(boundOpName == '$count' ? opResult || this.resultCount : opResult);
+
           if (elementType && boundOpName == '$value' && typeof elementType == 'function' && Edm.isMediaEntity(elementType)) {
-            opResult.then((opResult) => {
-              if (this.method == 'get') {
-                this.emit('header', {
-                  'Content-Type': Edm.getContentType(elementType) || opResult.contentType || 'application/octet-stream'
-                });
-                if (opResult.stream) {
-                  opResult = opResult.stream;
-                }
-                opResult.pipe(this);
-                opResult.on('end', resolve);
-                opResult.on('error', reject);
-              } else {
-                ODataResult.NoContent().then(resolve, reject);
+            opResult = await opResult;
+            if (this.method == 'get') {
+              this.emit('header', {
+                'Content-Type': Edm.getContentType(elementType) || opResult.contentType || 'application/octet-stream'
+              });
+              if (opResult.stream) {
+                opResult = opResult.stream;
               }
-            }, reject);
+              opResult.pipe(this);
+              opResult.on('end', resolve);
+              opResult.on('error', reject);
+            } else {
+              ODataResult.NoContent().then(resolve, reject);
+            }
           } else {
-            return expResult.then((expResult) => (<Promise<ODataResult>>(boundOpName == '$ref' && this.method != 'get' ? ODataResult.NoContent : ODataRequestResult[this.method])(expResult, typeof expResult == 'object' ? 'application/json' : 'text/plain')).then((result) => {
-              if (typeof expResult == 'object' && (boundOpName != '$ref' || this.method == 'get')) {
-                result.elementType = elementType;
-              }
-              resolve(result);
-            }, reject), reject);
+            expResult = await expResult;
+
+            let rf: any;
+
+            if (boundOpName == '$ref' && this.method != 'get') {
+              rf = ODataResult.NoContent;
+            } else {
+              rf = ODataRequestResult[this.method];
+            }
+
+            const result = await rf(expResult, typeof expResult == 'object' ? 'application/json' : 'text/plain');
+
+            if (typeof expResult == 'object' && (boundOpName != '$ref' || this.method == 'get')) {
+              result.elementType = elementType;
+            }
+
+            resolve(result);
+
           }
         }
+
         if (isAction && !returnType) {
-          return ODataResult.NoContent(opResult).then(resolve, reject);
-        }
-        return ODataResult.Ok(opResult).then((result) => {
+
+          resolve(await ODataResult.NoContent(opResult));
+
+        } else {
+
+          const result = await ODataResult.Ok(opResult);
+
           if (isStream(result.body)) {
+
             (<any>result.body).on('end', resolve);
             (<any>result.body).on('error', reject);
+
           } else {
-            try {
-              this.__appendODataContext(result, returnType, this.resourcePath.includes, this.resourcePath.select).then(() => {
-                if (typeof result.body.value == 'undefined') {
-                  result.body.value = opResult;
-                }
-                resolve(result);
-              });
-            } catch (err) {
-              reject(err);
+
+            await this.__appendODataContext(result, returnType, this.resourcePath.includes, this.resourcePath.select);
+
+            if (typeof result.body.value == 'undefined') {
+              result.body.value = opResult;
             }
+            resolve(result);
+
           }
-        }, reject);
+
+        }
+
       } catch (err) {
-        return reject(err);
+
+        reject(err);
+
       }
     });
   }

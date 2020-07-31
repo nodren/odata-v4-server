@@ -69,6 +69,7 @@ class Teacher extends BaseODataModel {
 
   @Edm.Action
   async addClass(@Edm.Int32 classId: number, @odata.context ctx: ODataHttpContext) {
+    // 'this' is bounded odata response object, is not entity instance 
     console.log(classId)
   }
 
