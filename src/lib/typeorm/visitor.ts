@@ -108,7 +108,8 @@ export const transformQueryAst = (node: ODataQuery, nameMapper: FieldNameMapper 
   };
 
   // only first level options
-  node.value.options.forEach((option) => {
+  // @ts-ignore
+  node.value?.options?.forEach((option) => {
     traverseAst(traverser, option);
   });
 
