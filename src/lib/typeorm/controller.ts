@@ -157,7 +157,7 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
     // query the created item
     const { identifiers: [id] } = await repo.insert(instance);
     // and return it
-    const created = this.findOne(id, ctx);
+    const created = await this.findOne(id, ctx);
     await this._executeHooks({ context: ctx, hookType: HookType.afterSave, data: created });
     return created;
   }
