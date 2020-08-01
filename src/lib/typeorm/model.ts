@@ -1,13 +1,21 @@
 import { BaseEntity, getConnection, Repository } from 'typeorm';
+import { getControllerInstance } from '../controller';
+import { getPublicControllers } from '../odata';
 import { ODataHttpContext } from '../server';
 import { getConnectionName } from './connection';
-import { getEntityController, TypedService } from './controller';
+import { TypedService } from './controller';
+import { getODataEntitySetName } from './decorators';
+import { getODataServerType } from './server';
 import { getOrCreateTransaction } from './transaction';
 
 export class BaseODataModel extends BaseEntity {
 
   protected _gerService<E extends typeof BaseODataModel>(entity: E): TypedService<E> {
-    return getEntityController(entity);
+    const serverType = getODataServerType(this.constructor);
+    const controllers = getPublicControllers(serverType);
+    const entitySetName = getODataEntitySetName(entity);
+    // @ts-ignore
+    return getControllerInstance(controllers[entitySetName]);
   };
 
   protected async _getConnection(ctx: ODataHttpContext) {
