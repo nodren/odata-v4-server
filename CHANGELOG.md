@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.18](https://github.com/Soontao/odata-v4-server/compare/v0.2.17...v0.2.18) (2020-08-01)
+
+
+### Features
+
+* [#18](https://github.com/Soontao/odata-v4-server/issues/18) ([de3196c](https://github.com/Soontao/odata-v4-server/commit/de3196c0dbd007b68a6e0f9c9a6d6d600483f70c))
+* action related refactor ([ebc2856](https://github.com/Soontao/odata-v4-server/commit/ebc2856d46cfe82ad449f03dff59373af793fddc))
+* action support for odata model ([b4ece29](https://github.com/Soontao/odata-v4-server/commit/b4ece29364be28f5bd2452b1ad29cea318e72483))
+* bounded function ([4cf44b0](https://github.com/Soontao/odata-v4-server/commit/4cf44b0a1a513a59049176577c32f9579313ca85))
+* integration test for school ([e536226](https://github.com/Soontao/odata-v4-server/commit/e5362264414d002f68c3634cc07a6865226700e4))
+* refactor action/function processor ([0e255f7](https://github.com/Soontao/odata-v4-server/commit/0e255f7a2c2c2a43126a037e06d2a6dab4a4a231))
+* support PUT method for odata ([a0fe2bd](https://github.com/Soontao/odata-v4-server/commit/a0fe2bd40f5b176c69c3c444f16e6ec21a10bd6a))
+* **hook:** attach new function shortcut ([35dcc71](https://github.com/Soontao/odata-v4-server/commit/35dcc71ad1cc438ec7b15113978c0bf25aeb9bd8))
+* **hook:** rename shortcut ([d01e7e4](https://github.com/Soontao/odata-v4-server/commit/d01e7e4e67c7ba6dafe36f66382b987bdd49bc90))
+
+
+### Bug Fixes
+
+* **type:** for visitor ([a45caec](https://github.com/Soontao/odata-v4-server/commit/a45caec755bafb4427f022fc65bb774b85d89e57))
+
 ### [0.2.17](https://github.com/Soontao/odata-v4-server/compare/v0.2.16...v0.2.17) (2020-07-30)
 
 
