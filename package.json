@@ -20,7 +20,7 @@
   "keywords": [
     "OData",
     "Rest",
-    "OData V4"
+    "OData(V4)"
   ],
   "license": "MIT",
   "contributors": [
@@ -51,6 +51,7 @@
     "uuid": "^8.3.0"
   },
   "devDependencies": {
+    "@odata/client": "^2.8.0",
     "@types/body-parser": "1.19.0",
     "@types/cors": "^2.8.6",
     "@types/event-stream": "^3.3.34",
@@ -71,7 +72,6 @@
     "eslint-plugin-es-beautifier": "^1.0.1",
     "event-stream": "^3.3.4",
     "jest": "^26.1.0",
-    "light-odata": "^2.7.0",
     "mongodb": "^3.6.0",
     "mssql": "^4.1.0",
     "odata-v4-inmemory": "^0.1.7",

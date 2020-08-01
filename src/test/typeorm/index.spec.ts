@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { defaultParser } from '@odata/parser';
-import { OData } from 'light-odata';
-import 'light-odata/lib/polyfill';
+import { OData } from '@odata/client';
+import '@odata/client/lib/polyfill';
 import 'reflect-metadata';
 import * as req from 'request-promise';
 import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';

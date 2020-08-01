@@ -1,6 +1,6 @@
 // @ts-nocheck
-import { OData } from 'light-odata';
-import 'light-odata/lib/polyfill';
+import { OData } from '@odata/client';
+import '@odata/client/lib/polyfill';
 import { ConnectionOptions, createConnection } from 'typeorm';
 import { createTypedODataServer } from '../../lib';
 import { randomPort } from '../utils/randomPort';

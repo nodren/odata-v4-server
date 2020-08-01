@@ -1,4 +1,4 @@
-import 'light-odata/lib/polyfill';
+import '@odata/client/lib/polyfill';
 import { isArray } from 'util';
 import { BaseHookProcessor, BaseODataModel, beforeCreate, createHookProcessor, findHooks, HookContext, HookProcessor, HookType, ODataColumn, ODataEntitySetName, ODataModel, registerHook } from '../../lib';
 import { shutdown } from '../utils/server';
