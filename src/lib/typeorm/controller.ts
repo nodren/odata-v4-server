@@ -28,7 +28,7 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
   }
 
   protected async _getQueryRunner(ctx?: ODataHttpContext) {
-    return getOrCreateTransaction(getConnection(getConnectionName(this.constructor as typeof TypedService)), ctx);
+    return getOrCreateTransaction(getConnection(getConnectionName(this.constructor)), ctx);
   }
 
   protected async _getRepository(ctx?: ODataHttpContext): Promise<Repository<InstanceType<T>>> {
@@ -53,17 +53,38 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
     if (ctx.entityType == undefined) {
       ctx.entityType = this.elementType;
     }
-    if (ctx.em == undefined) {
-      ctx.em = await this._getEntityManager(ctx.context);
-    }
+
     if (ctx.hookType == undefined) {
       throw new ServerInternalError('Hook Type must be specify by controller');
     }
-    if (ctx.getService == undefined) {
-      ctx.getService = getEntityController;
+
+    if (ctx.getConnection == undefined) {
+      ctx.getConnection = () => getConnection(getConnectionName(this.constructor));
     }
 
     const isEvent = HookEvents.includes(ctx.hookType);
+
+    if (isEvent) {
+
+      if (ctx.getService == undefined) {
+        ctx.getService = () => {
+          throw new ServerInternalError('Not support get service in event hooks.');
+        };
+      }
+
+
+    } else {
+
+      if (ctx.getService == undefined) {
+        ctx.getService = getEntityController;
+      }
+
+      if (ctx.em == undefined) {
+        ctx.em = await this._getEntityManager(ctx.context);
+      }
+
+    }
+
 
     const hooks = findHooks(this.elementType, ctx.hookType);
 
@@ -73,9 +94,7 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
       if (isEvent) {
         // is event, just trigger executor but not wait it finished
         // @ts-ignore
-        hook.execute(ctx).catch((error) => {
-          // logger here
-        });
+        hook.execute(ctx).catch(console.error);
       } else {
         // is hook, wait them executed
         // @ts-ignore

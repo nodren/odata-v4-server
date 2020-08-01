@@ -1,4 +1,4 @@
-import { EntityManager } from 'typeorm';
+import { Connection, EntityManager } from 'typeorm';
 import { ODataHttpContext } from '../../server';
 import { TypedService } from '../controller';
 import { BaseODataModel } from '../model';
@@ -8,6 +8,7 @@ export interface HookContext<T = any> {
   context: ODataHttpContext;
   hookType: HookType;
   entityType: typeof BaseODataModel;
+
   /**
    * data item for read/create/update
    */
@@ -22,14 +23,23 @@ export interface HookContext<T = any> {
   key?: any;
 
   /**
-   * (transaction) entity manager
+   * (transaction) entity manager,
+   * ONLY in sync hooks
    */
-  em: EntityManager;
+  em?: EntityManager;
 
   /**
    * get controller (service) instance for entity
+   *
+   * ONLY sync hooks
    */
-  getService: <E extends typeof BaseODataModel>(entity: E) => TypedService<E>;
+  getService?: <E extends typeof BaseODataModel>(entity: E) => TypedService<E>;
+
+
+  /**
+   * get root connection for server
+   */
+  getConnection: () => Connection;
 
 }
 
