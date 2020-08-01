@@ -1,3 +1,4 @@
+// @ts-nocheck
 import isEmpty from '@newdash/newdash/isEmpty';
 import { defaultParser, ODataQueryParam } from '@odata/parser';
 import 'reflect-metadata';
@@ -18,19 +19,19 @@ import { transformQueryAst } from './visitor';
  */
 export class TypedService<T extends typeof BaseODataModel = any> extends ODataController {
 
-  protected async _getConnection(ctx: ODataHttpContext) {
+  protected async _getConnection(ctx?: ODataHttpContext) {
     return (await this._getQueryRunner(ctx)).connection;
   }
 
-  protected async _getEntityManager(ctx: ODataHttpContext) {
+  protected async _getEntityManager(ctx?: ODataHttpContext) {
     return (await this._getQueryRunner(ctx)).manager;
   }
 
-  protected async _getQueryRunner(ctx: ODataHttpContext) {
+  protected async _getQueryRunner(ctx?: ODataHttpContext) {
     return getOrCreateTransaction(getConnection(getConnectionName(this.constructor as typeof TypedService)), ctx);
   }
 
-  protected async _getRepository(ctx: ODataHttpContext): Promise<Repository<InstanceType<T>>> {
+  protected async _getRepository(ctx?: ODataHttpContext): Promise<Repository<InstanceType<T>>> {
     // @ts-ignore
     return (await this._getConnection(ctx)).getRepository(this.elementType);
   }
@@ -47,7 +48,7 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
    * @param data data for read/create
    * @param key key for update/delete
    */
-  private async _executeHooks(ctx: Partial<HookContext>) {
+  private async _executeHooks(ctx?: Partial<HookContext>) {
 
     if (ctx.entityType == undefined) {
       ctx.entityType = this.elementType;
@@ -86,7 +87,7 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
 
 
   @odata.GET
-  async findOne(@odata.key key, @odata.context ctx: ODataHttpContext): Promise<InstanceType<T>> {
+  async findOne(@odata.key key, @odata.context ctx?: ODataHttpContext): Promise<InstanceType<T>> {
     const repo = await this._getRepository(ctx);
     const data = await repo.findOne(key);
     if (isEmpty(data)) {
@@ -98,11 +99,11 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
     return data;
   }
 
-  async find(query: ODataQueryParam, ctx: ODataHttpContext): Promise<Array<InstanceType<T>>>;
-  async find(query: string, ctx: ODataHttpContext): Promise<Array<InstanceType<T>>>;
-  async find(query: ODataQuery, ctx: ODataHttpContext): Promise<Array<InstanceType<T>>>;
+  async find(query: ODataQueryParam, ctx?: ODataHttpContext): Promise<Array<InstanceType<T>>>;
+  async find(query: string, ctx?: ODataHttpContext): Promise<Array<InstanceType<T>>>;
+  async find(query: ODataQuery, ctx?: ODataHttpContext): Promise<Array<InstanceType<T>>>;
   @odata.GET
-  async find(@odata.query query, @odata.context ctx: ODataHttpContext) {
+  async find(@odata.query query, @odata.context ctx?: ODataHttpContext) {
 
     const conn = await this._getConnection(ctx);
     const repo = await this._getRepository(ctx);
@@ -149,18 +150,21 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
   }
 
   @odata.POST
-  async create(@odata.body body: QueryDeepPartialEntity<InstanceType<T>>, @odata.context ctx: ODataHttpContext) {
+  async create(@odata.body body: QueryDeepPartialEntity<InstanceType<T>>, @odata.context ctx?: ODataHttpContext) {
     const repo = await this._getRepository(ctx);
-    await this._executeHooks({ context: ctx, hookType: HookType.beforeCreate, data: body });
+    const instance = repo.create(body);
+    await this._executeHooks({ context: ctx, hookType: HookType.beforeCreate, data: instance });
     // query the created item
-    const { identifiers: [id] } = await repo.insert(body);
+    const { identifiers: [id] } = await repo.insert(instance);
     // and return it
-    return this.findOne(id, ctx);
+    const created = this.findOne(id, ctx);
+    await this._executeHooks({ context: ctx, hookType: HookType.afterSave, data: created });
+    return created;
   }
 
   // create or update
   @odata.PUT
-  async save(@odata.key key, @odata.body body: QueryDeepPartialEntity<InstanceType<T>>, @odata.context ctx: ODataHttpContext) {
+  async save(@odata.key key, @odata.body body: QueryDeepPartialEntity<InstanceType<T>>, @odata.context ctx?: ODataHttpContext) {
     const repo = await this._getRepository(ctx);
     if (key) {
       const item = await repo.findOne(key);
@@ -174,18 +178,21 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
 
   // odata patch will not response any content
   @odata.PATCH
-  async update(@odata.key key, @odata.body body: QueryDeepPartialEntity<InstanceType<T>>, @odata.context ctx: ODataHttpContext) {
+  async update(@odata.key key, @odata.body body: QueryDeepPartialEntity<InstanceType<T>>, @odata.context ctx?: ODataHttpContext) {
     const repo = await this._getRepository(ctx);
-    await this._executeHooks({ context: ctx, hookType: HookType.beforeUpdate, data: body, key });
-    await repo.update(key, body);
+    const instance = repo.create(body);
+    await this._executeHooks({ context: ctx, hookType: HookType.beforeUpdate, data: instance, key });
+    await repo.update(key, instance);
+    await this._executeHooks({ context: ctx, hookType: HookType.afterSave, data: instance, key });
   }
 
   // odata delete will not response any content
   @odata.DELETE
-  async delete(@odata.key key, @odata.context ctx: ODataHttpContext) {
+  async delete(@odata.key key, @odata.context ctx?: ODataHttpContext) {
     const repo = await this._getRepository(ctx);
     await this._executeHooks({ context: ctx, hookType: HookType.beforeDelete, key });
     await repo.delete(key);
+    await this._executeHooks({ context: ctx, hookType: HookType.afterSave, key });
   }
 
 }

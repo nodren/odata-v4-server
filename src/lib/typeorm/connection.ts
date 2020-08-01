@@ -11,7 +11,7 @@ const KEY_CONN_NAME = 'odata:controller:connection';
  * @param connectionName typeorm connection name
  */
 export function withConnection(connectionName: string = 'default') {
-  return function(controller: typeof TypedService) {
+  return function (controller: typeof TypedService) {
     Reflect.defineMetadata(KEY_CONN_NAME, connectionName, controller);
   };
 }
@@ -32,3 +32,5 @@ export function getConnectionName(target: typeof TypedService | typeof BaseOData
  * @alias typeorm createConnection
  */
 export const createDBConnection = createConnection;
+
+export { ConnectionOptions } from 'typeorm';

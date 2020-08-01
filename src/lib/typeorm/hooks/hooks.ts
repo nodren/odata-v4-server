@@ -20,8 +20,9 @@ export interface HookContext<T = any> {
    * key for update/delete/read
    */
   key?: any;
+
   /**
-   * transaction entity manager
+   * (transaction) entity manager
    */
   em: EntityManager;
 

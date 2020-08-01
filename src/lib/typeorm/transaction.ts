@@ -10,16 +10,13 @@ const transactionStorage = new WeakMap<ODataHttpContext, QueryRunner>();
  * @param ctx
  */
 export async function getOrCreateTransaction(conn: Connection, ctx: ODataHttpContext): Promise<QueryRunner> {
-
   if (!transactionStorage.has(ctx)) {
     const qr = conn.createQueryRunner(); // pool required
     await qr.connect();
     await qr.startTransaction(); // begin transaction
     transactionStorage.set(ctx, qr);
   }
-
   return transactionStorage.get(ctx);
-
 }
 
 async function releaseTransaction(qr: QueryRunner): Promise<void> {
