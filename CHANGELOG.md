@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.20](https://github.com/Soontao/odata-v4-server/compare/v0.2.19...v0.2.20) (2020-08-01)
+
+
+### Bug Fixes
+
+* creation hook ([1b6a554](https://github.com/Soontao/odata-v4-server/commit/1b6a55483d7f2b6ed6b9792f845460366e396920))
+
 ### [0.2.19](https://github.com/Soontao/odata-v4-server/compare/v0.2.18...v0.2.19) (2020-08-01)
 
 
