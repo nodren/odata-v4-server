@@ -1,6 +1,7 @@
 # OData(V4) Server
 
 [![npm (scoped)](https://img.shields.io/npm/v/@odata/server?label=@odata/server)](https://www.npmjs.com/package/@odata/server)
+[![npm (scoped)](https://img.shields.io/npm/v/@odata/client?label=@odata/metadata)](https://www.npmjs.com/package/@odata/client)
 [![npm (scoped)](https://img.shields.io/npm/v/@odata/parser?label=@odata/parser)](https://www.npmjs.com/package/@odata/parser)
 [![npm (scoped)](https://img.shields.io/npm/v/@odata/metadata?label=@odata/metadata)](https://www.npmjs.com/package/@odata/metadata)
 
@@ -18,7 +19,7 @@ NodeJS OData(V4) Server Implementation
 * usable as a standalone server, as an Express router, as a node.js stream or as a library
 * expose service document and service metadata - `$metadata`
 * setup metadata using decorators or [@odata/metadata](https://github.com/Soontao/odata-v4-metadata)
-* supported data types are Edm primitives, complex types, navigation properties
+* supported data types are `Edm primitives`, `complex types`, `navigation properties`
 * support `create`, `read`, `update`, and `delete` entity sets, `action imports`, `function imports`, collection and `entity bound actions` and `functions`
 * support for full OData query language using [@odata/parser](https://github.com/Soontao/odata-v4-parser)
   * filtering entities - `$filter`
@@ -29,34 +30,26 @@ NodeJS OData(V4) Server Implementation
   * count records - `$count`
 * support async controller functions using `Promise`, `async/await` or ES6 generator functions
 
-## Controller and server functions parameter injection decorators
+## Concepts
 
-* @odata.key
-* ~~@odata.filter~~ -- **just use @odata.query**
-* @odata.query
-* @odata.context
-* @odata.body
-* ~~@odata.result~~ -- **NOT stable**
-* ~~@odata.stream~~ -- **NOT stable**
+### Model
 
-## Model
+Define `model` class, it will be transformed to database schema.
 
-Define model class, it will be transformed to database schema.
+### Action & Function
 
-## Action & Function
+Define `Action/Function` on you `Domain Models`, focus business logic on micro-level.
 
-Define `Action/Function` on you Domain Model, focus business logic on micro-level.
-
-## Hook
+### Hook
 
 Define `Hooks` to implement the business logics for entity.
 
-## Service (TypedController)
+### Service (TypedController)
 
 Using `services` in `hook`/`action`/`function`, keep the business consistence for single domain model.
 
 Each model will have its own standard `CRUD` service which enhanced with `hooks` logic.
 
-## Transaction
+### Transaction
 
 Each `ODataHTTPContext` will share a database transaction (connection).
