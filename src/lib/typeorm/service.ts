@@ -3,11 +3,11 @@ import { BaseEntity, Connection, ConnectionOptions, createConnection } from 'typ
 import { odata } from '..';
 import { ODataServer } from '../server';
 import { withConnection } from './connection';
-import { registerController, TypedService } from './controller';
+import { TypedService } from './controller';
 import { getODataEntitySetName } from './decorators';
-import { BaseHookProcessor, registerHook } from './hooks';
+import { BaseHookProcessor, withHook } from './hooks';
 import { BaseODataModel } from './model';
-import { TypedODataServer } from './server';
+import { TypedODataServer, withODataServerType } from './server';
 
 type TypedODataItems = typeof BaseEntity | typeof BaseHookProcessor
 
@@ -34,34 +34,40 @@ export async function createTypedODataServer(connection: any, ...configurations:
       throw new Error(`not supported initialized parameter [connection] for create odata server`);
   }
 
-  const server = class extends TypedODataServer { };
+  const serverType = class extends TypedODataServer { };
 
-  configurations.forEach((configuration) => {
+  Object.defineProperty(serverType, 'name', { value: `TypedServerWithConn_${connName}` });
+
+  configurations.filter((i) => Boolean(i)).forEach((configuration) => {
+
+    withODataServerType(serverType)(configuration);
+    withConnection(connName)(configuration);
 
     if (configuration.prototype instanceof BaseODataModel || configuration.prototype instanceof BaseEntity) {
 
       const ct = class extends TypedService { };
-      const entitySetName = getODataEntitySetName(configuration) || `${configuration.name}s`;
+
+      const entitySetName = getODataEntitySetName(configuration);
 
       // define controller name to use decorator
       Object.defineProperty(ct, 'name', { value: `${entitySetName}Controller` });
 
+      withODataServerType(serverType)(ct);
+
       // attach connection metadata
-      withConnection(connName)(configuration);
       withConnection(connName)(ct);
 
       // default public controller
-      odata.withController(ct, entitySetName, configuration)(server);
-      registerController(configuration, ct);
+      odata.withController(ct, entitySetName, configuration)(serverType);
 
     } else if (configuration.prototype instanceof BaseHookProcessor || configuration instanceof BaseHookProcessor) {
 
-      registerHook(configuration);
+      withHook(configuration)(serverType);
 
     }
 
   });
 
-  return server;
+  return serverType;
 
 }

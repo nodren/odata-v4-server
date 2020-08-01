@@ -32,7 +32,13 @@ export function ODataEntitySetName(entitySetName: string) {
  * @param target
  */
 export function getODataEntitySetName(target: any): string {
-  return Reflect.getMetadata(KEY_ODATA_ENTITY_SET, target);
+  const metaName = Reflect.getMetadata(KEY_ODATA_ENTITY_SET, target);
+  if (metaName) {
+    return metaName;
+  } else if (target?.name) {
+    return `${target.name}s`;
+  }
+  return undefined;
 }
 
 /**

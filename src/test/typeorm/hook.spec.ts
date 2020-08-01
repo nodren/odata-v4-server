@@ -1,6 +1,7 @@
 import '@odata/client/lib/polyfill';
 import { isArray } from 'util';
-import { BaseHookProcessor, BaseODataModel, beforeCreate, createHookProcessor, findHooks, HookContext, HookProcessor, HookType, ODataColumn, ODataEntitySetName, ODataModel, registerHook } from '../../lib';
+import { BaseHookProcessor, BaseODataModel, beforeCreate, createHookProcessor, findHooks, HookContext, HookProcessor, HookType, ODataColumn, ODataEntitySetName, ODataModel, withHook } from '../../lib';
+import { TypedODataServer } from '../../lib/typeorm/server';
 import { shutdown } from '../utils/server';
 import { createServerAndClient, createTmpConnection } from './utils';
 
@@ -9,6 +10,8 @@ describe('Hooks Test Suite', () => {
 
 
   it('should register hooks', () => {
+
+    const s1 = class extends TypedODataServer { };
 
     const t1 = class extends BaseODataModel { };
     const t2 = class extends BaseODataModel { };
@@ -41,17 +44,17 @@ describe('Hooks Test Suite', () => {
       }
     };
 
-    registerHook(p1);
-    registerHook(p2);
-    registerHook(p3);
-    registerHook(p4);
-    registerHook(p5);
+    withHook(p1)(s1);
+    withHook(p2)(s1);
+    withHook(p3)(s1);
+    withHook(p4)(s1);
+    withHook(p5)(s1);
 
-    expect(findHooks(t1, HookType.afterLoad)).toHaveLength(3);
+    expect(findHooks(s1, t1, HookType.afterLoad)).toHaveLength(3);
 
     // ensure order
     expect(
-      findHooks(t2, HookType.beforeCreate).map((i) => i?.constructor)
+      findHooks(s1, t2, HookType.beforeCreate).map((i) => i?.constructor)
     ).toStrictEqual(
       [
         p1?.constructor,
@@ -85,12 +88,10 @@ describe('Hooks Test Suite', () => {
 
     const entities = [Student];
 
-    registerHook(
-      createHookProcessor(
-        async ({ data }) => { if (!isArray(data)) { data.age = DEFAULT_AGE; } },
-        Student,
-        HookType.beforeCreate
-      )
+    const hook = createHookProcessor(
+      async ({ data }) => { if (!isArray(data)) { data.age = DEFAULT_AGE; } },
+      Student,
+      HookType.beforeCreate
     );
 
     const conn = await createTmpConnection({
@@ -98,7 +99,7 @@ describe('Hooks Test Suite', () => {
       entities
     });
 
-    const { server, client } = await createServerAndClient(conn, ...entities);
+    const { server, client } = await createServerAndClient(conn, hook, ...entities);
 
     const es = client.getEntitySet<Student>('Students');
 
@@ -146,14 +147,12 @@ describe('Hooks Test Suite', () => {
 
     }
 
-    registerHook(BeforeStudentCreationHook);
-
     const conn = await createTmpConnection({
       name: 'hook_class_test_conn',
       entities
     });
 
-    const { server, client } = await createServerAndClient(conn, ...entities);
+    const { server, client } = await createServerAndClient(conn, BeforeStudentCreationHook, ...entities);
 
     const es = client.getEntitySet<Student>('Students');
 

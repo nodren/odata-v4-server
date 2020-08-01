@@ -7,10 +7,13 @@ import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity
 import { odata, ODataQuery } from '..';
 import { getControllerInstance, ODataController } from '../controller';
 import { ResourceNotFoundError, ServerInternalError } from '../error';
+import { getPublicControllers } from '../odata';
 import { ODataHttpContext } from '../server';
 import { getConnectionName } from './connection';
+import { getODataEntitySetName } from './decorators';
 import { findHooks, HookContext, HookEvents, HookType } from './hooks';
 import { BaseODataModel } from './model';
+import { getODataServerType } from './server';
 import { getOrCreateTransaction } from './transaction';
 import { transformQueryAst } from './visitor';
 
@@ -36,8 +39,11 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
     return (await this._getConnection(ctx)).getRepository(this.elementType);
   }
 
-  protected _gerService<E extends typeof BaseODataModel>(entity: E): TypedService<E> {
-    return getEntityController(entity);
+  protected _getService<E extends typeof BaseODataModel>(entity: E): TypedService<E> {
+    const serverType = getODataServerType(this.constructor);
+    const controllers = getPublicControllers(serverType);
+    const entitySetName = getODataEntitySetName(entity);
+    return getControllerInstance(controllers[entitySetName]);
   };
 
   /**
@@ -76,7 +82,7 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
     } else {
 
       if (ctx.getService == undefined) {
-        ctx.getService = getEntityController;
+        ctx.getService = this._getService.bind(this);
       }
 
       if (ctx.em == undefined) {
@@ -84,9 +90,9 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
       }
 
     }
+    const serverType = getODataServerType(this.constructor);
 
-
-    const hooks = findHooks(this.elementType, ctx.hookType);
+    const hooks = findHooks(serverType, this.elementType, ctx.hookType);
 
     for (let idx = 0; idx < hooks.length; idx++) {
       const hook = hooks[idx];
@@ -214,32 +220,4 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
     await this._executeHooks({ context: ctx, hookType: HookType.afterSave, key });
   }
 
-}
-
-/**
- * service registry for entities
- */
-const entityServicesRegistry = new Map<typeof BaseODataModel, typeof TypedService>();
-
-/**
- * register controller for entity
- *
- * @param entity
- * @param controller
- */
-export function registerController(entity: typeof BaseODataModel, controller: typeof TypedService): void {
-  if (entityServicesRegistry.has(entity)) {
-    throw new Error('the controller has been generated for entity. (one entity - one controller)');
-  }
-  entityServicesRegistry.set(entity, controller);
-}
-
-/**
- * get entity controller instance
- *
- * @param entity
- */
-export function getEntityController<E extends typeof BaseODataModel>(entity: E): TypedService<E> {
-  // @ts-ignore
-  return getControllerInstance(entityServicesRegistry.get(entity));
 }

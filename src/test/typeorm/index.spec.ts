@@ -1,35 +1,35 @@
 // @ts-nocheck
-import { defaultParser } from '@odata/parser';
 import { OData } from '@odata/client';
 import '@odata/client/lib/polyfill';
+import { defaultParser } from '@odata/parser';
 import 'reflect-metadata';
 import * as req from 'request-promise';
 import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
-import { createTypedODataServer, Edm, FieldNameMapper, odata, ODataColumn, ODataModel, ODataNavigation, ODataServer, transformFilterAst, transformQueryAst, TypedService, withConnection } from '../../lib/index';
+import { BaseODataModel, createTypedODataServer, Edm, FieldNameMapper, odata, ODataColumn, ODataModel, ODataNavigation, ODataServer, transformFilterAst, transformQueryAst, TypedService, withConnection } from '../../lib/index';
+import { withODataServerType } from '../../lib/typeorm/server';
 import { randomPort } from '../utils/randomPort';
 import { ready, shutdown } from '../utils/server';
 import { createTmpConnection } from './utils';
 
 describe('Typeorm Integration Test Suite', () => {
 
-  it('should support CRUD by repository', async() => {
+  it('should support CRUD by repository', async () => {
 
     // example entity
-    @Entity({ name: 't_products' })
-    class Product extends BaseEntity {
+    @ODataModel()
+    class Product extends BaseODataModel {
 
-      @Edm.Key
-      @Edm.Int32 // remember to identify the type of key column
-      @PrimaryGeneratedColumn()
+      @ODataColumn({ primary: true, generated: 'increment' })
       id: number;
 
-      @Column()
-      @Edm.String
+      @ODataColumn()
       desc: string
 
     }
 
-    const tmpConn = await createTmpConnection({ name: 'typeorm-test1', entities: [Product] });
+    const tmpConn = await createTmpConnection({
+      name: 'typeorm-test1', entities: [Product]
+    });
 
     const tmpRepo = tmpConn.getRepository(Product);
 
@@ -38,16 +38,16 @@ describe('Typeorm Integration Test Suite', () => {
     expect(await tmpRepo.findOne({ id: 2 })).not.toBeUndefined();
 
     // example service
-    @odata.type(Product)
-    @odata.entitySet('Products')
-    @withConnection('typeorm-test1')
-    class C4 extends TypedService<Product> {
+    class TmpController extends TypedService<Product> {
 
     }
 
     // example server
-    @odata.withController(C4, true)
+    @odata.withController(TmpController, 'Products', Product)
     class TmpServer extends ODataServer { }
+
+    withODataServerType(TmpServer)(TmpController);
+    withConnection(tmpConn.name)(TmpController);
 
     const server = TmpServer.create(randomPort());
 
@@ -77,7 +77,7 @@ describe('Typeorm Integration Test Suite', () => {
     res = await req.delete(`http://127.0.0.1:${port}/Products(1)`);
 
     // not found
-    await expect(async() => req.get(`http://127.0.0.1:${port}/Products(1)`)).rejects.toThrow();
+    await expect(async () => req.get(`http://127.0.0.1:${port}/Products(1)`)).rejects.toThrow();
 
     // no limit query
     res = await req.get(`http://127.0.0.1:${port}/Products`, { json: true });
@@ -126,7 +126,7 @@ describe('Typeorm Integration Test Suite', () => {
 
   });
 
-  it('should support shortcut to create a service', async() => {
+  it('should support shortcut to create a service', async () => {
 
     const connectionName = 'shortcut';
 

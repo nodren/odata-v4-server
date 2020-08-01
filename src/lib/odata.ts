@@ -205,7 +205,7 @@ export function controller(controller: typeof ODataController, entitySetName?: s
     server.prototype[controller.name] = controller;
     entitySetName = (typeof entitySetName == 'string' ? entitySetName : '') || controller.prototype.entitySetName || (entitySetName === true ? controller.name.replace('Controller', '') : false);
     if (entitySetName) {
-      const entitySets: any[] = Reflect.getOwnMetadata(ODataEntitySets, server) || {};
+      const entitySets: any = Reflect.getOwnMetadata(ODataEntitySets, server) || {};
       entitySets[<string>entitySetName] = controller;
       Reflect.defineMetadata(ODataEntitySets, entitySets, server);
     } else {

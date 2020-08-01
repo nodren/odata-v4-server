@@ -1,8 +1,13 @@
+import sortBy from '@newdash/newdash/sortBy';
 import { Connection, EntityManager } from 'typeorm';
 import { ODataHttpContext } from '../../server';
 import { TypedService } from '../controller';
 import { BaseODataModel } from '../model';
+import { TypedODataServer } from '../server';
 import { HookType } from './hook_type';
+import { BaseHookProcessor } from './processor';
+
+const KEY_WITH_HOOK = 'odata:with_hook';
 
 export interface HookContext<T = any> {
   context: ODataHttpContext;
@@ -77,3 +82,47 @@ export const afterLoad = createHookDecorator(HookType.afterLoad);
  * after data has been saved to database (committed)
  */
 export const afterSave = createHookDecorator(HookType.afterSave);
+
+
+export function withHook(hook: typeof BaseHookProcessor | BaseHookProcessor) {
+  return function (target: typeof TypedODataServer) {
+    const hooks = getHooks(target);
+    if (hook instanceof BaseHookProcessor) {
+      hooks.add(hook);
+    } else if (hook instanceof BaseHookProcessor.constructor) {
+      // @ts-ignore
+      hooks.add(new hook);
+    }
+    Reflect.defineMetadata(KEY_HOOK_META, hooks, target);
+  };
+}
+
+export function getHooks(target: typeof TypedODataServer): Set<BaseHookProcessor> {
+  return Reflect.getMetadata(KEY_HOOK_META, target) || new Set();
+}
+
+
+/**
+ * find hooks by entity type and hook type
+ *
+ * @param entityType
+ * @param hookType
+ */
+export const findHooks = <T extends typeof BaseODataModel>(serverType: typeof TypedODataServer, entityType: T, hookType: HookType): Array<BaseHookProcessor<T>> => {
+
+  let rt: Array<BaseHookProcessor> = [];
+  const hooks = getHooks(serverType);
+
+  hooks.forEach((processor) => {
+    if (processor.support(entityType, hookType)) {
+      rt.push(processor);
+    };
+  });
+
+  if (rt.length > 0) {
+    rt = sortBy(rt, (processor) => processor.order());
+  }
+
+  return rt;
+
+};

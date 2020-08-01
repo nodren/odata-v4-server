@@ -8,7 +8,8 @@ describe('Typed OData Server Integration Test Suite', () => {
 
     const { server, client } = await createServerAndClient({
       name: 'typed_server_integration_test_conn',
-      type: 'sqljs', synchronize: true,
+      type: 'sqljs',
+      synchronize: true,
       entities: SchoolEntities
     }, ...SchoolEntities);
 
