@@ -1,7 +1,7 @@
 # OData(V4) Server
 
 [![npm (scoped)](https://img.shields.io/npm/v/@odata/server?label=@odata/server)](https://www.npmjs.com/package/@odata/server)
-[![npm (scoped)](https://img.shields.io/npm/v/@odata/client?label=@odata/metadata)](https://www.npmjs.com/package/@odata/client)
+[![npm (scoped)](https://img.shields.io/npm/v/@odata/client?label=@odata/client)](https://www.npmjs.com/package/@odata/client)
 [![npm (scoped)](https://img.shields.io/npm/v/@odata/parser?label=@odata/parser)](https://www.npmjs.com/package/@odata/parser)
 [![npm (scoped)](https://img.shields.io/npm/v/@odata/metadata?label=@odata/metadata)](https://www.npmjs.com/package/@odata/metadata)
 
