@@ -53,3 +53,5 @@ Each model will have its own standard `CRUD` service which enhanced with `hooks`
 ### Transaction
 
 Each `ODataHTTPContext` will share a database transaction (connection).
+
+## [CHANGELOG](./CHANGELOG.md)

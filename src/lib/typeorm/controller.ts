@@ -179,16 +179,20 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
   /**
    * deep insert
    *
+   * @private
+   * @ignore
+   * @internal
    * @param body
    * @param ctx
    */
-  async _deepInsert(body: any, ctx: ODataHttpContext) {
+  private async _deepInsert(body: any, ctx: ODataHttpContext) {
 
     const navigations = getODataEntityNavigations(this.elementType.prototype);
 
     for (const navigationName in navigations) {
       if (Object.prototype.hasOwnProperty.call(navigations, navigationName)) {
         if (Object.prototype.hasOwnProperty.call(body, navigationName)) {
+          // if navigation property have value
           const navigationData = body[navigationName];
           const options = navigations[navigationName];
           const service = this._getService(options.entity());
@@ -199,6 +203,7 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
                   navigationData.map((navigationItem) => service.create(navigationItem, ctx))
                 );
               } else {
+                // for one-to-many relationship, must provide an array, even only have one record
                 throw new ServerInternalError(`navigation property [${navigationName}] must be an array!`);
               }
               break;
