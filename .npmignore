@@ -1,11 +1,11 @@
 .vscode
+.github
 coverage
 report
 docs
 .nyc_output
 *.log*
 .vscode
-lib/example
-lib/test
-src/example
-src/test
+example
+test
+jest.config.js
