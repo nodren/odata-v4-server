@@ -7,7 +7,7 @@
       "name": "Typed Example Server",
       "program": "${workspaceFolder}/node_modules/ts-node/dist/bin.js",
       "args": [
-        "src/example/typed_simple_server"
+        "example/typed_simple_server"
       ],
       "skipFiles": [
         "<node_internals>/**"
