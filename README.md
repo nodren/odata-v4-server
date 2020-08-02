@@ -16,7 +16,7 @@ NodeJS OData(V4) Server Implementation
 ## Features
 
 * OASIS Standard OData Version **4.0** server
-* usable as a standalone server, as an Express router, as a node.js stream or as a library
+* usable as a standalone server, as an Express router
 * expose service document and service metadata - `$metadata`
 * setup metadata using decorators or [@odata/metadata](https://github.com/Soontao/odata-v4-metadata)
 * supported data types are `Edm primitives`, `complex types`, `navigation properties`
@@ -28,17 +28,17 @@ NodeJS OData(V4) Server Implementation
   * projection of entities - `$select`
   * expanding entities - `$expand`
   * count records - `$count`
-* support async controller functions using `Promise`, `async/await` or ES6 generator functions
+* support async controller functions using `Promise`, `async/await`
 
 ## Concepts
 
-### Model
+### Domain Model
 
-Define `model` class, it will be transformed to database schema.
+Define domain `model` class, it will be transformed to database schema.
 
 ### Action & Function
 
-Define `Action/Function` on you `Domain Models`, focus business logic on micro-level.
+Define `Action/Function` on the `Domain Models`, focus business logic on micro-level.
 
 ### Hook
 
@@ -53,5 +53,7 @@ Each model will have its own standard `CRUD` service which enhanced with `hooks`
 ### Transaction
 
 Each `ODataHTTPContext` will share a database transaction (connection).
+
+## [LICENSE](./LICENSE)
 
 ## [CHANGELOG](./CHANGELOG.md)
