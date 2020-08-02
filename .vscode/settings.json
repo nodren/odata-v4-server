@@ -8,6 +8,7 @@
     "Northwind",
     "inlinecount",
     "inmemory",
+    "navigations",
     "odata",
     "sqljs",
     "typeorm"

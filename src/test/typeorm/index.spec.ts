@@ -5,7 +5,7 @@ import { defaultParser } from '@odata/parser';
 import 'reflect-metadata';
 import * as req from 'request-promise';
 import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
-import { BaseODataModel, createTypedODataServer, Edm, FieldNameMapper, odata, ODataColumn, ODataModel, ODataNavigation, ODataServer, transformFilterAst, transformQueryAst, TypedService, withConnection } from '../../lib/index';
+import { BaseODataModel, createTypedODataServer, Edm, FieldNameMapper, getODataNavigation, odata, ODataColumn, ODataModel, ODataNavigation, ODataServer, transformFilterAst, transformQueryAst, TypedService, withConnection } from '../../lib/index';
 import { withODataServerType } from '../../lib/typeorm/server';
 import { randomPort } from '../utils/randomPort';
 import { ready, shutdown } from '../utils/server';
@@ -204,10 +204,15 @@ describe('Typeorm Integration Test Suite', () => {
   });
 
   it('should works with decorator', () => {
-    class A { }
 
     @ODataModel()
-    class E1 {
+    class A extends BaseODataModel { }
+
+    @ODataModel()
+    class B extends BaseODataModel { }
+
+    @ODataModel()
+    class E1 extends BaseODataModel {
 
       @ODataColumn()
       f1: string
@@ -231,8 +236,18 @@ describe('Typeorm Integration Test Suite', () => {
       })
       f6: A[]
 
+      @ODataNavigation({
+        type: 'ManyToOne',
+        entity: () => B,
+        foreignKey: 'a'
+      })
+      f7: B
+
     }
 
+    const n = getODataNavigation(E1.prototype, 'f6');
+
+    expect(n).not.toBeUndefined();
   });
 
 

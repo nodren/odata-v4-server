@@ -1,5 +1,5 @@
 // @ts-nocheck
-import isEmpty from '@newdash/newdash/isEmpty';
+import { isEmpty } from '@newdash/newdash/isEmpty';
 import { defaultParser, ODataQueryParam } from '@odata/parser';
 import 'reflect-metadata';
 import { getConnection, Repository } from 'typeorm';
@@ -10,12 +10,13 @@ import { ResourceNotFoundError, ServerInternalError } from '../error';
 import { getPublicControllers } from '../odata';
 import { ODataHttpContext } from '../server';
 import { getConnectionName } from './connection';
-import { getODataEntitySetName } from './decorators';
+import { getODataEntityNavigations, getODataEntitySetName } from './decorators';
 import { findHooks, HookContext, HookEvents, HookType } from './hooks';
 import { BaseODataModel } from './model';
 import { getODataServerType } from './server';
 import { getOrCreateTransaction } from './transaction';
 import { transformQueryAst } from './visitor';
+
 
 /**
  * Typeorm Service (Controller)
@@ -174,16 +175,49 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
 
   }
 
+  async _deepInsert(body: any, ctx: ODataHttpContext) {
+
+    const navigations = getODataEntityNavigations(this.elementType.prototype);
+
+    for (const navigationName in navigations) {
+      if (Object.prototype.hasOwnProperty.call(navigations, navigationName)) {
+        if (Object.prototype.hasOwnProperty.call(body, navigationName)) {
+          const navigationData = body[navigationName];
+          const options = navigations[navigationName];
+          const service = this._getService(options.entity());
+          switch (options.type) {
+            case 'OneToMany':
+              body[navigationName] = await Promise.all(
+                navigationData.map((navigationItem) => service.create(navigationItem, ctx))
+              );
+              break;
+            default:
+              body[navigationName] = await service.create(navigationData, ctx);
+              break;
+          }
+        }
+
+      }
+    }
+
+  }
+
   @odata.POST
   async create(@odata.body body: QueryDeepPartialEntity<InstanceType<T>>, @odata.context ctx?: ODataHttpContext) {
     const repo = await this._getRepository(ctx);
     const instance = repo.create(body);
+
+    await this._deepInsert(body, ctx);
+
     await this._executeHooks({ context: ctx, hookType: HookType.beforeCreate, data: instance });
-    // query the created item
+
+    // creation (INSERT only)
     const { identifiers: [id] } = await repo.insert(instance);
-    // and return it
+
+    // and return it by id
     const created = await this.findOne(id, ctx);
     await this._executeHooks({ context: ctx, hookType: HookType.afterSave, data: created });
+
     return created;
   }
 

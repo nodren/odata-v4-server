@@ -1,6 +1,7 @@
 import { has } from '@newdash/newdash/has';
 import { isEmpty } from '@newdash/newdash/isEmpty';
 import toInteger from '@newdash/newdash/toInteger';
+import 'reflect-metadata';
 import { Column, ColumnOptions, Entity, EntityOptions, JoinColumn, ManyToOne, OneToMany, OneToOne } from 'typeorm';
 import { Edm } from '..';
 import { NotImplementedError, ServerInternalError } from '../error';
@@ -8,6 +9,8 @@ import { BaseODataModel } from './model';
 
 const KEY_ODATA_ENTITY_SET = 'odata.entity:entity_set_name';
 const KEY_ODATA_PROP_NAVIGATION = 'odata.entity:entity_prop_navigation';
+const KEY_ODATA_ENTITY_NAVIGATIONS = 'odata.entity:entity_navigations';
+
 
 /**
  * define odata action for entity
@@ -122,7 +125,7 @@ export function ODataColumn(options: ColumnOptions = {}) {
   };
 }
 
-export interface NavigationOptions<T extends typeof BaseODataModel> {
+export interface NavigationOptions<T extends typeof BaseODataModel = any> {
   /**
    * navigation type
    */
@@ -153,6 +156,12 @@ export function ODataNavigation<T extends typeof BaseODataModel>(options: Naviga
       throw new ServerInternalError(`OneToMany navigation must define the ref 'foreign key' in ${target?.constructor?.name} ${propertyName}`);
     }
 
+    const navigations = getODataEntityNavigations(target);
+
+    navigations[propertyName] = options;
+
+    Reflect.defineMetadata(KEY_ODATA_ENTITY_NAVIGATIONS, navigations, target);
+
     Reflect.defineMetadata(KEY_ODATA_PROP_NAVIGATION, options, target, propertyName);
 
     switch (options.type) {
@@ -177,4 +186,25 @@ export function ODataNavigation<T extends typeof BaseODataModel>(options: Naviga
     }
 
   };
+}
+
+/**
+ * get odata navigation
+ *
+ * @param target
+ * @param propertyName
+ */
+export function getODataNavigation(target: any, propertyName: any): NavigationOptions {
+  return Reflect.getMetadata(KEY_ODATA_PROP_NAVIGATION, target, propertyName);
+}
+
+
+/**
+ * get odata navigation for entity
+ *
+ * @param target
+ * @param propertyName
+ */
+export function getODataEntityNavigations(target: any): { [key: string]: NavigationOptions } {
+  return Reflect.getMetadata(KEY_ODATA_ENTITY_NAVIGATIONS, target) || {};
 }
