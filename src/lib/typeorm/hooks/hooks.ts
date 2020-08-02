@@ -8,6 +8,7 @@ import { HookType } from './hook_type';
 import { BaseHookProcessor } from './processor';
 
 const KEY_WITH_HOOK = 'odata:with_hook';
+const KEY_HOOK_META = 'odata:hook';
 
 export interface HookContext<T = any> {
   context: ODataHttpContext;
@@ -48,7 +49,6 @@ export interface HookContext<T = any> {
 
 }
 
-const KEY_HOOK_META = 'odata:hook';
 
 const createHookDecorator = <E extends typeof BaseODataModel>(hookType: HookType) => (entityType?: E, order: number = 0) => (target: any) => {
   Reflect.defineMetadata(KEY_HOOK_META, { hookType, entityType, order }, target);
@@ -93,12 +93,12 @@ export function withHook(hook: typeof BaseHookProcessor | BaseHookProcessor) {
       // @ts-ignore
       hooks.add(new hook);
     }
-    Reflect.defineMetadata(KEY_HOOK_META, hooks, target);
+    Reflect.defineMetadata(KEY_WITH_HOOK, hooks, target);
   };
 }
 
 export function getHooks(target: typeof TypedODataServer): Set<BaseHookProcessor> {
-  return Reflect.getMetadata(KEY_HOOK_META, target) || new Set();
+  return Reflect.getMetadata(KEY_WITH_HOOK, target) || new Set();
 }
 
 
