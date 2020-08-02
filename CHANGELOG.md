@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.23](https://github.com/Soontao/odata-v4-server/compare/v0.2.22...v0.2.23) (2020-08-02)
+
+
+### Features
+
+* [#15](https://github.com/Soontao/odata-v4-server/issues/15) support deep insert ([9a18377](https://github.com/Soontao/odata-v4-server/commit/9a1837779d3b426eefdf29d880e37a2f3df252b8))
+
 ### [0.2.22](https://github.com/Soontao/odata-v4-server/compare/v0.2.21...v0.2.22) (2020-08-01)
 
 
