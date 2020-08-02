@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { isArray } from '@newdash/newdash/isArray';
 import { isEmpty } from '@newdash/newdash/isEmpty';
 import { defaultParser, ODataQueryParam } from '@odata/parser';
 import 'reflect-metadata';
@@ -175,6 +176,12 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
 
   }
 
+  /**
+   * deep insert
+   *
+   * @param body
+   * @param ctx
+   */
   async _deepInsert(body: any, ctx: ODataHttpContext) {
 
     const navigations = getODataEntityNavigations(this.elementType.prototype);
@@ -187,9 +194,13 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
           const service = this._getService(options.entity());
           switch (options.type) {
             case 'OneToMany':
-              body[navigationName] = await Promise.all(
-                navigationData.map((navigationItem) => service.create(navigationItem, ctx))
-              );
+              if (isArray(navigationData)) {
+                body[navigationName] = await Promise.all(
+                  navigationData.map((navigationItem) => service.create(navigationItem, ctx))
+                );
+              } else {
+                throw new ServerInternalError(`navigation property [${navigationName}] must be an array!`);
+              }
               break;
             default:
               body[navigationName] = await service.create(navigationData, ctx);

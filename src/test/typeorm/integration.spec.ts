@@ -19,8 +19,8 @@ describe('Typed OData Server Integration Test Suite', () => {
       const teachers = client.getEntitySet<Teacher>('Teachers');
       const classRegistry = client.getEntitySet<RelStudentClassAssignment>('RelStudentClassAssignments');
 
-      const t1 = await teachers.create({ name: 'turing' });
-      const t2 = await teachers.create({ name: 'issac' });
+      const t1 = await teachers.create({ name: 'turing', profile: { title: 'Professor' } });
+      const t2 = await teachers.create({ name: 'issac', profile: { title: 'Associate Professor' } });
 
       const s1 = await students.create({ name: 'theo' });
       const s2 = await students.create({ name: 'sun' });
@@ -92,6 +92,16 @@ describe('Typed OData Server Integration Test Suite', () => {
             }
           }
         ]
+      });
+
+      const t1Full = await teachers.retrieve(t1.id, client.newParam().expand('profile'));
+
+      expect(t1Full).toMatchObject({
+        id: t1.id,
+        name: t1.name,
+        profile: {
+          title: 'Professor'
+        }
       });
 
     } finally {

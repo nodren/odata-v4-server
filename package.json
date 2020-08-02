@@ -52,7 +52,7 @@
     "uuid": "^8.3.0"
   },
   "devDependencies": {
-    "@odata/client": "^2.8.0",
+    "@odata/client": "^2.8.1",
     "@types/body-parser": "1.19.0",
     "@types/cors": "^2.8.6",
     "@types/event-stream": "^3.3.34",
