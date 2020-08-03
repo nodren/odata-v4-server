@@ -5,8 +5,8 @@ import { Student } from './Student';
 @ODataModel()
 export class RelStudentClassAssignment extends BaseODataModel {
 
-  @ODataColumn({ primary: true, generated: 'uuid' })
-  uuid: string;
+  @ODataColumn({ primary: true, generated: 'increment' })
+  uuid: number;
 
   @ODataColumn()
   studentId: number;

@@ -1,15 +1,18 @@
+import { toInteger } from '@newdash/newdash/toInteger';
+import { toNumber } from '@newdash/newdash/toNumber';
 import { trimPrefix } from '@newdash/newdash/trimPrefix';
 import { trimSuffix } from '@newdash/newdash/trimSuffix';
 
+
 function integer(value: string): number {
-  return +value;
+  return toInteger(value);
 }
 
 function float(value: string): number {
   switch (value) {
     case 'INF': return Infinity;
     case '-INF': return -Infinity;
-    default: return +value;
+    default: return toNumber(value);
   }
 }
 
@@ -52,12 +55,20 @@ export class Literal {
     return float(value);
   }
   'Edm.Boolean'(value: string) {
-    value = value || '';
-    switch (value.toLowerCase()) {
-      case 'true': return true;
-      case 'false': return false;
-      default: return undefined;
+    switch (typeof value) {
+      case 'string':
+        value = value || '';
+        switch (value.toLowerCase()) {
+          case 'true': return true;
+          case 'false': return false;
+          default: return undefined;
+        }
+      case 'boolean':
+        return value;
+      default:
+        return undefined;
     }
+
   }
   'Edm.Guid'(value: string) {
     return decodeURIComponent(value);
