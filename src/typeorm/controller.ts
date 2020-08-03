@@ -1,13 +1,15 @@
 // @ts-nocheck
+import { forEach } from '@newdash/newdash/forEach';
 import { isArray } from '@newdash/newdash/isArray';
 import { isEmpty } from '@newdash/newdash/isEmpty';
 import { defaultParser, ODataQueryParam } from '@odata/parser';
 import 'reflect-metadata';
 import { getConnection, Repository } from 'typeorm';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
-import { odata, ODataQuery } from '..';
+import { Edm, getKeyProperties, odata, ODataQuery } from '..';
 import { getControllerInstance, ODataController } from '../controller';
 import { ResourceNotFoundError, ServerInternalError } from '../error';
+import { Literal } from '../literal';
 import { getPublicControllers } from '../odata';
 import { getConnectionName } from './connection';
 import { getODataEntityNavigations, getODataEntitySetName } from './decorators';
@@ -95,6 +97,18 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
     }
   }
 
+  /**
+   * transform inbound payload
+   */
+  private async _transformInboundPayload(body: any) {
+    forEach(body, (value: any, key: string) => {
+      const type = Edm.getType(this.elementType, key);
+      if (type) {
+        body[key] = Literal.convert(type, value);
+      }
+    });
+  }
+
 
   @odata.GET
   async findOne(@odata.key key, @odata.txContext ctx?: TransactionContext): Promise<InstanceType<T>> {
@@ -132,22 +146,34 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
 
       const meta = conn.getMetadata(this.elementType);
       const tableName = meta.tableName;
-      const { selectedFields, sqlQuery, count, where } = transformQueryAst(
+      const { sqlQuery, count, where } = transformQueryAst(
         query,
         (f) => `${tableName}.${f}`
       );
-      const sFields = selectedFields.length > 0 ? selectedFields.join(', ') : '*';
-      const sql = `select ${sFields} from ${tableName} ${sqlQuery};`;
+      const [key] = getKeyProperties(this.elementType);
+
+      // query all ids firstly
+      const sql = `select ${key} as id from ${tableName} ${sqlQuery};`;
       data = await repo.query(sql);
+
+      // query all items by id
+      // in this way, typeorm transformers will works will
+      data = await repo.findByIds(data.map((item) => item.id));
+
+      // get counts if necessary
       if (count) {
         let sql = `select count(1) as total from ${tableName}`;
         if (where) { sql += ` where ${where}`; }
         const [{ total }] = await repo.query(sql);
         data['inlinecount'] = total;
       }
+
     } else {
+
       data = await repo.find();
+
     }
+
 
     if (data.length > 0) {
       await this._executeHooks({
@@ -206,8 +232,8 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
     const repo = await this._getRepository(ctx);
     const instance = repo.create(body);
 
+    await this._transformInboundPayload(body);
     await this._deepInsert(body, ctx);
-
     await this._executeHooks({ txContext: ctx, hookType: HookType.beforeCreate, data: instance });
 
     // creation (INSERT only)
@@ -237,6 +263,7 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
   // odata patch will not response any content
   @odata.PATCH
   async update(@odata.key key, @odata.body body: QueryDeepPartialEntity<InstanceType<T>>, @odata.txContext ctx?: TransactionContext) {
+    await this._transformInboundPayload(body);
     const repo = await this._getRepository(ctx);
     const instance = repo.create(body);
     await this._executeHooks({ txContext: ctx, hookType: HookType.beforeUpdate, data: instance, key });

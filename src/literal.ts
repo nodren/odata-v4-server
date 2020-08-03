@@ -1,3 +1,6 @@
+import { trimPrefix } from '@newdash/newdash/trimPrefix';
+import { trimSuffix } from '@newdash/newdash/trimSuffix';
+
 function integer(value: string): number {
   return +value;
 }
@@ -19,7 +22,10 @@ export class Literal {
     return (new Literal(type, value)).valueOf();
   }
   'Edm.String'(value: string) {
-    return decodeURIComponent(value).slice(1, -1).replace(/''/g, "'");
+    if (typeof value == 'string') {
+      return trimSuffix(trimPrefix(decodeURIComponent(value), "'"), "'").replace(/''/g, "'");
+    }
+    return value;
   }
   'Edm.Byte'(value: string) {
     return integer(value);

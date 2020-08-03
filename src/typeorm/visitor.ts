@@ -3,6 +3,15 @@ import { Token, traverseAst, traverseAstDeepFirst, Traverser } from '@odata/pars
 import { ODataQuery } from '..';
 import { NotImplementedError } from '../error';
 
+export const mapValue = (node: Token) => {
+  switch (node.value) {
+    case 'Edm.DateTimeOffset':
+      return new Date(node.raw).getTime();
+    default:
+      return node.raw;
+  }
+};
+
 /**
  * transformFilterAst to where sql
  *
@@ -15,22 +24,22 @@ export const transformFilterAst = (node: Token, nameMapper: FieldNameMapper = id
 
   const traverser: Traverser = {
     EqualsExpression: (node) => {
-      node['sql'] = `${nameMapper(node.value.left.raw)} = ${node.value.right.raw}`;
+      node['sql'] = `${nameMapper(node.value.left.raw)} = ${mapValue(node.value.right)}`;
     },
     NotEqualsExpression: (node) => {
-      node['sql'] = `${nameMapper(node.value.left.raw)} != ${node.value.right.raw}`;
+      node['sql'] = `${nameMapper(node.value.left.raw)} != ${mapValue(node.value.right)}`;
     },
     GreaterOrEqualsExpression: (node) => {
-      node['sql'] = `${nameMapper(node.value.left.raw)} >= ${node.value.right.raw}`;
+      node['sql'] = `${nameMapper(node.value.left.raw)} >= ${mapValue(node.value.right)}`;
     },
     GreaterThanExpression: (node) => {
-      node['sql'] = `${nameMapper(node.value.left.raw)} > ${node.value.right.raw}`;
+      node['sql'] = `${nameMapper(node.value.left.raw)} > ${mapValue(node.value.right)}`;
     },
     LesserOrEqualsExpression: (node) => {
-      node['sql'] = `${nameMapper(node.value.left.raw)} <= ${node.value.right.raw}`;
+      node['sql'] = `${nameMapper(node.value.left.raw)} <= ${mapValue(node.value.right)}`;
     },
     LesserThanExpression: (node) => {
-      node['sql'] = `${nameMapper(node.value.left.raw)} < ${node.value.right.raw}`;
+      node['sql'] = `${nameMapper(node.value.left.raw)} < ${mapValue(node.value.right)}`;
     },
     OrExpression: (node) => {
       const { value: { left, right } } = node;

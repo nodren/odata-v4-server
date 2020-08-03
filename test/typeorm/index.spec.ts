@@ -249,7 +249,7 @@ describe('Typeorm Integration Test Suite', () => {
     expect(n).not.toBeUndefined();
   });
 
-  it('should query by datetime', async () => {
+  it('should query by date time', async () => {
 
 
     @ODataModel()
@@ -274,6 +274,12 @@ describe('Typeorm Integration Test Suite', () => {
     const body = await es.create({ date });
 
     expect(new Date(body.date).getTime()).toBe(date.getTime());
+
+    const items = await es.find({
+      date: date.toISOString()
+    });
+
+    expect(items).toHaveLength(1);
 
     await shutdown(server);
 
