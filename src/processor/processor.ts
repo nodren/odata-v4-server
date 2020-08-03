@@ -1798,6 +1798,7 @@ export class ODataProcessor extends Transform {
     const idParam = odata.getIdParameter(container, name);
     const bodyParam = odata.getBodyParameter(container, name);
     const typeParam = odata.getTypeParameter(container, name);
+    const txContextParam = odata.getTxContextParameter(container, name);
 
     const elementType = result?.elementType || this.ctrl?.prototype?.elementType || null;
 
@@ -1874,6 +1875,10 @@ export class ODataProcessor extends Transform {
 
     if (contextParam) {
       params[contextParam] = this.context;
+    }
+
+    if (txContextParam) {
+      params[txContextParam] = this.context?.response?.locals['tx_ctx'];
     }
 
     if (streamParam) {

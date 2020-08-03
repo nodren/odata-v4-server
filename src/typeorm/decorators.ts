@@ -18,6 +18,13 @@ const KEY_ODATA_ENTITY_NAVIGATIONS = 'odata.entity:entity_navigations';
  * @alias Edm.Action
  */
 export const ODataAction = Edm.Action;
+
+/**
+ * define odata function for entity
+ *
+ * @alias Edm.Function
+ */
+export const ODataFunction = Edm.Function;
 /**
  * set entity set name for odata entity
  *

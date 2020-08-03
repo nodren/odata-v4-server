@@ -1,9 +1,8 @@
 import sortBy from '@newdash/newdash/sortBy';
-import { Connection, EntityManager } from 'typeorm';
-import { ODataHttpContext } from '../../server';
 import { TypedService } from '../controller';
 import { BaseODataModel } from '../model';
 import { TypedODataServer } from '../server';
+import { TransactionContext } from '../transaction';
 import { HookType } from './hook_type';
 import { BaseHookProcessor } from './processor';
 
@@ -11,41 +10,45 @@ const KEY_WITH_HOOK = 'odata:with_hook';
 const KEY_HOOK_META = 'odata:hook';
 
 export interface HookContext<T = any> {
-  context: ODataHttpContext;
+
+
+  /**
+   * hook type
+   */
   hookType: HookType;
+
+  /**
+   * entity type (constructor)
+   */
   entityType: typeof BaseODataModel;
+
+  /**
+   * get service instance for entity
+   */
+  getService: <E extends typeof BaseODataModel>(entity: E) => TypedService<E>;
+
+  /**
+   * transaction released id
+   *
+   * 'afterSave' event not have this property
+   */
+  txContext?: TransactionContext;
 
   /**
    * data item for read/create/update
    */
   data?: T;
+
   /**
    * data items for read
    */
   listData?: Array<T>;
+
   /**
    * key for update/delete/read
    */
   key?: any;
 
-  /**
-   * (transaction) entity manager,
-   * ONLY in sync hooks
-   */
-  em?: EntityManager;
-
-  /**
-   * get controller (service) instance for entity
-   *
-   * ONLY sync hooks
-   */
-  getService?: <E extends typeof BaseODataModel>(entity: E) => TypedService<E>;
-
-
-  /**
-   * get root connection for server
-   */
-  getConnection: () => Connection;
 
 }
 

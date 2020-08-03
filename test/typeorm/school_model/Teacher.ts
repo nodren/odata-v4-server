@@ -1,5 +1,6 @@
 import { isUndefined } from 'util';
-import { BaseODataModel, Edm, odata, ODataAction, ODataColumn, ODataHttpContext, ODataModel, ODataNavigation, ResourceNotFoundError } from '../../../src';
+import { BaseODataModel, Edm, odata, ODataAction, ODataColumn, ODataModel, ODataNavigation, ResourceNotFoundError } from '../../../src';
+import { TransactionContext } from '../../../src/typeorm/transaction';
 import { Class } from './Class';
 import { Profile } from './Profile';
 
@@ -26,7 +27,7 @@ export class Teacher extends BaseODataModel {
   //  "classId": 1
   // }
   @ODataAction
-  async addClass(@Edm.Int32 classId: number, @odata.context ctx: ODataHttpContext) {
+  async addClass(@Edm.Int32 classId: number, @odata.txContext ctx: TransactionContext) {
     const classService = this._gerService(Class);
     const c = await classService.findOne(classId, ctx);
 
@@ -41,7 +42,7 @@ export class Teacher extends BaseODataModel {
 
   // GET http://localhost:50000/Teachers(1)/Default.queryClass()
   @Edm.Function(Edm.Collection(Edm.String))
-  async queryClass(@odata.context ctx) {
+  async queryClass(@odata.txContext ctx: TransactionContext) {
     const qr = await this._getQueryRunner(ctx);
     // run native SQL query
     const items = await qr.query(`select name from class where teacherOneId = :id`, [this.id]);

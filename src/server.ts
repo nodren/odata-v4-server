@@ -11,7 +11,7 @@ import { ODataController } from './controller';
 import { ContainerBase } from './edm';
 import { HttpRequestError } from './error';
 import { createMetadataJSON } from './metadata';
-import { ensureODataContentType, ensureODataHeaders, withODataHeader, withODataVersionVerify, withRequestId, withSwaggerDocument } from './middlewares';
+import { ensureODataContentType, ensureODataHeaders, withODataHeader, withODataVersionVerify, withSwaggerDocument, withTransactionContext } from './middlewares';
 import * as odata from './odata';
 // eslint-disable-next-line no-duplicate-imports
 import { IODataConnector, ODataBase } from './odata';
@@ -44,7 +44,10 @@ export class ODataServerBase extends Transform {
   private serverType: typeof ODataServer
 
   static requestHandler() {
+
     return async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+
+      const txContext = res.locals['tx_ctx'];
 
       const ctx: ODataHttpContext = {
         url: req.url,
@@ -107,14 +110,15 @@ export class ODataServerBase extends Transform {
           }
         }
 
-        await commitTransaction(ctx);
+        await commitTransaction(txContext);
         res.end();
 
       } catch (err) {
 
-        await rollbackTransaction(ctx);
+        await rollbackTransaction(txContext);
         hasError = true;
         next(err);
+
       }
     };
   }
@@ -282,7 +286,7 @@ export class ODataServerBase extends Transform {
       router.use(cors());
     }
 
-    router.use(withRequestId);
+    router.use(withTransactionContext);
 
     router.use(withODataHeader);
 

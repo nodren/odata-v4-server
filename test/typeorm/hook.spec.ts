@@ -185,13 +185,29 @@ describe('Hooks Test Suite', () => {
 
     }
 
-    const entities = [Student2];
+    @ODataModel()
+    @ODataEntitySetName('Students3')
+    class Student3 extends BaseODataModel {
+
+      // generated id
+      @ODataColumn({ primary: true, generated: 'increment' })
+      id2: number;
+
+      @ODataColumn({ nullable: true })
+      name2: string;
+
+      @ODataColumn({ nullable: true })
+      age2: number;
+
+    }
+
+    const entities = [Student2, Student3];
 
     const hookInvokeSeq = [];
 
     const h1 = createHookProcessor(async (ctx) => {
       hookInvokeSeq.push('h1');
-      await ctx.em.getRepository(Student2).save({ name2: 'first' });
+      await ctx.getService(Student3).create({ name2: 'first' }, ctx.txContext);
     }, Student2, HookType.beforeCreate, 0);
 
     const h2 = createHookProcessor(async (ctx) => {

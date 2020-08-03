@@ -9,13 +9,12 @@ import { odata, ODataQuery } from '..';
 import { getControllerInstance, ODataController } from '../controller';
 import { ResourceNotFoundError, ServerInternalError } from '../error';
 import { getPublicControllers } from '../odata';
-import { ODataHttpContext } from '../server';
 import { getConnectionName } from './connection';
 import { getODataEntityNavigations, getODataEntitySetName } from './decorators';
 import { findHooks, HookContext, HookEvents, HookType } from './hooks';
 import { BaseODataModel } from './model';
 import { getODataServerType } from './server';
-import { getOrCreateTransaction } from './transaction';
+import { getOrCreateTransaction, TransactionContext } from './transaction';
 import { transformQueryAst } from './visitor';
 
 
@@ -24,19 +23,19 @@ import { transformQueryAst } from './visitor';
  */
 export class TypedService<T extends typeof BaseODataModel = any> extends ODataController {
 
-  protected async _getConnection(ctx?: ODataHttpContext) {
+  protected async _getConnection(ctx?: TransactionContext) {
     return (await this._getQueryRunner(ctx)).connection;
   }
 
-  protected async _getEntityManager(ctx?: ODataHttpContext) {
+  protected async _getEntityManager(ctx?: TransactionContext) {
     return (await this._getQueryRunner(ctx)).manager;
   }
 
-  protected async _getQueryRunner(ctx?: ODataHttpContext) {
+  protected async _getQueryRunner(ctx?: TransactionContext) {
     return getOrCreateTransaction(getConnection(getConnectionName(this.constructor)), ctx);
   }
 
-  protected async _getRepository(ctx?: ODataHttpContext): Promise<Repository<InstanceType<T>>> {
+  protected async _getRepository(ctx?: TransactionContext): Promise<Repository<InstanceType<T>>> {
     // @ts-ignore
     return (await this._getConnection(ctx)).getRepository(this.elementType);
   }
@@ -66,32 +65,16 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
       throw new ServerInternalError('Hook Type must be specify by controller');
     }
 
-    if (ctx.getConnection == undefined) {
-      ctx.getConnection = () => getConnection(getConnectionName(this.constructor));
+    if (ctx.getService == undefined) {
+      ctx.getService = this._getService.bind(this);
     }
 
     const isEvent = HookEvents.includes(ctx.hookType);
 
     if (isEvent) {
-
-      if (ctx.getService == undefined) {
-        ctx.getService = () => {
-          throw new ServerInternalError('Not support get service in event hooks.');
-        };
-      }
-
-
-    } else {
-
-      if (ctx.getService == undefined) {
-        ctx.getService = this._getService.bind(this);
-      }
-
-      if (ctx.em == undefined) {
-        ctx.em = await this._getEntityManager(ctx.context);
-      }
-
+      delete ctx.txContext;
     }
+
     const serverType = getODataServerType(this.constructor);
 
     const hooks = findHooks(serverType, this.elementType, ctx.hookType);
@@ -114,23 +97,23 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
 
 
   @odata.GET
-  async findOne(@odata.key key, @odata.context ctx?: ODataHttpContext): Promise<InstanceType<T>> {
+  async findOne(@odata.key key, @odata.txContext ctx?: TransactionContext): Promise<InstanceType<T>> {
     const repo = await this._getRepository(ctx);
     const data = await repo.findOne(key);
     if (isEmpty(data)) {
       throw new ResourceNotFoundError(`Resource not found: ${this.elementType?.name}[${key}]`);
     }
     await this._executeHooks({
-      context: ctx, hookType: HookType.afterLoad, data, entityType: this.elementType
+      txContext: ctx, hookType: HookType.afterLoad, data, entityType: this.elementType
     });
     return data;
   }
 
-  async find(query: ODataQueryParam, ctx?: ODataHttpContext): Promise<Array<InstanceType<T>>>;
-  async find(query: string, ctx?: ODataHttpContext): Promise<Array<InstanceType<T>>>;
-  async find(query: ODataQuery, ctx?: ODataHttpContext): Promise<Array<InstanceType<T>>>;
+  async find(query: ODataQueryParam, ctx?: TransactionContext): Promise<Array<InstanceType<T>>>;
+  async find(query: string, ctx?: TransactionContext): Promise<Array<InstanceType<T>>>;
+  async find(query: ODataQuery, ctx?: TransactionContext): Promise<Array<InstanceType<T>>>;
   @odata.GET
-  async find(@odata.query query, @odata.context ctx?: ODataHttpContext) {
+  async find(@odata.query query, @odata.txContext ctx?: TransactionContext) {
 
     const conn = await this._getConnection(ctx);
     const repo = await this._getRepository(ctx);
@@ -168,7 +151,7 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
 
     if (data.length > 0) {
       await this._executeHooks({
-        context: ctx, hookType: HookType.afterLoad, data
+        txContext: ctx, hookType: HookType.afterLoad, data
       });
     }
 
@@ -185,7 +168,7 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
    * @param body
    * @param ctx
    */
-  private async _deepInsert(body: any, ctx: ODataHttpContext) {
+  private async _deepInsert(body: any, ctx: TransactionContext) {
 
     const navigations = getODataEntityNavigations(this.elementType.prototype);
 
@@ -219,27 +202,27 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
   }
 
   @odata.POST
-  async create(@odata.body body: QueryDeepPartialEntity<InstanceType<T>>, @odata.context ctx?: ODataHttpContext) {
+  async create(@odata.body body: QueryDeepPartialEntity<InstanceType<T>>, @odata.txContext ctx?: TransactionContext) {
     const repo = await this._getRepository(ctx);
     const instance = repo.create(body);
 
     await this._deepInsert(body, ctx);
 
-    await this._executeHooks({ context: ctx, hookType: HookType.beforeCreate, data: instance });
+    await this._executeHooks({ txContext: ctx, hookType: HookType.beforeCreate, data: instance });
 
     // creation (INSERT only)
     const { identifiers: [id] } = await repo.insert(instance);
 
     // and return it by id
     const created = await this.findOne(id, ctx);
-    await this._executeHooks({ context: ctx, hookType: HookType.afterSave, data: created });
+    await this._executeHooks({ txContext: ctx, hookType: HookType.afterSave, data: created });
 
     return created;
   }
 
   // create or update
   @odata.PUT
-  async save(@odata.key key, @odata.body body: QueryDeepPartialEntity<InstanceType<T>>, @odata.context ctx?: ODataHttpContext) {
+  async save(@odata.key key, @odata.body body: QueryDeepPartialEntity<InstanceType<T>>, @odata.txContext ctx?: TransactionContext) {
     const repo = await this._getRepository(ctx);
     if (key) {
       const item = await repo.findOne(key);
@@ -253,21 +236,21 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
 
   // odata patch will not response any content
   @odata.PATCH
-  async update(@odata.key key, @odata.body body: QueryDeepPartialEntity<InstanceType<T>>, @odata.context ctx?: ODataHttpContext) {
+  async update(@odata.key key, @odata.body body: QueryDeepPartialEntity<InstanceType<T>>, @odata.txContext ctx?: TransactionContext) {
     const repo = await this._getRepository(ctx);
     const instance = repo.create(body);
-    await this._executeHooks({ context: ctx, hookType: HookType.beforeUpdate, data: instance, key });
+    await this._executeHooks({ txContext: ctx, hookType: HookType.beforeUpdate, data: instance, key });
     await repo.update(key, instance);
-    await this._executeHooks({ context: ctx, hookType: HookType.afterSave, data: instance, key });
+    await this._executeHooks({ txContext: ctx, hookType: HookType.afterSave, data: instance, key });
   }
 
   // odata delete will not response any content
   @odata.DELETE
-  async delete(@odata.key key, @odata.context ctx?: ODataHttpContext) {
+  async delete(@odata.key key, @odata.txContext ctx?: TransactionContext) {
     const repo = await this._getRepository(ctx);
-    await this._executeHooks({ context: ctx, hookType: HookType.beforeDelete, key });
+    await this._executeHooks({ txContext: ctx, hookType: HookType.beforeDelete, key });
     await repo.delete(key);
-    await this._executeHooks({ context: ctx, hookType: HookType.afterSave, key });
+    await this._executeHooks({ txContext: ctx, hookType: HookType.afterSave, key });
   }
 
 }

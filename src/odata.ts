@@ -31,6 +31,7 @@ const ODataResultParameter: string = 'odata:resultparameter';
 const ODataIdParameter: string = 'odata:idparameter';
 const ODataTypeParameter: string = 'odata:typeparameter';
 const ODataNamespace: string = 'odata:namespace';
+const ODataTxContextParameter = 'odata:tx_contextparameter';
 
 /** Set element type
  * @param elementType The type of element
@@ -683,11 +684,28 @@ export const getBodyParameter = createMethodParameterGetter(ODataBodyParameter);
  */
 export const context = createMethodParameterAnnotation(ODataContextParameter);
 
+/**
+ *
+ * Gives the current transaction context.
+ *
+ * @param target            The prototype of the class for an instance member
+ * @param targetKey         The name of the class method
+ * @param parameterIndex    The ordinal index of the parameter in the function’s parameter list
+ */
+export const txContext = createMethodParameterAnnotation(ODataTxContextParameter);
+
 /** Gives the decorated context parameter.
  * @param target    The prototype of the class for an instance member
  * @param targetKey The name of the class method
  */
 export const getContextParameter = createMethodParameterGetter(ODataContextParameter);
+
+/**
+ * Gives the decorated tx context parameter.
+ * @param target    The prototype of the class for an instance member
+ * @param targetKey The name of the class method
+ */
+export const getTxContextParameter = createMethodParameterGetter(ODataTxContextParameter);
 
 /** Gives a writable stream that will perform OData result transformation on the result and then sends it forward to your response stream.
  * @param target            The prototype of the class for an instance member

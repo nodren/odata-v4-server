@@ -3,17 +3,18 @@ import { NextFunction, Request, Response } from 'express';
 import { convert, parse } from 'odata2openapi';
 import { dirname } from 'path';
 import { isArray } from 'util';
-import { v4 } from 'uuid';
 import { HttpRequestError, UnsupportedMediaTypeError } from './error';
 import { ODataMetadataType } from './processor';
+import { createTransactionContext } from './typeorm/transaction';
+
 
 /**
- * with request id in `res.locals.id`
+ * with request id in `res.locals[tx_ctx]`
  *
  * @param req request object
  */
-export function withRequestId(req: Request) {
-  req.res.locals['id'] = v4();
+export function withTransactionContext(req: Request) {
+  req.res.locals['tx_ctx'] = createTransactionContext();
   req.next();
 }
 
