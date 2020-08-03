@@ -87,7 +87,7 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
       if (isEvent) {
         // is event, just trigger executor but not wait it finished
         // @ts-ignore
-        hook.execute(ctx).catch(console.error);
+        hook.execute(ctx).catch(console.error); // create transaction context here
       } else {
         // is hook, wait them executed
         // @ts-ignore
@@ -99,6 +99,8 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
 
   /**
    * transform inbound payload
+   *
+   * please AVOID run this method for single body multi times
    */
   private async _transformInboundPayload(body: any) {
     forEach(body, (value: any, key: string) => {
@@ -108,7 +110,6 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
       }
     });
   }
-
 
   @odata.GET
   async findOne(@odata.key key, @odata.txContext ctx?: TransactionContext): Promise<InstanceType<T>> {

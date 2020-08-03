@@ -26,7 +26,10 @@ export class Literal {
   }
   'Edm.String'(value: string) {
     if (typeof value == 'string') {
-      return trimSuffix(trimPrefix(decodeURIComponent(value), "'"), "'").replace(/''/g, "'");
+      if (value.startsWith("'") && value.endsWith("'")) {
+        return trimSuffix(trimPrefix(decodeURIComponent(value), "'"), "'").replace(/''/g, "'");
+      }
+      return value;
     }
     return value;
   }
