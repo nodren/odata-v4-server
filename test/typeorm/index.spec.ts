@@ -8,7 +8,7 @@ import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 import { BaseODataModel, createTypedODataServer, Edm, FieldNameMapper, getODataNavigation, odata, ODataColumn, ODataModel, ODataNavigation, ODataServer, transformFilterAst, transformQueryAst, TypedService, withConnection, withODataServerType } from '../../src';
 import { randomPort } from '../utils/randomPort';
 import { ready, shutdown } from '../utils/server';
-import { createTmpConnection } from './utils';
+import { createServerAndClient, createTmpConnection } from './utils';
 
 describe('Typeorm Integration Test Suite', () => {
 
@@ -247,6 +247,37 @@ describe('Typeorm Integration Test Suite', () => {
     const n = getODataNavigation(E1.prototype, 'f6');
 
     expect(n).not.toBeUndefined();
+  });
+
+  it('should query by datetime', async () => {
+
+
+    @ODataModel()
+    class TimeSheet extends BaseODataModel {
+
+      @ODataColumn({ primary: true, generated: 'uuid' })
+      id: string;
+
+      @ODataColumn()
+      date: Date;
+
+    }
+
+    const conn = await createTmpConnection({ name: 'datetime_query_conn', entities: [TimeSheet] });
+
+    const { server, client } = await createServerAndClient(conn, TimeSheet);
+
+    const es = client.getEntitySet<TimeSheet>('TimeSheets');
+
+    const date = new Date();
+
+    const body = await es.create({ date });
+
+    expect(new Date(body.date).getTime()).toBe(date.getTime());
+
+    await shutdown(server);
+
+
   });
 
 

@@ -12,6 +12,27 @@ const KEY_ODATA_PROP_NAVIGATION = 'odata.entity:entity_prop_navigation';
 const KEY_ODATA_ENTITY_NAVIGATIONS = 'odata.entity:entity_navigations';
 
 
+const DateTimeTransformer = {
+  from: (databaseColumn: number): Date => {
+    if (databaseColumn) {
+      return new Date(databaseColumn);
+    }
+    return new Date(0);
+  },
+  to: (date): number => {
+    switch (typeof date) {
+      case 'string':
+        return new Date(date).getTime();
+      case 'object':
+        if (date instanceof Date) {
+          return date.getTime();
+        }
+        throw new ServerInternalError('not supported property type');
+      default: return 0;
+    }
+  }
+};
+
 /**
  * define odata action for entity
  *
@@ -78,7 +99,6 @@ export function ODataColumn(options: ColumnOptions = {}) {
   return function (object: any, propertyName: string): void {
     const { primary, length, precision, nullable } = options;
 
-    Column(options)(object, propertyName);
 
     if (primary) {
       Edm.Key(object, propertyName);
@@ -125,10 +145,15 @@ export function ODataColumn(options: ColumnOptions = {}) {
         break;
       case Date:
         Edm.DateTimeOffset(object, propertyName);
+        options.type = 'integer';
+        options.transformer = DateTimeTransformer;
         break;
       default:
         throw new NotImplementedError(`Not support the type of field '${propertyName}'.`);
     }
+
+    Column(options)(object, propertyName);
+
   };
 }
 
