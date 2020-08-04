@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.24](https://github.com/Soontao/odata-v4-server/compare/v0.2.23...v0.2.24) (2020-08-04)
+
+
+### Features
+
+* [#17](https://github.com/Soontao/odata-v4-server/issues/17) support datetime in body ([ff89ffd](https://github.com/Soontao/odata-v4-server/commit/ff89ffd1c1e01f29bb4b3ee7485ced8a82145c8a))
+* [#17](https://github.com/Soontao/odata-v4-server/issues/17) support datetime on payload & query ([849acd9](https://github.com/Soontao/odata-v4-server/commit/849acd9cbf55e2eb7a3ac69e1356e83209b4a9ee))
+
 ### [0.2.23](https://github.com/Soontao/odata-v4-server/compare/v0.2.22...v0.2.23) (2020-08-02)
 
 
