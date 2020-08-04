@@ -13,7 +13,9 @@
 
 NodeJS OData(V4) Server Implementation.
 
-**This project is under heavily development & just check the [demo project](https://github.com/Soontao/odata-v4-server-demo) for features preview**
+**This project is under heavy development.**
+
+**Just check the [demo project](https://github.com/Soontao/odata-v4-server-demo) for features preview.**
 
 ## Features
 
@@ -40,11 +42,15 @@ Define domain `model` class, it will be transformed to database schema.
 
 ### Action & Function
 
-Define `Action/Function` on the `Domain Models`, focus business logic on micro-level.
+Define `Action/Function` on the `Domain Models`.
+
+Using the `actions` implement the partially focused business logics, and use the `functions` implement complex queries.
 
 ### Hook
 
-Define `Hooks` to implement the business logics for entity.
+Hook is general business logic for specify `Domain Model`, like `beforeCreate`/`beforeUpdate`, and it's mapped from `OData`/`HTTPS` method.
+
+Define `Hooks` to implement the general business logics for entity.
 
 ### Service (TypedController)
 
@@ -54,7 +60,7 @@ Each model will have its own standard `CRUD` service which enhanced with `hooks`
 
 ### Transaction
 
-Each `ODataHTTPContext` will share a database transaction (connection).
+Each `TransactionContext` will use single database transaction (connection).
 
 ## [CHANGELOG](./CHANGELOG.md)
 
