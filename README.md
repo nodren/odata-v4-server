@@ -11,7 +11,9 @@
 [![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=Soontao_odata-v4-server&metric=reliability_rating)](https://sonarcloud.io/dashboard?id=Soontao_odata-v4-server)
 [![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=Soontao_odata-v4-server&metric=sqale_index)](https://sonarcloud.io/dashboard?id=Soontao_odata-v4-server)
 
-NodeJS OData(V4) Server Implementation 
+NodeJS OData(V4) Server Implementation.
+
+**This project is under heavily development & just check the [demo project](https://github.com/Soontao/odata-v4-server-demo) for features preview**
 
 ## Features
 
@@ -54,6 +56,6 @@ Each model will have its own standard `CRUD` service which enhanced with `hooks`
 
 Each `ODataHTTPContext` will share a database transaction (connection).
 
-## [LICENSE](./LICENSE)
-
 ## [CHANGELOG](./CHANGELOG.md)
+
+## [LICENSE](./LICENSE)
