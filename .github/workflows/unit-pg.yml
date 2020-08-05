@@ -12,6 +12,8 @@ jobs:
         env:
           POSTGRES_USER: odataserver
           POSTGRES_PASSWORD: odataserver
+        ports:
+        - 5432/tcp
         options: >-
           --health-cmd pg_isready
           --health-interval 30s
@@ -47,7 +49,7 @@ jobs:
       run: npm run coverage
       env:
         CI: true
-        PG_HOST: postgres
+        PG_HOST: 127.0.0.1
+        PG_PORT: ${{ job.services.postgres.ports[5432] }}
         PG_USER: odataserver
         PG_PASSWORD: odataserver
-        PG_PORT: 5432
