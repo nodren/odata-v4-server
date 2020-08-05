@@ -12,7 +12,7 @@
     "prebuild": "rimraf lib",
     "build": "tsc",
     "lint": "eslint src --fix",
-    "test": "jest --runInBand",
+    "test": "jest -w 1",
     "coverage": "npm test -- --coverage --no-cache",
     "prepublishOnly": "npm test && npm run build",
     "release": "standard-version --no-verify && git push --follow-tags origin master"
@@ -77,6 +77,7 @@
     "mysql": "^2.18.1",
     "odata-v4-inmemory": "^0.1.7",
     "odata-v4-mongodb": "^0.1.12",
+    "pg": "^8.3.0",
     "request": "^2.88.2",
     "request-promise": "^4.2.5",
     "rimraf": "^3.0.2",

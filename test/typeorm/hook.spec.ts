@@ -95,7 +95,7 @@ describe('Hooks Test Suite', () => {
 
     const conn = await createTmpConnection({
       name: 'hook_test_conn',
-      entityPrefix: 'odata_server_unit_hook_01',
+      entityPrefix: 'odata_server_unit_hook_01_',
       entities
     });
 
@@ -149,7 +149,7 @@ describe('Hooks Test Suite', () => {
 
     const conn = await createTmpConnection({
       name: 'hook_class_test_conn',
-      entityPrefix: 'odata_server_unit_hook_02',
+      entityPrefix: 'odata_server_unit_hook_02_',
       entities
     });
 
@@ -220,7 +220,7 @@ describe('Hooks Test Suite', () => {
 
     const conn = await createTmpConnection({
       name: 'hook_class_tx_conn',
-      entityPrefix: 'odata_server_unit_hook_03',
+      entityPrefix: 'odata_server_unit_hook_03_',
       entities
     });
 

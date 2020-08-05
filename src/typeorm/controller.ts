@@ -149,7 +149,7 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
       const tableName = meta.tableName;
       const { sqlQuery, count, where } = transformQueryAst(
         query,
-        (f) => `${tableName}.${f}`
+        (f) => `"${tableName}"."${f}"`
       );
       const [key] = getKeyProperties(this.elementType);
 
@@ -165,7 +165,11 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
       if (count) {
         let sql = `select count(1) as total from ${tableName}`;
         if (where) { sql += ` where ${where}`; }
-        const [{ total }] = await repo.query(sql);
+        let [{ total }] = await repo.query(sql);
+        // for mysql, maybe other db driver also will response string
+        if (typeof total == 'string') {
+          total = parseInt(total);
+        }
         data['inlinecount'] = total;
       }
 
@@ -231,9 +235,9 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
   @odata.POST
   async create(@odata.body body: QueryDeepPartialEntity<InstanceType<T>>, @odata.txContext ctx?: TransactionContext) {
     const repo = await this._getRepository(ctx);
-    const instance = repo.create(body);
-
     await this._transformInboundPayload(body);
+
+    const instance = repo.create(body);
     await this._deepInsert(body, ctx);
     await this._executeHooks({ txContext: ctx, hookType: HookType.beforeCreate, data: instance });
 

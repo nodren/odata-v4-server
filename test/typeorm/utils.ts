@@ -14,17 +14,29 @@ export const createTmpConnection = (opt?: Partial<ConnectionOptions>) => {
       type: 'mysql',
       username: process.env.MYSQL_USER,
       password: process.env.MYSQL_PASSWORD,
-      database: process.env.MYSQL_DATABASE,
-      port: parseInt(process.env.MYSQL_PORT)
+      host: process.env.MYSQL_HOST || '127.0.0.1',
+      database: process.env.MYSQL_DATABASE || process.env.MYSQL_USER,
+      port: parseInt(process.env.MYSQL_PORT),
+      charset: 'utf8mb4_unicode_ci'
     };
-  } else {
+  } else if (process.env.PG_USER) {
     defaultOpt = {
-      type: 'sqljs',
-      synchronize: true
+      type: 'postgres',
+      username: process.env.PG_USER,
+      password: process.env.PG_PASSWORD,
+      host: process.env.PG_HOST || '127.0.0.1',
+      database: process.env.PG_DATABASE || process.env.PG_USER,
+      port: parseInt(process.env.PG_PORT),
+      extra: { max: 10 }
+    };
+  }
+  else {
+    defaultOpt = {
+      type: 'sqljs'
     };
   }
 
-  return createConnection(Object.assign(defaultOpt, opt));
+  return createConnection(Object.assign(defaultOpt, opt, { synchronize: true }));
 };
 
 export const createServerAndClient = async (conn, ...items: any[]) => {

@@ -14,6 +14,9 @@ const KEY_ODATA_ENTITY_NAVIGATIONS = 'odata.entity:entity_navigations';
 
 const DateTimeTransformer = {
   from: (databaseColumn: number): Date => {
+    if (typeof databaseColumn == 'string') { // fix mysql driver return string for column
+      databaseColumn = parseInt(databaseColumn);
+    }
     if (databaseColumn) {
       return new Date(databaseColumn);
     }
@@ -145,7 +148,7 @@ export function ODataColumn(options: ColumnOptions = {}) {
         break;
       case Date:
         Edm.DateTimeOffset(object, propertyName);
-        options.type = 'integer';
+        options.type = 'bigint';
         options.transformer = DateTimeTransformer;
         break;
       default:

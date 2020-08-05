@@ -41,7 +41,7 @@ describe('Typed Controller Test Suite', () => {
 
     const conn = await createTmpConnection({
       name: 'controller_call_test_conn',
-      entityPrefix: 'odata_server_unit_controller_01',
+      entityPrefix: 'odata_server_unit_controller_01_',
       entities
     });
 
@@ -71,13 +71,17 @@ describe('Typed Controller Test Suite', () => {
     const esA1 = client.getEntitySet<A1>('A1s');
     const esA2 = client.getEntitySet<A2>('A2s');
 
-    await esA2.create({ name: testUserName, desc: expectedDescription });
-    await esA1.create({ name: testUserName });
+    const instanceA1 = await esA2.create({ name: testUserName, desc: expectedDescription });
+    const instanceA2 = await esA1.create({ name: testUserName });
 
     const items = await esA1.find({ name: testUserName });
 
     // expect A1.student[theo].desc has been copied from A2.student[theo].desc
     expect(items[0].desc).toBe(expectedDescription);
+
+    // clean
+    await esA1.delete(instanceA1.id);
+    await esA2.delete(instanceA2.id);
 
     await shutdown(server);
 

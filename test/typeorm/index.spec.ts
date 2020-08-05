@@ -5,7 +5,8 @@ import { defaultParser } from '@odata/parser';
 import 'reflect-metadata';
 import * as req from 'request-promise';
 import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
-import { BaseODataModel, createTypedODataServer, Edm, FieldNameMapper, getODataNavigation, odata, ODataColumn, ODataModel, ODataNavigation, ODataServer, transformFilterAst, transformQueryAst, TypedService, withConnection, withODataServerType } from '../../src';
+import { v4 } from 'uuid';
+import { BaseODataModel, Edm, FieldNameMapper, getODataNavigation, odata, ODataColumn, ODataModel, ODataNavigation, ODataServer, transformFilterAst, transformQueryAst, TypedService, withConnection, withODataServerType } from '../../src';
 import { randomPort } from '../utils/randomPort';
 import { ready, shutdown } from '../utils/server';
 import { createServerAndClient, createTmpConnection } from './utils';
@@ -27,14 +28,12 @@ describe('Typeorm Integration Test Suite', () => {
     }
 
     const tmpConn = await createTmpConnection({
-      name: 'typeorm-test1', entities: [Product]
+      name: 'typeorm-test1',
+      entityPrefix: 'odata_server_unit_index_00_',
+      entities: [Product]
     });
 
     const tmpRepo = tmpConn.getRepository(Product);
-
-    // ensure typeorm works
-    await tmpRepo.save({ id: 2, desc: '123' });
-    expect(await tmpRepo.findOne({ id: 2 })).not.toBeUndefined();
 
     // example service
     class TmpController extends TypedService<Product> {
@@ -50,42 +49,51 @@ describe('Typeorm Integration Test Suite', () => {
 
     const server = TmpServer.create(randomPort());
 
-    const port = await ready(server);
+    try {
 
-    let res = await req.post(`http://127.0.0.1:${port}/Products`, { json: { id: 1, desc: 'description' } });
+      const port = await ready(server);
 
-    expect(res['@odata.id']).not.toBeUndefined();
+      let res = await req.post(`http://127.0.0.1:${port}/Products`, { json: { id: 1, desc: 'description' } });
 
-    const v = await tmpRepo.findOne(1);
+      expect(res['@odata.id']).not.toBeUndefined();
 
-    expect(v).not.toBeUndefined();
+      const createdId = res.id;
 
-    // query
-    res = await req.get(`http://127.0.0.1:${port}/Products?$filter=id eq 1`, { json: true });
-    expect(res.value).toHaveLength(1);
-    expect(res.value[0]?.desc).toEqual('description');
+      const v = await tmpRepo.findOne(createdId);
 
-    // update
-    // no content
-    await req.patch(`http://127.0.0.1:${port}/Products(1)`, { json: { id: 1, desc: 'updated' } });
+      expect(v).not.toBeUndefined();
 
-    // assert
-    res = await req.get(`http://127.0.0.1:${port}/Products(1)`, { json: true });
-    expect(res['desc']).toEqual('updated');
+      // query
+      res = await req.get(`http://127.0.0.1:${port}/Products?$filter=id eq ${createdId}`, { json: true });
+      expect(res.value).toHaveLength(1);
+      expect(res.value[0]?.desc).toEqual('description');
 
-    res = await req.delete(`http://127.0.0.1:${port}/Products(1)`);
+      // update
+      // no content
+      await req.patch(`http://127.0.0.1:${port}/Products(${createdId})`, { json: { desc: 'updated' } });
 
-    // not found
-    await expect(async () => req.get(`http://127.0.0.1:${port}/Products(1)`)).rejects.toThrow();
+      // assert
+      res = await req.get(`http://127.0.0.1:${port}/Products(${createdId})`, { json: true });
+      expect(res['desc']).toEqual('updated');
 
-    // no limit query
-    res = await req.get(`http://127.0.0.1:${port}/Products`, { json: true });
+      // clean
+      res = await req.delete(`http://127.0.0.1:${port}/Products(${createdId})`);
 
-    // still have a '2' record
-    expect(res.value).toHaveLength(1);
+      // not found throw error
+      await expect(async () => req.get(`http://127.0.0.1:${port}/Products(${createdId})`)).rejects.toThrow();
 
-    await shutdown(server);
-    await tmpConn.close();
+      // query again
+      res = await req.get(`http://127.0.0.1:${port}/Products?$filter=id eq ${createdId}`, { json: true });
+
+      expect(res.value).toHaveLength(0);
+
+    } finally {
+
+      await shutdown(server);
+      await tmpConn.close();
+
+    }
+
 
   });
 
@@ -127,7 +135,6 @@ describe('Typeorm Integration Test Suite', () => {
 
   it('should support shortcut to create a service', async () => {
 
-    const connectionName = 'shortcut';
 
     // define models
     @Entity()
@@ -167,41 +174,43 @@ describe('Typeorm Integration Test Suite', () => {
     }
 
     const conn = await createTmpConnection({
-      name: connectionName,
-      entityPrefix: 'odata_server_unit_index_01',
+      name: 'shortcut_test_conn',
+      entityPrefix: 'odata_server_unit_index_01_',
       entities: [Student, Class]
     });
 
-    const OServer = await createTypedODataServer(connectionName, Student, Class);
+    const { server, client } = await createServerAndClient(conn, Student, Class);
 
-    const s = OServer.create(randomPort());
-    const port = await ready(s);
+    try {
 
-    const client = OData.New4({ metadataUri: `http://127.0.0.1:${port}/$metadata`, processCsrfToken: false });
+      const students = client.getEntitySet<Student>('Students');
 
-    const students = client.getEntitySet<Student>('Students');
+      const name1 = v4();
+      const name2 = v4();
+      const created = await students.create({
+        name: name1,
+        age: 12
+      });
 
-    const created = await students.create({
-      name: 'theo',
-      age: 12
-    });
+      expect(created).not.toBeUndefined();
 
-    expect(created).not.toBeUndefined();
+      await students.update(created.id, { name: name2 });
 
-    await students.update(created.id, { name: 'theo sun' });
+      const updated = await students.retrieve(created.id);
 
-    const updated = await students.retrieve(created.id);
+      expect(updated.name).toEqual(name2);
 
-    expect(updated.name).toEqual('theo sun');
+      const total = await students.count(OData.newFilter().field('name').eq(name2));
 
-    const total = await students.count(OData.newFilter().field('name').eq('theo sun'));
+      expect(total).toEqual(1);
 
-    expect(total).toEqual(1);
+      await students.delete(created.id);
 
-    await students.delete(created.id);
+    } finally {
 
-    await shutdown(s);
-    await conn.close();
+      await shutdown(server);
+
+    }
 
 
   });
@@ -255,7 +264,6 @@ describe('Typeorm Integration Test Suite', () => {
 
   it('should query by date time', async () => {
 
-
     @ODataModel()
     class TimeSheet extends BaseODataModel {
 
@@ -269,27 +277,35 @@ describe('Typeorm Integration Test Suite', () => {
 
     const conn = await createTmpConnection({
       name: 'datetime_query_conn',
-      entityPrefix: 'odata_server_unit_index_02',
+      entityPrefix: 'odata_server_unit_index_02_',
       entities: [TimeSheet]
     });
 
     const { server, client } = await createServerAndClient(conn, TimeSheet);
 
-    const es = client.getEntitySet<TimeSheet>('TimeSheets');
+    try {
 
-    const date = new Date();
+      const es = client.getEntitySet<TimeSheet>('TimeSheets');
 
-    const body = await es.create({ date });
+      const date = new Date();
 
-    expect(new Date(body.date).getTime()).toBe(date.getTime());
+      const body = await es.create({ date });
 
-    const items = await es.find({
-      date: date.toISOString()
-    });
+      expect(new Date(body.date).getTime()).toBe(date.getTime());
 
-    expect(items).toHaveLength(1);
+      const items = await es.find({
+        date: date.toISOString()
+      });
 
-    await shutdown(server);
+      expect(items).toHaveLength(1);
+
+      await es.delete(body.id);
+
+    } finally {
+
+      await shutdown(server);
+
+    }
 
 
   });

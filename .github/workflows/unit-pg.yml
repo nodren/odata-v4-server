@@ -1,4 +1,4 @@
-name: unittest-with-mysql
+name: unittest-with-pg
 
 on: push
 jobs:
@@ -8,15 +8,15 @@ jobs:
 
     services:
       mysql:
-        image: mariadb:10.4
+        image: postgres
         env:
-          MYSQL_DATABASE: odata_test
-          MYSQL_USER: odata_test
-          MYSQL_PASSWORD: odata_test
-          MYSQL_ROOT_PASSWORD: odata_test_root_password
-        ports:
-          - 3306
-        options: --health-cmd="mysqladmin ping" --health-interval=30s --health-timeout=5s --health-retries=10
+          POSTGRES_USER: odataserver
+          POSTGRES_PASSWORD: odataserver
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 30s
+          --health-timeout 5s
+          --health-retries 10
 
     strategy:
       matrix:
@@ -47,7 +47,8 @@ jobs:
       run: npm run coverage
       env:
         CI: true
-        MYSQL_USER: odata_test
-        MYSQL_PASSWORD: odata_test
-        MYSQL_DATABASE: odata_test
-        MYSQL_PORT: ${{ job.services.mysql.ports[3306] }}
+        env:
+          PG_HOST: postgres
+          PG_USER: odataserver
+          PG_PASSWORD: odataserver
+          PG_PORT: 5432

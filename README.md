@@ -5,7 +5,7 @@
 [![npm (scoped)](https://img.shields.io/npm/v/@odata/parser?label=@odata/parser)](https://www.npmjs.com/package/@odata/parser)
 [![npm (scoped)](https://img.shields.io/npm/v/@odata/metadata?label=@odata/metadata)](https://www.npmjs.com/package/@odata/metadata)
 
-[![GitHub Workflow Status](https://img.shields.io/github/workflow/status/Soontao/odata-v4-server/Node%20CI?label=nodejs)](https://github.com/Soontao/odata-v4-server/actions?query=workflow%3A%Node+CI%22)
+[![GitHub Workflow Status](https://img.shields.io/github/workflow/status/Soontao/odata-v4-server/unittest?label=nodejs)](https://github.com/Soontao/odata-v4-server/actions?query=workflow%3A%unittest)
 [![Codecov](https://codecov.io/gh/Soontao/odata-v4-server/branch/master/graph/badge.svg)](https://codecov.io/gh/Soontao/odata-v4-server)
 [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=Soontao_odata-v4-server&metric=security_rating)](https://sonarcloud.io/dashboard?id=Soontao_odata-v4-server)
 [![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=Soontao_odata-v4-server&metric=reliability_rating)](https://sonarcloud.io/dashboard?id=Soontao_odata-v4-server)

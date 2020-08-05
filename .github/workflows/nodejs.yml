@@ -1,4 +1,4 @@
-name: Node CI
+name: unittest
 
 on:
   push:
@@ -41,7 +41,7 @@ jobs:
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
 
-  build-all-platform:
+  test:
 
     runs-on: ${{ matrix.os }}
 
@@ -69,5 +69,5 @@ jobs:
 
     - run: npm ci
     - run: npm run lint
-    - run: npm run build --if-present
+    - run: npm run build
     - run: npm run test
