@@ -166,7 +166,11 @@ describe('Typeorm Integration Test Suite', () => {
 
     }
 
-    const conn = await createTmpConnection({ name: connectionName, entities: [Student, Class] });
+    const conn = await createTmpConnection({
+      name: connectionName,
+      entityPrefix: 'odata_server_unit_index_01',
+      entities: [Student, Class]
+    });
 
     const OServer = await createTypedODataServer(connectionName, Student, Class);
 
@@ -263,7 +267,11 @@ describe('Typeorm Integration Test Suite', () => {
 
     }
 
-    const conn = await createTmpConnection({ name: 'datetime_query_conn', entities: [TimeSheet] });
+    const conn = await createTmpConnection({
+      name: 'datetime_query_conn',
+      entityPrefix: 'odata_server_unit_index_02',
+      entities: [TimeSheet]
+    });
 
     const { server, client } = await createServerAndClient(conn, TimeSheet);
 

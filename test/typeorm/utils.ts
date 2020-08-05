@@ -6,12 +6,26 @@ import { createTypedODataServer } from '../../src';
 import { randomPort } from '../utils/randomPort';
 import { ready } from '../utils/server';
 
-export const createTmpConnection = (opt?: Partial<ConnectionOptions>) => createConnection({
-  type: 'sqljs',
-  synchronize: true,
-  // logging: true,
-  ...opt
-});
+export const createTmpConnection = (opt?: Partial<ConnectionOptions>) => {
+  let defaultOpt: ConnectionOptions;
+
+  if (process.env.MYSQL_USER) {
+    defaultOpt = {
+      type: 'mysql',
+      username: process.env.MYSQL_USER,
+      password: process.env.MYSQL_PASSWORD,
+      database: process.env.MYSQL_DATABASE,
+      port: parseInt(process.env.MYSQL_PORT)
+    };
+  } else {
+    defaultOpt = {
+      type: 'sqljs',
+      synchronize: true
+    };
+  }
+
+  return createConnection(Object.assign(defaultOpt, opt));
+};
 
 export const createServerAndClient = async (conn, ...items: any[]) => {
 

@@ -18,8 +18,13 @@ export async function createTypedODataServer(connection: any, ...configurations:
 
   let connName: string = 'default';
 
+  if (connection instanceof Promise) {
+    connection = await connection;
+  }
+
   switch (typeof connection) {
     case 'object':
+
       if (connection instanceof Connection) {
         connName = connection.name;
       } else {

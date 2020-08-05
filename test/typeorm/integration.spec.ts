@@ -1,17 +1,19 @@
 import { shutdown } from '../utils/server';
 import { Class, RelStudentClassAssignment, SchoolEntities, Student, Teacher } from './school_model';
-import { createServerAndClient } from './utils';
+import { createServerAndClient, createTmpConnection } from './utils';
 
 describe('Typed OData Server Integration Test Suite', () => {
 
   it('should run total integration tests', async () => {
 
-    const { server, client } = await createServerAndClient({
+    const conn = await createTmpConnection({
       name: 'typed_server_integration_test_conn',
-      type: 'sqljs',
+      entityPrefix: 'odata_server_unit_int_',
       synchronize: true,
       entities: SchoolEntities
-    }, ...SchoolEntities);
+    });
+
+    const { server, client } = await createServerAndClient(conn, ...SchoolEntities);
 
     try {
       const students = client.getEntitySet<Student>('Students');
