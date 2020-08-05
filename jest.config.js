@@ -7,7 +7,7 @@ module.exports = {
   ],
   'testTimeout': 30 * 1000,
   'collectCoverageFrom': [
-    'src/lib/**/*',
+    'src/**/*',
     '!**/node_modules/**'
   ],
   'coveragePathIgnorePatterns': [
