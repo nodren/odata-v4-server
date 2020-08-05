@@ -145,11 +145,13 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
         query = defaultParser.query(query.toString());
       }
 
+
       const meta = conn.getMetadata(this.elementType);
+
       const tableName = meta.tableName;
       const { sqlQuery, count, where } = transformQueryAst(
         query,
-        (f) => `"${tableName}"."${f}"`
+        (f) => conn.driver.options.type == 'postgres' ? `"${tableName}"."${f}"` : `${tableName}.${f}`
       );
       const [key] = getKeyProperties(this.elementType);
 
