@@ -74,6 +74,7 @@
     "jest": "^26.1.0",
     "mongodb": "^3.6.0",
     "mssql": "^4.1.0",
+    "mysql": "^2.18.1",
     "odata-v4-inmemory": "^0.1.7",
     "odata-v4-mongodb": "^0.1.12",
     "request": "^2.88.2",
