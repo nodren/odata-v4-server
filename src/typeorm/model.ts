@@ -1,4 +1,4 @@
-import { BaseEntity, getConnection, Repository } from 'typeorm';
+import { getConnection, Repository } from 'typeorm';
 import { getControllerInstance } from '../controller';
 import { getPublicControllers } from '../odata';
 import { getConnectionName } from './connection';
@@ -7,7 +7,7 @@ import { getODataEntitySetName } from './decorators';
 import { getODataServerType } from './server';
 import { getOrCreateTransaction, TransactionContext } from './transaction';
 
-export class BaseODataModel extends BaseEntity {
+export class BaseODataModel {
 
   protected _gerService<E extends typeof BaseODataModel>(entity: E): TypedService<E> {
     const serverType = getODataServerType(this.constructor);

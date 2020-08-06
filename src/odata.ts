@@ -213,13 +213,12 @@ export function controller(controller: typeof ODataController, entitySetName?: s
       // throw error here
     }
     if (elementType) {
-      // @ts-ignore
       controller.prototype.elementType = elementType;
     }
     if (!controller.prototype.elementType) {
-      // @ts-ignore
       controller.prototype.elementType = Object;
     }
+    // overwrite entity name with controller name
     EntityType(controller.prototype.elementType)(server.prototype, (<any>controller).name);
   };
 }

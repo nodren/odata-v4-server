@@ -10,6 +10,7 @@ import { BaseODataModel } from './model';
 const KEY_ODATA_ENTITY_SET = 'odata.entity:entity_set_name';
 const KEY_ODATA_PROP_NAVIGATION = 'odata.entity:entity_prop_navigation';
 const KEY_ODATA_ENTITY_NAVIGATIONS = 'odata.entity:entity_navigations';
+const KEY_ODATA_ENTITY_TYPE = 'odata.entity:entity_type';
 
 
 const DateTimeTransformer = {
@@ -54,9 +55,24 @@ export const ODataFunction = Edm.Function;
  *
  * @param entitySetName
  */
-export function ODataEntitySetName(entitySetName: string) {
-  return function (target) {
+export function withEntitySetName(entitySetName: string) {
+  return function (target: any) {
     Reflect.defineMetadata(KEY_ODATA_ENTITY_SET, entitySetName, target);
+  };
+}
+
+/**
+ * set entity type for anything
+ *
+ * @param entity
+ */
+export function withEntityType(entity: any) {
+  return function (target: any) {
+    if (entity.prototype instanceof BaseODataModel) {
+      Reflect.defineMetadata(KEY_ODATA_ENTITY_TYPE, entity, target);
+    } else {
+      throw new TypeError('Must provide sub-class of BaseODataModel');
+    }
   };
 }
 
@@ -76,6 +92,15 @@ export function getODataEntitySetName(target: any): string {
 }
 
 /**
+ * get entity type for controller
+ *
+ * @param target
+ */
+export function getODataEntityType(target: any): typeof BaseODataModel {
+  return Reflect.getMetadata(KEY_ODATA_ENTITY_TYPE, target);
+}
+
+/**
  * ODataModel
  *
  * decorator wrapper of the typeorm `Entity` decorator
@@ -86,7 +111,7 @@ export function ODataModel(options: EntityOptions = {}, entitySetName?: string) 
   return function (target: any): void {
     Entity(options)(target);
     if (entitySetName) {
-      ODataEntitySetName(entitySetName)(target);
+      withEntitySetName(entitySetName)(target);
     }
   };
 }

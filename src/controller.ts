@@ -1,6 +1,5 @@
 import { Token } from '@odata/parser/lib/lexer';
 import * as odata from './odata';
-import { BaseODataModel } from './typeorm';
 import { getFunctionParameters } from './utils';
 
 const { ODataBase } = odata;
@@ -9,7 +8,7 @@ export class ODataControllerBase {
 
   entitySetName: string
 
-  elementType: typeof BaseODataModel
+  elementType: any
 
   static containerName: string
 

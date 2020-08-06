@@ -1,18 +1,18 @@
 // @ts-nocheck
-import { BaseEntity, Connection, ConnectionOptions, createConnection } from 'typeorm';
+import { Connection, ConnectionOptions, createConnection } from 'typeorm';
 import { odata } from '..';
 import { createLogger } from '../logger';
 import { ODataServer } from '../server';
 import { withConnection } from './connection';
 import { TypedService } from './controller';
-import { getODataEntitySetName } from './decorators';
+import { getODataEntitySetName, withEntityType } from './decorators';
 import { BaseHookProcessor, withHook } from './hooks';
 import { BaseODataModel } from './model';
 import { TypedODataServer, withODataServerType } from './server';
 
 const logger = createLogger('type:service');
 
-type TypedODataItems = typeof BaseEntity | typeof BaseHookProcessor
+type TypedODataItems = typeof BaseODataModel | typeof BaseHookProcessor
 
 export async function createTypedODataServer(connectionOpt: Connection, ...configurations: Array<TypedODataItems>): Promise<typeof ODataServer>;
 export async function createTypedODataServer(connectionOpt: ConnectionOptions, ...configurations: Array<TypedODataItems>): Promise<typeof ODataServer>;
@@ -53,24 +53,28 @@ export async function createTypedODataServer(connection: any, ...configurations:
     withODataServerType(serverType)(configuration);
     withConnection(connName)(configuration);
 
-    if (configuration.prototype instanceof BaseODataModel || configuration.prototype instanceof BaseEntity) {
+    if (configuration.prototype instanceof BaseODataModel) {
+
+      const entityType = configuration;
 
       logger(`load entity %s`, configuration?.name || 'Unknown entity');
 
-      const ct = class extends TypedService { };
+      const controllerType = class extends TypedService { };
 
       const entitySetName = getODataEntitySetName(configuration);
 
       // define controller name to use decorator
-      Object.defineProperty(ct, 'name', { value: `${entitySetName}Controller` });
+      Object.defineProperty(controllerType, 'name', { value: `${entitySetName}Controller` });
 
-      withODataServerType(serverType)(ct);
+      withODataServerType(serverType)(controllerType);
+
+      withEntityType(entityType)(controllerType);
 
       // attach connection metadata
-      withConnection(connName)(ct);
+      withConnection(connName)(controllerType);
 
       // default public controller
-      odata.withController(ct, entitySetName, configuration)(serverType);
+      odata.withController(controllerType, entitySetName, configuration)(serverType);
 
     } else if (configuration.prototype instanceof BaseHookProcessor || configuration instanceof BaseHookProcessor) {
 

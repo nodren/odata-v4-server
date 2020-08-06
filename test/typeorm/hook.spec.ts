@@ -1,6 +1,6 @@
 import '@odata/client/lib/polyfill';
 import { isArray } from 'util';
-import { BaseHookProcessor, BaseODataModel, beforeCreate, createHookProcessor, findHooks, HookContext, HookProcessor, HookType, ODataColumn, ODataEntitySetName, ODataModel, TypedODataServer, withHook } from '../../src';
+import { BaseHookProcessor, BaseODataModel, beforeCreate, createHookProcessor, findHooks, HookContext, HookProcessor, HookType, ODataColumn, ODataModel, TypedODataServer, withEntitySetName, withHook } from '../../src';
 import { shutdown } from '../utils/server';
 import { createServerAndClient, createTmpConnection } from './utils';
 
@@ -172,7 +172,7 @@ describe('Hooks Test Suite', () => {
 
 
     @ODataModel()
-    @ODataEntitySetName('Students2')
+    @withEntitySetName('Students2')
     class Student2 extends BaseODataModel {
 
       // generated id
@@ -188,7 +188,7 @@ describe('Hooks Test Suite', () => {
     }
 
     @ODataModel()
-    @ODataEntitySetName('Students3')
+    @withEntitySetName('Students3')
     class Student3 extends BaseODataModel {
 
       // generated id

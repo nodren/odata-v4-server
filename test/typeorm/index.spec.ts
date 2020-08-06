@@ -4,9 +4,9 @@ import '@odata/client/lib/polyfill';
 import { defaultParser } from '@odata/parser';
 import 'reflect-metadata';
 import * as req from 'request-promise';
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 import { v4 } from 'uuid';
-import { BaseODataModel, Edm, FieldNameMapper, getODataNavigation, odata, ODataColumn, ODataModel, ODataNavigation, ODataServer, transformFilterAst, transformQueryAst, TypedService, withConnection, withODataServerType } from '../../src';
+import { BaseODataModel, Edm, FieldNameMapper, getODataNavigation, odata, ODataColumn, ODataModel, ODataNavigation, ODataServer, transformFilterAst, transformQueryAst, TypedService, withConnection, withEntityType, withODataServerType } from '../../src';
 import { randomPort } from '../utils/randomPort';
 import { ready, shutdown } from '../utils/server';
 import { createServerAndClient, createTmpConnection } from './utils';
@@ -36,6 +36,7 @@ describe('Typeorm Integration Test Suite', () => {
     const tmpRepo = tmpConn.getRepository(Product);
 
     // example service
+    @withEntityType(Product)
     class TmpController extends TypedService<Product> {
 
     }
@@ -138,7 +139,7 @@ describe('Typeorm Integration Test Suite', () => {
 
     // define models
     @Entity()
-    class Student extends BaseEntity {
+    class Student extends BaseODataModel {
 
       @Edm.Key
       @Edm.Int32
@@ -156,7 +157,7 @@ describe('Typeorm Integration Test Suite', () => {
     }
 
     @Entity()
-    class Class extends BaseEntity {
+    class Class extends BaseODataModel {
 
       @Edm.Key
       @Edm.Int32
