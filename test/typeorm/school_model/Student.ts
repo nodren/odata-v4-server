@@ -6,7 +6,7 @@ export class Student extends BaseODataModel {
 
   // generated id
   @ODataColumn({ primary: true, generated: 'increment' })
-  id: number;
+  sid: number;
 
   @ODataColumn()
   name: string;

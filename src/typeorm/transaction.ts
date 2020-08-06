@@ -26,6 +26,9 @@ export const createTransactionContext = (): TransactionContext => ({
  * @param ctx
  */
 export async function getOrCreateTransaction(conn: Connection, ctx: TransactionContext): Promise<QueryRunner> {
+  if (ctx == undefined || ctx.uuid == undefined) {
+    throw new TypeError(`get/creation transaction failed, must provide 'uuid'`);
+  }
   if (!transactionStorage.has(ctx.uuid)) {
     logger(`create transaction: %s`, ctx.uuid);
     const qr = conn.createQueryRunner(); // pool required

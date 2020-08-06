@@ -116,13 +116,36 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
    *
    * please AVOID run this method for single body multi times
    */
-  private async _transformInboundPayload(body: any) {
+  private async _transformInboundPayload(body: any, ctx: TransactionContext) {
     forEach(body, (value: any, key: string) => {
       const type = Edm.getType(this._getEntityType(), key);
       if (type) {
         body[key] = Literal.convert(type, value);
       }
     });
+  }
+
+  /**
+   * apply typeorm transformers, for read only
+   *
+   * (because the SQL query can not be processed in typeorm lifecycle)
+   *
+   * @param body
+   */
+  private async _applyTransforms(body: any, ctx: TransactionContext) {
+    if (isArray(body)) {
+      await Promise.all(body.map((item) => this._applyTransforms(item, ctx)));
+    } else {
+      const conn = await this._getConnection(ctx);
+      const meta = await conn.getMetadata(this._getEntityType());
+      const columns = meta.columns;
+      columns.forEach(({ propertyName, transformer }) => {
+        if (transformer && Object.prototype.hasOwnProperty.call(body, propertyName)) {
+          body[propertyName] = transformer.from(body[propertyName]);
+        }
+      });
+    }
+
   }
 
   @odata.GET
@@ -166,8 +189,6 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
 
       // optimize here
       const meta = conn.getMetadata(this._getEntityType());
-      const [key] = getKeyProperties(this._getEntityType());
-
       const schema = meta.schema;
       const tableName = meta.tableName;
 
@@ -176,16 +197,13 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
       const { queryStatement, countStatement } = helper.buildSQL({
         tableName,
         schema,
-        query,
-        keyName: key
+        query
       });
 
       // query all ids firstly
       data = await repo.query(queryStatement);
-
-      // query all items by id
-      // in this way, typeorm transformers will works will
-      data = await repo.findByIds(data.map((item) => item.id));
+      // apply transform
+      await this._applyTransforms(data, ctx);
 
       // get counts if necessary
       if (countStatement) {
@@ -288,9 +306,7 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
   @odata.POST
   async create(@odata.body body: QueryDeepPartialEntity<InstanceType<T>>, @odata.txContext ctx?: TransactionContext) {
     const repo = await this._getRepository(ctx);
-
     await this._transformInboundPayload(body);
-
     const instance = repo.create(body);
 
     await this._executeHooks({ txContext: ctx, hookType: HookType.beforeCreate, data: instance });

@@ -213,6 +213,8 @@ describe('Typeorm Test Suite', () => {
 
       expect(items).toHaveLength(1);
 
+      expect(items[0].date).toBe(date.toISOString());
+
       await es.delete(body.id);
 
     } finally {

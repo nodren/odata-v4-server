@@ -8,7 +8,7 @@ import { Teacher } from './Teacher';
 export class Class extends BaseODataModel {
 
   @ODataColumn({ primary: true, generated: 'increment' })
-  id: number;
+  cid: number;
 
   @ODataColumn()
   name: string;

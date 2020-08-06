@@ -1,3 +1,4 @@
+import isEmpty from '@newdash/newdash/isEmpty';
 import { ConnectionOptions, DatabaseType } from 'typeorm';
 import { ODataQuery } from '..';
 import { transformQueryAst } from './visitor';
@@ -7,7 +8,6 @@ export interface BuildSQLOption {
   schema?: string;
   tableName: string;
   query: ODataQuery;
-  keyName: string;
 }
 
 export interface BuildSQLResult {
@@ -28,7 +28,7 @@ export interface DBHelper {
 
 class BaseDBHelper implements DBHelper {
 
-  buildSQL({ schema, tableName, query, keyName }) {
+  buildSQL({ schema, tableName, query }) {
     let objName = tableName;
 
     if (schema) {
@@ -37,13 +37,13 @@ class BaseDBHelper implements DBHelper {
       objName = `"${tableName}"`;
     }
 
-    const { sqlQuery, count, where } = transformQueryAst(query, (col) => `${objName}."${col}"`);
+    const { sqlQuery, count, where, selectedFields } = transformQueryAst(query, (col) => `${objName}."${col}"`);
 
-    const queryStatement = `select "${keyName}" as "id" from ${tableName} ${sqlQuery};`;
+    const queryStatement = `select ${isEmpty(selectedFields) ? '*' : selectedFields.join(', ')} from ${objName} ${sqlQuery};`;
     let countStatement = undefined;
 
     if (count) {
-      countStatement = `select count(1) as total from ${tableName}`;
+      countStatement = `select count(1) as total from ${objName}`;
       if (where) { countStatement += ` where ${where}`; }
     }
 
@@ -66,7 +66,7 @@ export class DefaultDBHelper extends BaseDBHelper {
 
 export class MySqlDBHelper extends BaseDBHelper {
 
-  buildSQL({ schema, tableName, query, keyName }) {
+  buildSQL({ schema, tableName, query }) {
     let objName = tableName;
 
     if (schema) {
@@ -75,13 +75,14 @@ export class MySqlDBHelper extends BaseDBHelper {
       objName = `${tableName}`;
     }
 
-    const { sqlQuery, count, where } = transformQueryAst(query, (col) => `${objName}.${col}`);
+    const { sqlQuery, count, where, selectedFields } = transformQueryAst(query, (col) => `${objName}.${col}`);
 
-    const queryStatement = `select ${keyName} as id from ${tableName} ${sqlQuery};`;
+    const queryStatement = `select ${isEmpty(selectedFields) ? '*' : selectedFields.join(', ')} from ${objName} ${sqlQuery};`;
+
     let countStatement = undefined;
 
     if (count) {
-      countStatement = `select count(1) as total from ${tableName}`;
+      countStatement = `select count(1) as total from ${objName}`;
       if (where) { countStatement += ` where ${where}`; }
     }
 

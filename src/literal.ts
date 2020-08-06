@@ -3,6 +3,9 @@ import { toNumber } from '@newdash/newdash/toNumber';
 import { trimPrefix } from '@newdash/newdash/trimPrefix';
 import { trimSuffix } from '@newdash/newdash/trimSuffix';
 
+export enum EdmType {
+
+}
 
 function integer(value: string): number {
   return toInteger(value);
