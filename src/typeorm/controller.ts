@@ -295,7 +295,7 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
     const reSaveRequired = await this._deepInsert(instance, ctx);
 
     if (reSaveRequired) {
-      await instance.save(); // merge deep insert
+      await repo.save(instance); // merge deep insert
     }
 
     // and return it by id

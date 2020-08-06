@@ -7,7 +7,7 @@ describe('Typed OData Server Integration Test Suite', () => {
   it('should run total integration tests', async () => {
 
     const conn = await createTmpConnection({
-      name: 'default', // why there should be 'default'?
+      name: 'typed_service_int_test', // why there should be 'default'?
       entityPrefix: 'odata_server_unit_int_',
       synchronize: true,
       entities: SchoolEntities

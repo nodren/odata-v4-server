@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { BaseEntity, Connection, ConnectionOptions, createConnection } from 'typeorm';
 import { odata } from '..';
+import { createLogger } from '../logger';
 import { ODataServer } from '../server';
 import { withConnection } from './connection';
 import { TypedService } from './controller';
@@ -8,6 +9,8 @@ import { getODataEntitySetName } from './decorators';
 import { BaseHookProcessor, withHook } from './hooks';
 import { BaseODataModel } from './model';
 import { TypedODataServer, withODataServerType } from './server';
+
+const logger = createLogger('type:service');
 
 type TypedODataItems = typeof BaseEntity | typeof BaseHookProcessor
 
@@ -39,6 +42,8 @@ export async function createTypedODataServer(connection: any, ...configurations:
       throw new Error(`not supported initialized parameter [connection] for create odata server`);
   }
 
+  logger(`create typed odata server with connection name: %s`, connName);
+
   const serverType = class extends TypedODataServer { };
 
   Object.defineProperty(serverType, 'name', { value: `TypedServerWithConn_${connName}` });
@@ -49,6 +54,8 @@ export async function createTypedODataServer(connection: any, ...configurations:
     withConnection(connName)(configuration);
 
     if (configuration.prototype instanceof BaseODataModel || configuration.prototype instanceof BaseEntity) {
+
+      logger(`load entity %s`, configuration?.name || 'Unknown entity');
 
       const ct = class extends TypedService { };
 
@@ -66,6 +73,8 @@ export async function createTypedODataServer(connection: any, ...configurations:
       odata.withController(ct, entitySetName, configuration)(serverType);
 
     } else if (configuration.prototype instanceof BaseHookProcessor || configuration instanceof BaseHookProcessor) {
+
+      logger(`load hook %s`, configuration?.name || 'Unknown hook');
 
       withHook(configuration)(serverType);
 

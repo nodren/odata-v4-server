@@ -10,6 +10,7 @@ import * as swaggerUi from 'swagger-ui-express';
 import { ODataController } from './controller';
 import { ContainerBase } from './edm';
 import { HttpRequestError } from './error';
+import { createLogger } from './logger';
 import { createMetadataJSON } from './metadata';
 import { ensureODataContentType, ensureODataHeaders, withODataHeader, withODataVersionVerify, withSwaggerDocument, withTransactionContext } from './middlewares';
 import * as odata from './odata';
@@ -18,6 +19,8 @@ import { IODataConnector, ODataBase } from './odata';
 import { ODataMetadataType, ODataProcessor, ODataProcessorOptions } from './processor';
 import { ODataResult } from './result';
 import { commitTransaction, rollbackTransaction } from './typeorm/transaction';
+
+const logger = createLogger('server');
 
 /** HTTP context interface when using the server HTTP request handler */
 export interface ODataHttpContext {
@@ -336,6 +339,7 @@ export function ODataErrorHandler(err, _, res, next) {
     if (!res.statusCode || res.statusCode < 400) {
       res.status(statusCode);
     }
+    logger(err.stack);
     res.send({
       error: {
         code: statusCode,

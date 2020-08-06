@@ -1,5 +1,8 @@
 import { Connection, QueryRunner } from 'typeorm';
 import { v4 } from 'uuid';
+import { createLogger } from '../logger';
+
+const logger = createLogger('type:tx');
 
 const transactionStorage = new Map<string, QueryRunner>();
 
@@ -24,6 +27,7 @@ export const createTransactionContext = (): TransactionContext => ({
  */
 export async function getOrCreateTransaction(conn: Connection, ctx: TransactionContext): Promise<QueryRunner> {
   if (!transactionStorage.has(ctx.uuid)) {
+    logger(`create transaction: %s`, ctx.uuid);
     const qr = conn.createQueryRunner(); // pool required
     await qr.connect();
     await qr.startTransaction(); // begin transaction
@@ -45,6 +49,7 @@ async function releaseTransaction(qr: QueryRunner): Promise<void> {
  */
 export async function rollbackTransaction(ctx: TransactionContext): Promise<void> {
   if (transactionStorage.has(ctx.uuid)) {
+    logger(`rollback transaction: %s`, ctx.uuid);
     const tx = transactionStorage.get(ctx.uuid);
     await tx.rollbackTransaction();
     await releaseTransaction(tx);
@@ -59,6 +64,7 @@ export async function rollbackTransaction(ctx: TransactionContext): Promise<void
  */
 export async function commitTransaction(ctx: TransactionContext): Promise<void> {
   if (transactionStorage.has(ctx.uuid)) {
+    logger(`commit transaction: %s`, ctx.uuid);
     const tx = transactionStorage.get(ctx.uuid);
     await tx.commitTransaction();
     await releaseTransaction(tx);
