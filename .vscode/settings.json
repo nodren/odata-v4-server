@@ -11,7 +11,8 @@
     "navigations",
     "odata",
     "sqljs",
-    "typeorm"
+    "typeorm",
+    "mysql"
   ],
   "jest.autoEnable": false
 }

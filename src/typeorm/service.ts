@@ -1,11 +1,12 @@
 // @ts-nocheck
-import { Connection, ConnectionOptions, createConnection } from 'typeorm';
+import { Connection, ConnectionOptions, createConnection, getConnection } from 'typeorm';
 import { odata } from '..';
 import { createLogger } from '../logger';
 import { ODataServer } from '../server';
 import { withConnection } from './connection';
 import { TypedService } from './controller';
-import { getODataEntitySetName, withEntityType } from './decorators';
+import { createDBHelper } from './db_helper';
+import { getODataEntitySetName, withDBHelper, withEntityType } from './decorators';
 import { BaseHookProcessor, withHook } from './hooks';
 import { BaseODataModel } from './model';
 import { TypedODataServer, withODataServerType } from './server';
@@ -20,6 +21,8 @@ export async function createTypedODataServer(connectionName: string, ...configur
 export async function createTypedODataServer(connection: any, ...configurations: Array<TypedODataItems>): Promise<typeof ODataServer> {
 
   let connName: string = 'default';
+  let connOpt: ConnectionOptions = undefined;
+  let connObj: Connection = undefined;
 
   if (connection instanceof Promise) {
     connection = await connection;
@@ -27,20 +30,23 @@ export async function createTypedODataServer(connection: any, ...configurations:
 
   switch (typeof connection) {
     case 'object':
-
       if (connection instanceof Connection) {
-        connName = connection.name;
+        connObj = connection;
       } else {
-        const conn = await createConnection(connection);
-        connName = conn.name;
+        connObj = await createConnection(connection);
       }
       break;
     case 'string':
-      connName = connection;
+      connObj = getConnection(connection);
       break;
     default:
       throw new Error(`not supported initialized parameter [connection] for create odata server`);
   }
+
+  connName = connObj.name;
+  connOpt = connObj.driver.options;
+
+  const dbHelper = createDBHelper(connOpt);
 
   logger(`create typed odata server with connection name: %s`, connName);
 
@@ -69,6 +75,8 @@ export async function createTypedODataServer(connection: any, ...configurations:
       withODataServerType(serverType)(controllerType);
 
       withEntityType(entityType)(controllerType);
+
+      withDBHelper(dbHelper)(controllerType);
 
       // attach connection metadata
       withConnection(connName)(controllerType);

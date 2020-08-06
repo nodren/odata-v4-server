@@ -12,12 +12,12 @@ import { ResourceNotFoundError, ServerInternalError } from '../error';
 import { Literal } from '../literal';
 import { getPublicControllers } from '../odata';
 import { getConnectionName } from './connection';
-import { getODataEntityNavigations, getODataEntitySetName, getODataEntityType } from './decorators';
+import { DBHelper } from './db_helper';
+import { getDBHelper, getODataEntityNavigations, getODataEntitySetName, getODataEntityType } from './decorators';
 import { findHooks, HookContext, HookEvents, HookType } from './hooks';
 import { BaseODataModel } from './model';
 import { getODataServerType, TypedODataServer } from './server';
 import { getOrCreateTransaction, TransactionContext } from './transaction';
-import { transformQueryAst } from './visitor';
 
 
 /**
@@ -29,8 +29,12 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
     return (await this._getQueryRunner(ctx)).connection;
   }
 
-  protected getEntityType(): T {
+  protected _getEntityType(): T {
     return getODataEntityType(this.constructor);
+  }
+
+  protected _getDBHelper(): DBHelper {
+    return getDBHelper(this.constructor);
   }
 
   protected async _getEntityManager(ctx?: TransactionContext) {
@@ -45,7 +49,7 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
 
   protected async _getRepository(ctx?: TransactionContext): Promise<Repository<InstanceType<T>>> {
     // @ts-ignore
-    return (await this._getConnection(ctx)).getRepository(this.getEntityType());
+    return (await this._getConnection(ctx)).getRepository(this._getEntityType());
   }
 
   private _getServerType(): typeof TypedODataServer {
@@ -70,7 +74,7 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
   private async _executeHooks(ctx?: Partial<HookContext>) {
 
     if (ctx.entityType == undefined) {
-      ctx.entityType = this.getEntityType();
+      ctx.entityType = this._getEntityType();
     }
 
     if (ctx.hookType == undefined) {
@@ -89,7 +93,7 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
 
     const serverType = getODataServerType(this.constructor);
 
-    const hooks = findHooks(serverType, this.getEntityType(), ctx.hookType);
+    const hooks = findHooks(serverType, this._getEntityType(), ctx.hookType);
 
     for (let idx = 0; idx < hooks.length; idx++) {
       const hook = hooks[idx];
@@ -114,7 +118,7 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
    */
   private async _transformInboundPayload(body: any) {
     forEach(body, (value: any, key: string) => {
-      const type = Edm.getType(this.getEntityType(), key);
+      const type = Edm.getType(this._getEntityType(), key);
       if (type) {
         body[key] = Literal.convert(type, value);
       }
@@ -128,10 +132,10 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
       const repo = await this._getRepository(ctx);
       const data = await repo.findOne(key);
       if (isEmpty(data)) {
-        throw new ResourceNotFoundError(`Resource not found: ${this.getEntityType()?.name}[${key}]`);
+        throw new ResourceNotFoundError(`Resource not found: ${this._getEntityType()?.name}[${key}]`);
       }
       await this._executeHooks({
-        txContext: ctx, hookType: HookType.afterLoad, data, entityType: this.getEntityType()
+        txContext: ctx, hookType: HookType.afterLoad, data, entityType: this._getEntityType()
       });
       return data;
     }
@@ -161,34 +165,31 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
       }
 
       // optimize here
-      const meta = conn.getMetadata(this.getEntityType());
-      const [key] = getKeyProperties(this.getEntityType());
+      const meta = conn.getMetadata(this._getEntityType());
+      const [key] = getKeyProperties(this._getEntityType());
 
       const schema = meta.schema;
-      let tableName = meta.tableName;
+      const tableName = meta.tableName;
 
-      if (schema) {
-        tableName = `"${schema}"."${tableName}"`;
-      } else {
-        tableName = `"${tableName}"`;
-      }
+      const helper = this._getDBHelper();
 
-      const { sqlQuery, count, where } = transformQueryAst(query, (col) => `${tableName}."${col}"`);
-
-      const sql = `select "${key}" as "id" from ${tableName} ${sqlQuery};`;
+      const { queryStatement, countStatement } = helper.buildSQL({
+        tableName,
+        schema,
+        query,
+        keyName: key
+      });
 
       // query all ids firstly
-      data = await repo.query(sql);
+      data = await repo.query(queryStatement);
 
       // query all items by id
       // in this way, typeorm transformers will works will
       data = await repo.findByIds(data.map((item) => item.id));
 
       // get counts if necessary
-      if (count) {
-        let sql = `select count(1) as total from ${tableName}`;
-        if (where) { sql += ` where ${where}`; }
-        let [{ total }] = await repo.query(sql);
+      if (countStatement) {
+        let [{ total }] = await repo.query(countStatement);
         // for mysql, maybe other db driver also will response string
         if (typeof total == 'string') {
           total = parseInt(total);
@@ -226,8 +227,8 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
   private async _deepInsert(body: any, ctx: TransactionContext): Promise<boolean> {
     let reSaveRequired = false;
 
-    const navigations = getODataEntityNavigations(this.getEntityType().prototype);
-    const [thisKeyName] = getKeyProperties(this.getEntityType());
+    const navigations = getODataEntityNavigations(this._getEntityType().prototype);
+    const [thisKeyName] = getKeyProperties(this._getEntityType());
 
     for (const navigationName in navigations) {
       if (Object.prototype.hasOwnProperty.call(navigations, navigationName)) {
@@ -264,7 +265,7 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
             default:
               const createdDeepInstance2 = await service.create(navigationData, ctx);
               body[navigationName] = createdDeepInstance2;
-              if (getType(this.getEntityType(), fkName, this._getServerType().container)) {
+              if (getType(this._getEntityType(), fkName, this._getServerType().container)) {
                 reSaveRequired = true;
                 body[fkName] = createdDeepInstance2[targetInstanceKeyName];
               }
@@ -272,7 +273,7 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
                 createdDeepInstance2[fkName] = body[thisKeyName];
               }
               else {
-                throw new ServerInternalError(`fk ${fkName} not existed on entity ${this.getEntityType().name} or ${deepInsertElementType.name}`);
+                throw new ServerInternalError(`fk ${fkName} not existed on entity ${this._getEntityType().name} or ${deepInsertElementType.name}`);
               }
               break;
           }

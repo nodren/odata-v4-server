@@ -5,12 +5,14 @@ import 'reflect-metadata';
 import { Column, ColumnOptions, Entity, EntityOptions, JoinColumn, ManyToOne, OneToMany, OneToOne } from 'typeorm';
 import { Edm } from '..';
 import { NotImplementedError, ServerInternalError } from '../error';
+import { DBHelper } from './db_helper';
 import { BaseODataModel } from './model';
 
 const KEY_ODATA_ENTITY_SET = 'odata.entity:entity_set_name';
 const KEY_ODATA_PROP_NAVIGATION = 'odata.entity:entity_prop_navigation';
 const KEY_ODATA_ENTITY_NAVIGATIONS = 'odata.entity:entity_navigations';
 const KEY_ODATA_ENTITY_TYPE = 'odata.entity:entity_type';
+const KEY_TYPEORM_DB_TYPE = 'odata.typeorm:db_type';
 
 
 const DateTimeTransformer = {
@@ -74,6 +76,26 @@ export function withEntityType(entity: any) {
       throw new TypeError('Must provide sub-class of BaseODataModel');
     }
   };
+}
+
+/**
+ * with db helper for entity/service/server
+ *
+ * @param type
+ */
+export function withDBHelper(type: DBHelper) {
+  return function (target: any) {
+    Reflect.defineMetadata(KEY_TYPEORM_DB_TYPE, type, target);
+  };
+}
+
+/**
+ * get db helper for entity/service/server
+ *
+ * @param target
+ */
+export function getDBHelper(target: any): DBHelper {
+  return Reflect.getMetadata(KEY_TYPEORM_DB_TYPE, target);
 }
 
 /**

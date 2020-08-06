@@ -3,100 +3,13 @@ import { OData } from '@odata/client';
 import '@odata/client/lib/polyfill';
 import { defaultParser } from '@odata/parser';
 import 'reflect-metadata';
-import * as req from 'request-promise';
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 import { v4 } from 'uuid';
-import { BaseODataModel, Edm, FieldNameMapper, getODataNavigation, odata, ODataColumn, ODataModel, ODataNavigation, ODataServer, transformFilterAst, transformQueryAst, TypedService, withConnection, withEntityType, withODataServerType } from '../../src';
-import { randomPort } from '../utils/randomPort';
-import { ready, shutdown } from '../utils/server';
+import { BaseODataModel, Edm, FieldNameMapper, getODataNavigation, ODataColumn, ODataModel, ODataNavigation, transformFilterAst, transformQueryAst } from '../../src';
+import { shutdown } from '../utils/server';
 import { createServerAndClient, createTmpConnection } from './utils';
 
-describe('Typeorm Integration Test Suite', () => {
-
-  it('should support CRUD by repository', async () => {
-
-    // example entity
-    @ODataModel()
-    class Product extends BaseODataModel {
-
-      @ODataColumn({ primary: true, generated: 'increment' })
-      id: number;
-
-      @ODataColumn()
-      desc: string
-
-    }
-
-    const tmpConn = await createTmpConnection({
-      name: 'typeorm-test1',
-      entityPrefix: 'odata_server_unit_index_00_',
-      entities: [Product]
-    });
-
-    const tmpRepo = tmpConn.getRepository(Product);
-
-    // example service
-    @withEntityType(Product)
-    class TmpController extends TypedService<Product> {
-
-    }
-
-    // example server
-    @odata.withController(TmpController, 'Products', Product)
-    class TmpServer extends ODataServer { }
-
-    withODataServerType(TmpServer)(TmpController);
-    withConnection(tmpConn.name)(TmpController);
-
-    const server = TmpServer.create(randomPort());
-
-    try {
-
-      const port = await ready(server);
-
-      let res = await req.post(`http://127.0.0.1:${port}/Products`, { json: { id: 1, desc: 'description' } });
-
-      expect(res['@odata.id']).not.toBeUndefined();
-
-      const createdId = res.id;
-
-      const v = await tmpRepo.findOne(createdId);
-
-      expect(v).not.toBeUndefined();
-
-      // query
-      res = await req.get(`http://127.0.0.1:${port}/Products?$filter=id eq ${createdId}`, { json: true });
-      expect(res.value).toHaveLength(1);
-      expect(res.value[0]?.desc).toEqual('description');
-
-      // update
-      // no content
-      await req.patch(`http://127.0.0.1:${port}/Products(${createdId})`, { json: { desc: 'updated' } });
-
-      // assert
-      res = await req.get(`http://127.0.0.1:${port}/Products(${createdId})`, { json: true });
-      expect(res['desc']).toEqual('updated');
-
-      // clean
-      res = await req.delete(`http://127.0.0.1:${port}/Products(${createdId})`);
-
-      // not found throw error
-      await expect(async () => req.get(`http://127.0.0.1:${port}/Products(${createdId})`)).rejects.toThrow();
-
-      // query again
-      res = await req.get(`http://127.0.0.1:${port}/Products?$filter=id eq ${createdId}`, { json: true });
-
-      expect(res.value).toHaveLength(0);
-
-    } finally {
-
-      await shutdown(server);
-      await tmpConn.close();
-
-    }
-
-
-  });
+describe('Typeorm Test Suite', () => {
 
   it('should support converting odata query to sql', () => {
 
