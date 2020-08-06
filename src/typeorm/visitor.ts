@@ -71,7 +71,7 @@ export interface FieldNameMapper {
   (field: string): string
 }
 
-export const transformQueryAst = (node: ODataQuery, nameMapper: FieldNameMapper = identity): { selectedFields: string[], sqlQuery: string, count: boolean, where: string } => {
+export const transformQueryAst = (node: ODataQuery, nameMapper: FieldNameMapper = identity) => {
 
   let sqlQuery = '';
   let offset = 0;
@@ -133,7 +133,7 @@ export const transformQueryAst = (node: ODataQuery, nameMapper: FieldNameMapper 
     sqlQuery += ` ORDERBY ${orderBy.join(', ')}`;
   }
 
-  return { sqlQuery, selectedFields: selects, count: inlineCount, where };
+  return { sqlQuery, selectedFields: selects, count: inlineCount, where, offset, limit };
 
 };
 

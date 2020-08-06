@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { createTypedODataServer } from '../lib';
+import { createTypedODataServer } from '../src';
 import { SchoolEntities } from "../test/typeorm/school_model";
 
 const run = async () => {
@@ -20,5 +20,5 @@ const run = async () => {
 };
 
 if (require.main == module) {
-  run();
+  run().catch(console.error);
 }

@@ -13,6 +13,6 @@ export function withODataServerType(serverType: typeof TypedODataServer) {
   };
 }
 
-export function getODataServerType(target: any) {
+export function getODataServerType(target: any): typeof ODataServer {
   return Reflect.getMetadata(KEY_WITH_ODATA_SERVER, target);
 }

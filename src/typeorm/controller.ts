@@ -6,7 +6,7 @@ import { defaultParser, ODataQueryParam } from '@odata/parser';
 import 'reflect-metadata';
 import { getConnection, Repository } from 'typeorm';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
-import { Edm, getKeyProperties, odata, ODataQuery } from '..';
+import { Edm, getKeyProperties, getType, odata, ODataQuery } from '..';
 import { getControllerInstance, ODataController } from '../controller';
 import { ResourceNotFoundError, ServerInternalError } from '../error';
 import { Literal } from '../literal';
@@ -15,7 +15,7 @@ import { getConnectionName } from './connection';
 import { getODataEntityNavigations, getODataEntitySetName } from './decorators';
 import { findHooks, HookContext, HookEvents, HookType } from './hooks';
 import { BaseODataModel } from './model';
-import { getODataServerType } from './server';
+import { getODataServerType, TypedODataServer } from './server';
 import { getOrCreateTransaction, TransactionContext } from './transaction';
 import { transformQueryAst } from './visitor';
 
@@ -34,7 +34,9 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
   }
 
   protected async _getQueryRunner(ctx?: TransactionContext) {
-    return getOrCreateTransaction(getConnection(getConnectionName(this.constructor)), ctx);
+    const connName = getConnectionName(this.constructor);
+    const conn = getConnection(connName);
+    return getOrCreateTransaction(conn, ctx);
   }
 
   protected async _getRepository(ctx?: TransactionContext): Promise<Repository<InstanceType<T>>> {
@@ -42,8 +44,12 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
     return (await this._getConnection(ctx)).getRepository(this.elementType);
   }
 
+  private _getServerType(): typeof TypedODataServer {
+    return getODataServerType(this.constructor);
+  }
+
   protected _getService<E extends typeof BaseODataModel>(entity: E): TypedService<E> {
-    const serverType = getODataServerType(this.constructor);
+    const serverType = this._getServerType();
     const controllers = getPublicControllers(serverType);
     const entitySetName = getODataEntitySetName(entity);
     return getControllerInstance(controllers[entitySetName]);
@@ -113,15 +119,20 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
 
   @odata.GET
   async findOne(@odata.key key, @odata.txContext ctx?: TransactionContext): Promise<InstanceType<T>> {
-    const repo = await this._getRepository(ctx);
-    const data = await repo.findOne(key);
-    if (isEmpty(data)) {
-      throw new ResourceNotFoundError(`Resource not found: ${this.elementType?.name}[${key}]`);
+    if (key != undefined && key != null) {
+      // with key
+      const repo = await this._getRepository(ctx);
+      const data = await repo.findOne(key);
+      if (isEmpty(data)) {
+        throw new ResourceNotFoundError(`Resource not found: ${this.elementType?.name}[${key}]`);
+      }
+      await this._executeHooks({
+        txContext: ctx, hookType: HookType.afterLoad, data, entityType: this.elementType
+      });
+      return data;
     }
-    await this._executeHooks({
-      txContext: ctx, hookType: HookType.afterLoad, data, entityType: this.elementType
-    });
-    return data;
+    // without key, generally in navigation
+    return {};
   }
 
   async find(query: ODataQueryParam, ctx?: TransactionContext): Promise<Array<InstanceType<T>>>;
@@ -145,18 +156,24 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
         query = defaultParser.query(query.toString());
       }
 
-
+      // optimize here
       const meta = conn.getMetadata(this.elementType);
-
-      const tableName = meta.tableName;
-      const { sqlQuery, count, where } = transformQueryAst(
-        query,
-        (f) => conn.driver.options.type == 'postgres' ? `"${tableName}"."${f}"` : `${tableName}.${f}`
-      );
       const [key] = getKeyProperties(this.elementType);
 
+      const schema = meta.schema;
+      let tableName = meta.tableName;
+
+      if (schema) {
+        tableName = `"${schema}"."${tableName}"`;
+      } else {
+        tableName = `"${tableName}"`;
+      }
+
+      const { sqlQuery, count, where } = transformQueryAst(query, (col) => `${tableName}."${col}"`);
+
+      const sql = `select "${key}" as "id" from ${tableName} ${sqlQuery};`;
+
       // query all ids firstly
-      const sql = `select ${key} as id from ${tableName} ${sqlQuery};`;
       data = await repo.query(sql);
 
       // query all items by id
@@ -174,6 +191,7 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
         }
         data['inlinecount'] = total;
       }
+
 
     } else {
 
@@ -201,30 +219,57 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
    * @param body
    * @param ctx
    */
-  private async _deepInsert(body: any, ctx: TransactionContext) {
+  private async _deepInsert(body: any, ctx: TransactionContext): Promise<boolean> {
+    let reSaveRequired = false;
 
     const navigations = getODataEntityNavigations(this.elementType.prototype);
+    const [thisKeyName] = getKeyProperties(this.elementType);
 
     for (const navigationName in navigations) {
       if (Object.prototype.hasOwnProperty.call(navigations, navigationName)) {
         if (Object.prototype.hasOwnProperty.call(body, navigationName)) {
+
           // if navigation property have value
           const navigationData = body[navigationName];
           const options = navigations[navigationName];
-          const service = this._getService(options.entity());
+          const deepInsertElementType = options.entity();
+          const fkName = options.foreignKey;
+          const service = this._getService(deepInsertElementType);
+          const [targetInstanceKeyName] = getKeyProperties(deepInsertElementType);
+
           switch (options.type) {
             case 'OneToMany':
               if (isArray(navigationData)) {
                 body[navigationName] = await Promise.all(
-                  navigationData.map((navigationItem) => service.create(navigationItem, ctx))
+                  navigationData.map((navigationItem) => {
+                    navigationItem[fkName] = body[thisKeyName];
+                    return service.create(navigationItem, ctx);
+                  })
                 );
               } else {
                 // for one-to-many relationship, must provide an array, even only have one record
                 throw new ServerInternalError(`navigation property [${navigationName}] must be an array!`);
               }
               break;
+            case 'ManyToOne':
+              reSaveRequired = true;
+              const createdDeepInstance = await service.create(navigationData, ctx);
+              body[navigationName] = createdDeepInstance;
+              body[fkName] = createdDeepInstance[targetInstanceKeyName];
+              break;
             default:
-              body[navigationName] = await service.create(navigationData, ctx);
+              const createdDeepInstance2 = await service.create(navigationData, ctx);
+              body[navigationName] = createdDeepInstance2;
+              if (getType(this.elementType, fkName, this._getServerType().container)) {
+                reSaveRequired = true;
+                body[fkName] = createdDeepInstance2[targetInstanceKeyName];
+              }
+              else if (getType(deepInsertElementType, fkName, this._getServerType().container)) {
+                createdDeepInstance2[fkName] = body[thisKeyName];
+              }
+              else {
+                throw new ServerInternalError(`fk ${fkName} not existed on entity ${this.elementType.name} or ${deepInsertElementType.name}`);
+              }
               break;
           }
         }
@@ -232,25 +277,31 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
       }
     }
 
-  }
+    return reSaveRequired;
 
+  }
   @odata.POST
   async create(@odata.body body: QueryDeepPartialEntity<InstanceType<T>>, @odata.txContext ctx?: TransactionContext) {
     const repo = await this._getRepository(ctx);
+
     await this._transformInboundPayload(body);
 
     const instance = repo.create(body);
-    await this._deepInsert(body, ctx);
+
     await this._executeHooks({ txContext: ctx, hookType: HookType.beforeCreate, data: instance });
 
     // creation (INSERT only)
     const { identifiers: [id] } = await repo.insert(instance);
+    const reSaveRequired = await this._deepInsert(instance, ctx);
+
+    if (reSaveRequired) {
+      await instance.save(); // merge deep insert
+    }
 
     // and return it by id
-    const created = await this.findOne(id, ctx);
-    await this._executeHooks({ txContext: ctx, hookType: HookType.afterSave, data: created });
+    await this._executeHooks({ txContext: ctx, hookType: HookType.afterSave, data: instance });
 
-    return created;
+    return instance;
   }
 
   // create or update
