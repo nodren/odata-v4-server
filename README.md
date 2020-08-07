@@ -5,10 +5,10 @@
 [![npm (scoped)](https://img.shields.io/npm/v/@odata/parser?label=@odata/parser)](https://www.npmjs.com/package/@odata/parser)
 [![npm (scoped)](https://img.shields.io/npm/v/@odata/metadata?label=@odata/metadata)](https://www.npmjs.com/package/@odata/metadata)
 
-[![Unit Test Status](https://img.shields.io/github/workflow/status/Soontao/odata-v4-server/unittest?label=nodejs/sqlite/sqljs)](https://github.com/Soontao/odata-v4-server/actions?query=workflow%3A%unittest)
-[![MySQL Integration Status](https://img.shields.io/github/workflow/status/Soontao/odata-v4-server/unittest-with-mysql?label=mysql)](https://github.com/Soontao/odata-v4-server/actions?query=workflow%3A%unittest-with-mysql)
-[![PostgreSQL Integration Status](https://img.shields.io/github/workflow/status/Soontao/odata-v4-server/unittest-with-pg?label=postgres)](https://github.com/Soontao/odata-v4-server/actions?query=workflow%3A%unittest-with-pg)
-[![SAP HANA Integration Status](https://img.shields.io/github/workflow/status/Soontao/odata-v4-server/unittest-with-hana?label=hana)](https://github.com/Soontao/odata-v4-server/actions?query=workflow%3A%unittest-with-hana)
+[![Unit Test Status](https://img.shields.io/github/workflow/status/Soontao/odata-v4-server/unittest?label=nodejs/sqlite/sqljs)](https://github.com/Soontao/odata-v4-server/actions?query=workflow%3Aunittest)
+[![MySQL Integration Status](https://img.shields.io/github/workflow/status/Soontao/odata-v4-server/unittest-with-mysql?label=mysql)](https://github.com/Soontao/odata-v4-server/actions?query=workflow%3Aunittest-with-mysql)
+[![PostgreSQL Integration Status](https://img.shields.io/github/workflow/status/Soontao/odata-v4-server/unittest-with-pg?label=postgres)](https://github.com/Soontao/odata-v4-server/actions?query=workflow%3Aunittest-with-pg)
+[![SAP HANA Integration Status](https://img.shields.io/github/workflow/status/Soontao/odata-v4-server/unittest-with-hana?label=hana)](https://github.com/Soontao/odata-v4-server/actions?query=workflow%3Aunittest-with-hana)
 [![Codecov](https://codecov.io/gh/Soontao/odata-v4-server/branch/master/graph/badge.svg)](https://codecov.io/gh/Soontao/odata-v4-server)
 
 [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=Soontao_odata-v4-server&metric=security_rating)](https://sonarcloud.io/dashboard?id=Soontao_odata-v4-server)
