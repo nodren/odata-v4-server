@@ -43,7 +43,8 @@ class BaseDBHelper implements DBHelper {
     let countStatement = undefined;
 
     if (count) {
-      countStatement = `select count(1) as total from ${objName}`;
+      // use the uppercase 'total' field for hana database
+      countStatement = `select count(1) as TOTAL from ${objName}`;
       if (where) { countStatement += ` where ${where}`; }
     }
 

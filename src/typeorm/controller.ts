@@ -207,12 +207,13 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
 
       // get counts if necessary
       if (countStatement) {
-        let [{ total }] = await repo.query(countStatement);
+        const countResult = await repo.query(countStatement);
+        let [{ TOTAL }] = countResult;
         // for mysql, maybe other db driver also will response string
         if (typeof total == 'string') {
-          total = parseInt(total);
+          TOTAL = parseInt(TOTAL);
         }
-        data['inlinecount'] = total;
+        data['inlinecount'] = TOTAL;
       }
 
 

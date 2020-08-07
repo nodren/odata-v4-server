@@ -10,6 +10,7 @@ const run = async () => {
     synchronize: true,
     logging: true,
     cache: true,
+    entityPrefix: "odata_server_example_school_",
     entities: SchoolEntities
   }, ...SchoolEntities);
 
