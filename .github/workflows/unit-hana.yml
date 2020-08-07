@@ -37,4 +37,3 @@ jobs:
         HANA_PASSWORD: ${{ secrets.LOCAL_HANA_PWD }}
         HANA_HOST: hxehost
         HANA_PORT: 39015
-        DEBUG: "@sap*"
