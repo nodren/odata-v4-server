@@ -5,7 +5,7 @@ jobs:
   test:
 
     runs-on: self-hosted
-    timeout-minutes: 15
+    timeout-minutes: 30
     
     strategy:
       matrix:
