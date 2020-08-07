@@ -322,7 +322,7 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
     }
 
     // and return it by id
-    await this._executeHooks({ txContext: ctx, hookType: HookType.afterSave, data: instance });
+    await this._executeHooks({ txContext: ctx, hookType: HookType.afterCreate, data: instance });
 
     return instance;
   }
@@ -349,7 +349,7 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
     const instance = repo.create(body);
     await this._executeHooks({ txContext: ctx, hookType: HookType.beforeUpdate, data: instance, key });
     await repo.update(key, instance);
-    await this._executeHooks({ txContext: ctx, hookType: HookType.afterSave, data: instance, key });
+    await this._executeHooks({ txContext: ctx, hookType: HookType.afterUpdate, data: instance, key });
   }
 
   // odata delete will not response any content
@@ -358,7 +358,7 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
     const repo = await this._getRepository(ctx);
     await this._executeHooks({ txContext: ctx, hookType: HookType.beforeDelete, key });
     await repo.delete(key);
-    await this._executeHooks({ txContext: ctx, hookType: HookType.afterSave, key });
+    await this._executeHooks({ txContext: ctx, hookType: HookType.afterDelete, key });
   }
 
 }

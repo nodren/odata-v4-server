@@ -30,7 +30,7 @@ export interface HookContext<T = any> {
   /**
    * transaction released id
    *
-   * 'afterSave' event not have this property
+   * 'afterXXX' events not have this property
    */
   txContext?: TransactionContext;
 
@@ -81,10 +81,9 @@ export const beforeDelete = createHookDecorator(HookType.beforeDelete);
  */
 export const afterLoad = createHookDecorator(HookType.afterLoad);
 
-/**
- * after data has been saved to database (committed)
- */
-export const afterSave = createHookDecorator(HookType.afterSave);
+export const afterCreate = createHookDecorator(HookType.afterCreate);
+export const afterUpdate = createHookDecorator(HookType.afterUpdate);
+export const afterDelete = createHookDecorator(HookType.afterDelete);
 
 
 export function withHook(hook: typeof BaseHookProcessor | BaseHookProcessor) {
