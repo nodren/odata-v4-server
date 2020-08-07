@@ -29,8 +29,16 @@ export const createTmpConnection = (opt?: Partial<ConnectionOptions>) => {
       port: parseInt(process.env.PG_PORT),
       extra: { max: 10 }
     };
-  }
-  else {
+  } else if (process.env.HANA_USER) {
+    defaultOpt = {
+      type: 'sap',
+      username: process.env.HANA_USER,
+      password: process.env.HANA_PASSWORD,
+      host: process.env.HANA_HOST || '127.0.0.1',
+      schema: process.env.HANA_DATABASE || process.env.HANA_USER,
+      port: parseInt(process.env.HANA_PORT)
+    };
+  } else {
     defaultOpt = {
       type: 'sqljs'
     };

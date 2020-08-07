@@ -5,14 +5,15 @@
     "source.organizeImports": true
   },
   "cSpell.words": [
+    "HANA",
     "Northwind",
     "inlinecount",
     "inmemory",
+    "mysql",
     "navigations",
     "odata",
     "sqljs",
-    "typeorm",
-    "mysql"
+    "typeorm"
   ],
   "jest.autoEnable": false
 }
