@@ -8,6 +8,7 @@ export interface BuildSQLOption {
   schema?: string;
   tableName: string;
   query: ODataQuery;
+  countKey: string;
 }
 
 export interface BuildSQLResult {
@@ -28,7 +29,7 @@ export interface DBHelper {
 
 class BaseDBHelper implements DBHelper {
 
-  buildSQL({ schema, tableName, query }) {
+  buildSQL({ schema, tableName, query, countKey }) {
     let objName = tableName;
 
     if (schema) {
@@ -44,7 +45,7 @@ class BaseDBHelper implements DBHelper {
 
     if (count) {
       // use the uppercase 'total' field for hana database
-      countStatement = `select count(1) as TOTAL from ${objName}`;
+      countStatement = `select count(1) as "${countKey}" from ${objName}`;
       if (where) { countStatement += ` where ${where}`; }
     }
 
@@ -67,7 +68,7 @@ export class DefaultDBHelper extends BaseDBHelper {
 
 export class MySqlDBHelper extends BaseDBHelper {
 
-  buildSQL({ schema, tableName, query }) {
+  buildSQL({ schema, tableName, query, countKey }) {
     let objName = tableName;
 
     if (schema) {
@@ -83,7 +84,7 @@ export class MySqlDBHelper extends BaseDBHelper {
     let countStatement = undefined;
 
     if (count) {
-      countStatement = `select count(1) as total from ${objName}`;
+      countStatement = `select count(1) as ${countKey} from ${objName}`;
       if (where) { countStatement += ` where ${where}`; }
     }
 

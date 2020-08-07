@@ -197,7 +197,8 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
       const { queryStatement, countStatement } = helper.buildSQL({
         tableName,
         schema,
-        query
+        query,
+        countKey: 'TOTAL'
       });
 
       // query all ids firstly
@@ -210,7 +211,7 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
         const countResult = await repo.query(countStatement);
         let [{ TOTAL }] = countResult;
         // for mysql, maybe other db driver also will response string
-        if (typeof total == 'string') {
+        if (typeof TOTAL == 'string') {
           TOTAL = parseInt(TOTAL);
         }
         data['inlinecount'] = TOTAL;
