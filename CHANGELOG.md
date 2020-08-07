@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.25](https://github.com/Soontao/odata-v4-server/compare/v0.2.24...v0.2.25) (2020-08-07)
+
+
+### Features
+
+* [#14](https://github.com/Soontao/odata-v4-server/issues/14) add debug module as basis logger ([0c8ae04](https://github.com/Soontao/odata-v4-server/commit/0c8ae0469e6d58bcda3fb93d388cc384575ab77a))
+* db helper ([49b764d](https://github.com/Soontao/odata-v4-server/commit/49b764d1db1a2d7778ef97b2059624615b64d36b))
+* optimize query ([68d36bd](https://github.com/Soontao/odata-v4-server/commit/68d36bddb3be0e46eb9b76a326f9278601e82599))
+* unit test & ci for hana ([b2f826a](https://github.com/Soontao/odata-v4-server/commit/b2f826ac13d3b0199c430918a7acb9c8a87908bd))
+* **ci:** [#21](https://github.com/Soontao/odata-v4-server/issues/21) support pg unt test ([980eb70](https://github.com/Soontao/odata-v4-server/commit/980eb70040ff15f53a6bf5baa7d2275dffc33b35))
+* **ci:** add tests for mysql [#21](https://github.com/Soontao/odata-v4-server/issues/21) ([a48f3dc](https://github.com/Soontao/odata-v4-server/commit/a48f3dc9e0bbeb98fbec5dcc58b8efbd5ff42613))
+
+
+### Bug Fixes
+
+* ci ([f0dfecd](https://github.com/Soontao/odata-v4-server/commit/f0dfecded91f29221f69a5c56a2903a9ed0459db))
+* doc ([d51a825](https://github.com/Soontao/odata-v4-server/commit/d51a8257a972fb87e70b92701f2432a9e78fd93f))
+* pg & mysql count ([be27ac8](https://github.com/Soontao/odata-v4-server/commit/be27ac8ebc74946fd18c5fa14c26de5346e86dd1))
+* setup script ([e84968f](https://github.com/Soontao/odata-v4-server/commit/e84968f9025e0001861eb294801f7de7ffd65f27))
+
 ### [0.2.24](https://github.com/Soontao/odata-v4-server/compare/v0.2.23...v0.2.24) (2020-08-04)
 
 
