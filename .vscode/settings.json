@@ -7,10 +7,13 @@
   "cSpell.words": [
     "HANA",
     "Northwind",
+    "deepmerge",
     "inlinecount",
     "inmemory",
     "mysql",
     "navigations",
+    "newdash",
+    "nocheck",
     "odata",
     "sqljs",
     "typeorm"

@@ -10,12 +10,7 @@ export class Profile extends BaseODataModel {
   @ODataColumn()
   title: string;
 
-  // if user want two-direction navigation for one to one
-  // must define FKs both on two entity
-  @ODataNavigation({ type: 'OneToOne', entity: () => Teacher, foreignKey: 'teacherId', targetForeignKey: 'profileId' })
+  @ODataNavigation({ type: 'OneToOne', entity: () => Teacher, targetForeignKey: 'profileId' })
   teacher: Teacher;
-
-  @ODataColumn({ nullable: true })
-  teacherId: number;
 
 }

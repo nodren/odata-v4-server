@@ -1,5 +1,8 @@
 // @ts-nocheck
+import { get } from '@newdash/newdash/get';
+import { isEmpty } from '@newdash/newdash/isEmpty';
 import { isUndefined } from '@newdash/newdash/isUndefined';
+import { ODataFilter } from '@odata/parser';
 import { Token, TokenType } from '@odata/parser/lib/lexer';
 import { findOne } from '@odata/parser/lib/utils';
 import * as deepmerge from 'deepmerge';
@@ -14,7 +17,7 @@ import { IODataResult } from '../index';
 import * as odata from '../odata';
 import { ODataResult } from '../result';
 import { ODataHttpContext, ODataServer } from '../server';
-import { BaseODataModel } from '../typeorm';
+import { BaseODataModel, getODataNavigation } from '../typeorm';
 import { isIterator, isPromise, isStream } from '../utils';
 import { NavigationPart, ODATA_TYPE, ResourcePathVisitor } from '../visitor';
 import { fnCaller } from './fnCaller';
@@ -1724,19 +1727,40 @@ export class ODataProcessor extends Transform {
           navigationResult = await this.__read(ctrl, part, params, result, foreignFilter, navigationType, include, select);
         } else {
           const foreignKeys = Edm.getForeignKeys(elementType, include.navigationProperty);
-          result.foreignKeys = {};
           const part: any = {};
-          part.key = foreignKeys.map((key) => {
-            result.foreignKeys[key] = result[key];
-            return {
-              name: key,
-              value: result[key]
-            };
-          });
-          if (part.key) {
-            part.key.forEach((key) => params[key.name] = key.value);
+
+          // enhanced logic for typed odata server
+          const nav = getODataNavigation(elementType, include.navigationProperty);
+
+          if (nav?.type == 'OneToOne' && !isEmpty(nav.targetForeignKey)) {
+            const [keyName] = Edm.getKeyProperties(elementType);
+            const foreignFilter = ODataFilter.New().field(nav.targetForeignKey).eq(result[keyName]).toString();
+            navigationResult = await this.__read(ctrl, part, params, result, foreignFilter, navigationType, include, select);
+
+            const data = get(navigationResult, '_originalResult.value[0]');
+
+            if (!isUndefined(data)) {
+              navigationResult = await ODataResult.Ok(data);
+            }
+
+          } else {
+
+            result.foreignKeys = {};
+            part.key = foreignKeys.map((key) => {
+              result.foreignKeys[key] = result[key];
+              return {
+                name: key,
+                value: result[key]
+              };
+            });
+            if (part.key) {
+              part.key.forEach((key) => params[key.name] = key.value);
+            }
+            navigationResult = await this.__read(ctrl, part, params, result, undefined, navigationType, include, select);
+
           }
-          navigationResult = await this.__read(ctrl, part, params, result, undefined, navigationType, include, select);
+
+
         }
       }
     }

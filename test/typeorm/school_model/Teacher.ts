@@ -16,7 +16,7 @@ export class Teacher extends BaseODataModel {
   @ODataColumn({ nullable: true })
   profileId: number;
 
-  @ODataNavigation({ type: 'OneToOne', entity: () => Profile, foreignKey: 'profileId', targetForeignKey: 'teacherId' })
+  @ODataNavigation({ type: 'OneToOne', entity: () => Profile, foreignKey: 'profileId' })
   profile: Profile;
 
   @ODataNavigation({ type: 'OneToMany', entity: () => Class, targetForeignKey: 'teacherOneId' })

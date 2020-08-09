@@ -296,12 +296,15 @@ export function ODataNavigation<T extends typeof BaseODataModel>(options: Naviga
 }
 
 /**
- * get odata navigation
+ * get odata navigation options
  *
  * @param target
  * @param propertyName
  */
 export function getODataNavigation(target: any, propertyName: any): NavigationOptions {
+  if (target?.prototype instanceof BaseODataModel) {
+    return Reflect.getMetadata(KEY_ODATA_PROP_NAVIGATION, target.prototype, propertyName);
+  }
   return Reflect.getMetadata(KEY_ODATA_PROP_NAVIGATION, target, propertyName);
 }
 
