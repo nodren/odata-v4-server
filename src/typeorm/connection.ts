@@ -1,6 +1,6 @@
 import { createConnection } from 'typeorm';
-import { TypedService } from './controller';
 import { BaseODataModel } from './model';
+import { TypedService } from './service';
 
 const KEY_CONN_NAME = 'odata:controller:connection';
 

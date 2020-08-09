@@ -2,7 +2,6 @@
 
 
 export * from './connection';
-export * from './controller';
 export * from './decorators';
 export * from './hooks';
 export * from './model';

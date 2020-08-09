@@ -52,11 +52,11 @@ Using the `actions` implement the partially focused business logics, and use the
 
 ### Hook
 
-Hook is general business logic for specify `Domain Model`, like `beforeCreate`/`beforeUpdate`, and it's mapped from `OData`/`HTTPS` method.
+Hook is general business logic for specify `Domain Model`, like `beforeCreate`/`beforeUpdate`, and it's mapped from `OData`/`HTTP Method`.
 
 Define `Hooks` to implement the general business logics for entity.
 
-### Service (TypedController)
+### Service
 
 Using `services` in `hook`/`action`/`function`, keep the business consistence for single domain model.
 

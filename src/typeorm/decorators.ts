@@ -3,16 +3,18 @@ import { isEmpty } from '@newdash/newdash/isEmpty';
 import toInteger from '@newdash/newdash/toInteger';
 import 'reflect-metadata';
 import { Column, ColumnOptions, Entity, EntityOptions, JoinColumn, ManyToOne, OneToMany, OneToOne } from 'typeorm';
-import { Edm } from '..';
+import { Edm, ODataServer } from '..';
 import { NotImplementedError, ServerInternalError } from '../error';
 import { DBHelper } from './db_helper';
 import { BaseODataModel } from './model';
+import { TypedODataServer } from './server';
 
 const KEY_ODATA_ENTITY_SET = 'odata.entity:entity_set_name';
 const KEY_ODATA_PROP_NAVIGATION = 'odata.entity:entity_prop_navigation';
 const KEY_ODATA_ENTITY_NAVIGATIONS = 'odata.entity:entity_navigations';
 const KEY_ODATA_ENTITY_TYPE = 'odata.entity:entity_type';
 const KEY_TYPEORM_DB_TYPE = 'odata.typeorm:db_type';
+const KEY_WITH_ODATA_SERVER = 'odata:with_server';
 
 
 const DateTimeTransformer = {
@@ -289,4 +291,14 @@ export function getODataNavigation(target: any, propertyName: any): NavigationOp
  */
 export function getODataEntityNavigations(target: any): { [key: string]: NavigationOptions } {
   return Reflect.getMetadata(KEY_ODATA_ENTITY_NAVIGATIONS, target) || {};
+}
+
+export function withODataServerType(serverType: typeof TypedODataServer) {
+  return function (target: any) {
+    Reflect.defineMetadata(KEY_WITH_ODATA_SERVER, serverType, target);
+  };
+}
+
+export function getODataServerType(target: any): typeof ODataServer {
+  return Reflect.getMetadata(KEY_WITH_ODATA_SERVER, target);
 }

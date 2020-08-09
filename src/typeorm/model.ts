@@ -2,9 +2,8 @@ import { getConnection, Repository } from 'typeorm';
 import { getControllerInstance } from '../controller';
 import { getPublicControllers } from '../odata';
 import { getConnectionName } from './connection';
-import { TypedService } from './controller';
-import { getODataEntitySetName } from './decorators';
-import { getODataServerType } from './server';
+import { getODataEntitySetName, getODataServerType } from './decorators';
+import { TypedService } from './service';
 import { getOrCreateTransaction, TransactionContext } from './transaction';
 
 export class BaseODataModel {
