@@ -23,7 +23,7 @@ export class Class extends BaseODataModel {
   teacher: any;
 
   // GET http://localhost:50000/Classes?$expand=students($expand=student)
-  @ODataNavigation({ type: 'OneToMany', entity: () => RelStudentClassAssignment, foreignKey: 'classId' })
+  @ODataNavigation({ type: 'OneToMany', entity: () => RelStudentClassAssignment, targetForeignKey: 'classId' })
   students: any;
 
 }

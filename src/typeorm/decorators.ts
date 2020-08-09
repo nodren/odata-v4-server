@@ -209,23 +209,43 @@ export function ODataColumn(options: ColumnOptions = {}) {
   };
 }
 
-export interface NavigationOptions<T extends typeof BaseODataModel = any> {
+interface BaseNavigation<T extends typeof BaseODataModel = any> {
   /**
-   * navigation type
-   */
-  type: 'OneToOne' | 'OneToMany' | 'ManyToOne';
-  /**
-   * entity provider
+   * nav target entity
    */
   entity: (type?: any) => T,
+}
+
+interface OneToManyNavigationOption<T extends typeof BaseODataModel = any> extends BaseNavigation<T> {
+  type: 'OneToMany';
+  targetForeignKey: keyof InstanceType<T>;
+}
+
+interface ManyToOneNavigationOption<T extends typeof BaseODataModel = any> extends BaseNavigation<T> {
+  type: 'ManyToOne';
   /**
-   * (ref) foreignKey,
-   *
-   * which field record the relation ship between `this` & `that` table
-   */
+  * (ref) foreignKey,
+  *
+  * which field record the relation ship between `this` & `that` table
+  */
   foreignKey: string;
 }
 
+interface OneToOneNavigationOption<T extends typeof BaseODataModel = any> extends BaseNavigation<T> {
+  type: 'OneToOne';
+  /**
+  * (ref) foreignKey,
+  *
+  * which field record the relation ship between `this` table
+  */
+  foreignKey?: string;
+  /**
+   * fk on targe entity
+   */
+  targetForeignKey?: keyof InstanceType<T>;
+}
+
+export type NavigationOptions<T extends typeof BaseODataModel = any> = OneToManyNavigationOption<T> | ManyToOneNavigationOption<T> | OneToOneNavigationOption<T>;
 /**
  * ODataNavigation decorator
  *
@@ -236,8 +256,9 @@ export interface NavigationOptions<T extends typeof BaseODataModel = any> {
 export function ODataNavigation<T extends typeof BaseODataModel>(options: NavigationOptions<T>) {
   return function (target: any, propertyName: string): void {
 
-    if (isEmpty(options.foreignKey)) {
-      throw new ServerInternalError(`OneToMany navigation must define the ref 'foreign key' in ${target?.constructor?.name} ${propertyName}`);
+    // @ts-ignore
+    if (isEmpty(options?.foreignKey) && isEmpty(options?.targetForeignKey)) {
+      throw new ServerInternalError(`navigation must define the ref 'foreign key' in ${target?.constructor?.name} ${propertyName}`);
     }
 
     const navigations = getODataEntityNavigations(target);
@@ -250,9 +271,11 @@ export function ODataNavigation<T extends typeof BaseODataModel>(options: Naviga
 
     switch (options.type) {
       case 'OneToMany':
-        OneToMany(options.entity, options.foreignKey)(target, propertyName);
+        // @ts-ignore
+        OneToMany(options.entity, options.targetForeignKey)(target, propertyName);
         Edm.Collection(Edm.EntityType(Edm.ForwardRef(options.entity)))(target, propertyName);
-        Edm.ForeignKey(options.foreignKey)(target, propertyName);
+        // @ts-ignore
+        Edm.ForeignKey(options.targetForeignKey)(target, propertyName);
         break;
       case 'ManyToOne':
         ManyToOne(options.entity)(target, propertyName);

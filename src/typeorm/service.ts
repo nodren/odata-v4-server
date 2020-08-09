@@ -6,7 +6,7 @@ import { defaultParser, ODataQueryParam } from '@odata/parser';
 import 'reflect-metadata';
 import { getConnection, Repository } from 'typeorm';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
-import { Edm, getKeyProperties, getType, odata, ODataQuery } from '..';
+import { Edm, getKeyProperties, odata, ODataQuery } from '..';
 import { getControllerInstance, ODataController } from '../controller';
 import { ResourceNotFoundError, ServerInternalError } from '../error';
 import { Literal } from '../literal';
@@ -241,33 +241,43 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
    * @private
    * @ignore
    * @internal
-   * @param body
+   * @param parentBody
    * @param ctx
    */
-  private async _deepInsert(body: any, ctx: TransactionContext): Promise<boolean> {
+  private async _deepInsert(parentBody: any, ctx: TransactionContext): Promise<boolean> {
     let reSaveRequired = false;
 
     const navigations = getODataEntityNavigations(this._getEntityType().prototype);
-    const [thisKeyName] = getKeyProperties(this._getEntityType());
+    // TO DO
+    // assert only one key for entities
+    const [parentObjectKeyName] = getKeyProperties(this._getEntityType());
 
     for (const navigationName in navigations) {
       if (Object.prototype.hasOwnProperty.call(navigations, navigationName)) {
-        if (Object.prototype.hasOwnProperty.call(body, navigationName)) {
+        if (Object.prototype.hasOwnProperty.call(parentBody, navigationName)) {
 
           // if navigation property have value
-          const navigationData = body[navigationName];
+          const navigationData = parentBody[navigationName];
           const options = navigations[navigationName];
           const deepInsertElementType = options.entity();
-          const fkName = options.foreignKey;
+          // TO DO
+          // verify this two keys are existed on entity definition
+          const parentObjectFKName = options.foreignKey;
+          const navTargetFKName = options.targetForeignKey;
+
+          if (isEmpty(parentObjectFKName) && isEmpty(navTargetFKName)) {
+            throw new ServerInternalError(`fk not existed on entity ${this._getEntityType().name} or ${deepInsertElementType.name}`);
+          }
+
           const service = this._getService(deepInsertElementType);
-          const [targetInstanceKeyName] = getKeyProperties(deepInsertElementType);
+          const [navTargetKeyName] = getKeyProperties(deepInsertElementType);
 
           switch (options.type) {
             case 'OneToMany':
               if (isArray(navigationData)) {
-                body[navigationName] = await Promise.all(
+                parentBody[navigationName] = await Promise.all(
                   navigationData.map((navigationItem) => {
-                    navigationItem[fkName] = body[thisKeyName];
+                    navigationItem[navTargetFKName] = parentBody[parentObjectKeyName];
                     return service.create(navigationItem, ctx);
                   })
                 );
@@ -278,23 +288,23 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
               break;
             case 'ManyToOne':
               reSaveRequired = true;
-              const createdDeepInstance = await service.create(navigationData, ctx);
-              body[navigationName] = createdDeepInstance;
-              body[fkName] = createdDeepInstance[targetInstanceKeyName];
+              parentBody[navigationName] = await service.create(navigationData, ctx);
+              parentBody[parentObjectFKName] = parentBody[navigationName][navTargetKeyName];
               break;
             default:
-              const createdDeepInstance2 = await service.create(navigationData, ctx);
-              body[navigationName] = createdDeepInstance2;
-              if (getType(this._getEntityType(), fkName, this._getServerType().container)) {
+
+              if (navTargetFKName) {
+                navigationData[navTargetFKName] = parentBody[parentObjectKeyName];
+              }
+
+              parentBody[navigationName] = await service.create(navigationData, ctx);
+
+              if (parentObjectFKName) {
+                // save the fk to parent table
                 reSaveRequired = true;
-                body[fkName] = createdDeepInstance2[targetInstanceKeyName];
+                parentBody[parentObjectFKName] = parentBody[navigationName][navTargetKeyName];
               }
-              else if (getType(deepInsertElementType, fkName, this._getServerType().container)) {
-                createdDeepInstance2[fkName] = body[thisKeyName];
-              }
-              else {
-                throw new ServerInternalError(`fk ${fkName} not existed on entity ${this._getEntityType().name} or ${deepInsertElementType.name}`);
-              }
+
               break;
           }
         }
