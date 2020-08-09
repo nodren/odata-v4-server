@@ -1,13 +1,43 @@
+import { validateBySchema } from '@cypress/schema-tools';
 import flatten from '@newdash/newdash/flatten';
 import groupBy from '@newdash/newdash/groupBy';
+import isArray from '@newdash/newdash/isArray';
 import { map } from '@newdash/newdash/map';
 import { JsonBatchBundle, JsonBatchRequest } from '@odata/parser';
 import { NextFunction, Request, Response } from 'express';
 import { ODataHttpContext, ODataServer } from '..';
+import { BadRequestError } from '../error';
 import { createLogger } from '../logger';
+import { ODataRequestMethods } from '../processor';
 import { commitTransaction, createTransactionContext, rollbackTransaction } from '../typeorm';
 
 const logger = createLogger('request:batch');
+
+const validateRequestBody = validateBySchema({
+  title: 'batch-request',
+  type: 'object',
+  properties: {
+    requests: {
+      title: 'request-item',
+      type: 'array',
+      required: true,
+      minItems: 1,
+      items: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', required: true },
+          method: { type: 'string', enum: ODataRequestMethods, required: true },
+          url: { type: 'string', required: true },
+          atomicityGroup: { type: 'string' },
+          dependsOn: { type: 'array', items: { type: 'string' } },
+          headers: { type: 'object' },
+          body: { type: 'object' }
+        }
+      }
+    }
+  },
+  additionalProperties: false
+});
 
 /**
  * create $batch requests handler
@@ -18,11 +48,19 @@ export function withODataBatchRequestHandler(server: typeof ODataServer) {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
       const body: JsonBatchBundle = req.body;
-      // TO DO validation here
+
+      // validate inbound payload
+      const errors = validateRequestBody(body);
+
+      if (isArray(errors)) {
+        throw new BadRequestError(errors.join(', '));
+      }
+
+      // group by 'atomicityGroup'
       const groups: Record<string, JsonBatchRequest[]> = groupBy(body.requests, (bRequest) => bRequest.atomicityGroup || 'default');
 
       const collectedResults = await Promise.all(map(groups, async (groupRequests, groupName) => {
-        // each atom group will run in SINGLE transaction
+        // each atomicityGroup will run in SINGLE transaction
         const groupResults = [];
         const txContext = createTransactionContext();
 
@@ -83,9 +121,7 @@ export function withODataBatchRequestHandler(server: typeof ODataServer) {
 
       }));
 
-      res.json({
-        responses: flatten(collectedResults)
-      });
+      res.json({ responses: flatten(collectedResults) });
 
     } catch (error) {
       next(error);

@@ -153,7 +153,7 @@ const createODataContext = function (context: ODataHttpContext, entitySets, serv
 };
 
 
-const ODataRequestMethods: string[] = [
+export const ODataRequestMethods: string[] = [
   'get',
   'post',
   'put',
