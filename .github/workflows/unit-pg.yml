@@ -42,7 +42,11 @@ jobs:
 
     - name: npm install
       run: npm ci
-      
+  
+    - name: npm install driver
+      run: |
+        npm install -D pg@8.3.0
+    
     - name: npm build
       run: npm run build
 
