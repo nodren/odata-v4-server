@@ -18,10 +18,8 @@ import { BaseODataModel } from '../typeorm';
 import { isIterator, isPromise, isStream } from '../utils';
 import { NavigationPart, ODATA_TYPE, ResourcePathVisitor } from '../visitor';
 import { fnCaller } from './fnCaller';
+import { getODataRoot } from './getODataRoot';
 
-const getODataRoot = function (context: ODataHttpContext) {
-  return `${context.protocol || 'http'}://${context.host || 'localhost'}${context.base || ''}`;
-};
 
 const createODataContext = function (context: ODataHttpContext, entitySets, server: typeof ODataServer, resourcePath, processor) {
   const odataContextBase = `${getODataRoot(context)}/$metadata#`;
@@ -466,9 +464,9 @@ export enum ODataMetadataType {
 }
 
 export interface ODataProcessorOptions {
-  disableEntityConversion: boolean
-  metadata: ODataMetadataType
-  objectMode: boolean
+  disableEntityConversion?: boolean
+  metadata?: ODataMetadataType
+  objectMode?: boolean
 }
 
 export class ODataProcessor extends Transform {
@@ -1878,7 +1876,7 @@ export class ODataProcessor extends Transform {
     }
 
     if (txContextParam) {
-      params[txContextParam] = this.context?.response?.locals['tx_ctx'];
+      params[txContextParam] = this.context?.tx;
     }
 
     if (streamParam) {

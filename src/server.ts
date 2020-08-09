@@ -10,17 +10,15 @@ import * as swaggerUi from 'swagger-ui-express';
 import { ODataController } from './controller';
 import { ContainerBase } from './edm';
 import { HttpRequestError } from './error';
-import { createLogger } from './logger';
 import { createMetadataJSON } from './metadata';
-import { ensureODataContentType, ensureODataHeaders, withODataHeader, withODataVersionVerify, withSwaggerDocument, withTransactionContext } from './middlewares';
+import { ensureODataHeaders, withODataBatchRequestHandler, withODataErrorHandler, withODataHeader, withODataRequestHandler, withODataVersionVerify, withSwaggerDocument } from './middlewares';
 import * as odata from './odata';
 // eslint-disable-next-line no-duplicate-imports
 import { IODataConnector, ODataBase } from './odata';
 import { ODataMetadataType, ODataProcessor, ODataProcessorOptions } from './processor';
 import { ODataResult } from './result';
-import { commitTransaction, rollbackTransaction } from './typeorm/transaction';
+import { commitTransaction, createTransactionContext, rollbackTransaction, TransactionContext } from './typeorm/transaction';
 
-const logger = createLogger('server');
 
 /** HTTP context interface when using the server HTTP request handler */
 export interface ODataHttpContext {
@@ -31,6 +29,7 @@ export interface ODataHttpContext {
   base: string
   request: express.Request & Readable
   response: express.Response & Writable
+  tx?: TransactionContext
 }
 
 
@@ -42,89 +41,9 @@ export class ODataServerBase extends Transform {
   static parser = ODataParser;
   static connector: IODataConnector
   static validator: (odataQuery: string | Token) => null;
-  static errorHandler: express.ErrorRequestHandler = ODataErrorHandler;
+  static errorHandler: express.ErrorRequestHandler = withODataErrorHandler;
 
   private serverType: typeof ODataServer
-
-  static requestHandler() {
-
-    return async (req: express.Request, res: express.Response, next: express.NextFunction) => {
-
-      const txContext = res.locals['tx_ctx'];
-
-      const ctx: ODataHttpContext = {
-        url: req.url,
-        method: req.method,
-        protocol: req.secure ? 'https' : 'http',
-        host: req.headers.host,
-        base: req.baseUrl,
-        request: req,
-        response: res
-      };
-
-      let hasError = false;
-
-      try {
-
-        ensureODataHeaders(req, res);
-
-        const processor = this.createProcessor(ctx, <ODataProcessorOptions>{
-          metadata: res['metadata']
-        });
-
-        processor.on('header', (headers) => {
-          for (const prop in headers) {
-            if (prop.toLowerCase() == 'content-type') {
-              ensureODataContentType(req, res, headers[prop]);
-            } else {
-              res.setHeader(prop, headers[prop]);
-            }
-          }
-        });
-
-        processor.on('data', (chunk, encoding, done) => {
-          if (!hasError) {
-            res.write(chunk, encoding, done);
-          }
-        });
-
-        let body = req.body;
-
-        // if chunked upload, will use request stream as body
-        if (req.headers['transfer-encoding'] == 'chunked') {
-          body = req;
-        }
-
-        const origStatus = res.statusCode;
-
-        const result = await processor.execute(body);
-
-        if (result) {
-          res.status((origStatus != res.statusCode && res.statusCode) || result.statusCode || 200);
-          if (!res.headersSent) {
-            ensureODataContentType(req, res, result.contentType || 'text/plain');
-          }
-          if (typeof result.body != 'undefined') {
-            if (typeof result.body != 'object') {
-              res.send(`${result.body}`);
-            } else if (!res.headersSent) {
-              res.send(result.body);
-            }
-          }
-        }
-
-        await commitTransaction(txContext);
-        res.end();
-
-      } catch (err) {
-
-        await rollbackTransaction(txContext);
-        hasError = true;
-        next(err);
-
-      }
-    };
-  }
 
   static async execute<T>(url: string, body?: object): Promise<ODataResult<T>>;
   static async execute<T>(url: string, method?: string, body?: object): Promise<ODataResult<T>>;
@@ -150,6 +69,8 @@ export class ODataServerBase extends Transform {
     }
     context.method = context.method || 'GET';
     context.request = context.request || body;
+
+    const txContext = createTransactionContext();
 
     try {
 
@@ -193,10 +114,10 @@ export class ODataServerBase extends Transform {
       } else if (result && response) {
         result.body = <any>response;
       }
-      await commitTransaction(context);
+      await commitTransaction(txContext);
       return result;
     } catch (error) {
-      await rollbackTransaction(context);
+      await rollbackTransaction(txContext);
       throw error;
     }
 
@@ -289,7 +210,6 @@ export class ODataServerBase extends Transform {
       router.use(cors());
     }
 
-    router.use(withTransactionContext);
 
     router.use(withODataHeader);
 
@@ -305,10 +225,13 @@ export class ODataServerBase extends Transform {
     // enable swagger ui
     router.use('/api-docs', withSwaggerDocument(server.$metadata()), swaggerUi.serve, swaggerUi.setup());
 
-    // all request handler
-    router.use(server.requestHandler());
+    // $batch request handler
+    router.post('/\\$batch', withODataBatchRequestHandler(this));
 
-    router.use(server.errorHandler);
+    // simple single request handler
+    router.use(withODataRequestHandler(this));
+
+    router.use(withODataErrorHandler);
 
     if (typeof path == 'number') {
       if (typeof port == 'string') {
@@ -327,30 +250,6 @@ export class ODataServerBase extends Transform {
 }
 
 export class ODataServer extends ODataBase<ODataServerBase, typeof ODataServerBase>(ODataServerBase) { }
-
-
-/** Create Express middleware for OData error handling */
-export function ODataErrorHandler(err, _, res, next) {
-  if (err) {
-    if (res.headersSent) {
-      return next(err);
-    }
-    const statusCode = err.statusCode || err.status || (res.statusCode < 400 ? 500 : res.statusCode);
-    if (!res.statusCode || res.statusCode < 400) {
-      res.status(statusCode);
-    }
-    logger(err.stack);
-    res.send({
-      error: {
-        code: statusCode,
-        message: err.message
-        // stack: process.env.ODATA_V4_ENABLE_STACKTRACE ? undefined : err.stack
-      }
-    });
-  } else {
-    next();
-  }
-}
 
 /** Create Express server for OData Server
  * @param server OData Server instance

@@ -44,3 +44,9 @@ export class UnsupportedMediaTypeError extends HttpRequestError {
     super(415, message);
   }
 }
+
+export class BadRequestError extends HttpRequestError {
+  constructor(message = 'Bad Request') {
+    super(400, message);
+  }
+}

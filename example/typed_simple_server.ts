@@ -1,3 +1,4 @@
+import * as express from "express";
 import 'reflect-metadata';
 import { createTypedODataServer } from '../src';
 import { SchoolEntities } from "../test/typeorm/school_model";
@@ -14,7 +15,12 @@ const run = async () => {
     entities: SchoolEntities
   }, ...SchoolEntities);
 
-  const s = server.create(50000);
+
+  const app = express()
+
+  app.use(server.create())
+
+  const s = app.listen(50000)
 
   s.once('listening', () => console.log(`server started at ${s.address()['port']}`));
 
