@@ -218,7 +218,9 @@ export function withODataBatchRequestHandler(server: typeof ODataServer) {
 
       }));
 
-      res.json(flatten(collectedResults));
+      res.json({
+        responses: flatten(collectedResults)
+      });
 
     } catch (error) {
       next(error);
