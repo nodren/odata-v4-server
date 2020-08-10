@@ -104,9 +104,9 @@ export function getODataEntityType(target: any): typeof BaseODataModel {
 }
 
 /**
- * ODataModel
+ * OData Entity Type
  *
- * decorator wrapper of the typeorm `Entity` decorator
+ * The wrapper of the typeorm `Entity` decorator
  *
  * @param options
  */

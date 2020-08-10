@@ -54,7 +54,7 @@
     "uuid": "^8.3.0"
   },
   "devDependencies": {
-    "@odata/client": "^2.8.1",
+    "@odata/client": "^2.10.0",
     "@types/body-parser": "1.19.0",
     "@types/cors": "^2.8.6",
     "@types/debug": "^4.1.5",
