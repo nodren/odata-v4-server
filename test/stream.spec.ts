@@ -522,7 +522,7 @@ if (typeof describe == 'function') {
           testServer.write({
             url: '/ImagesControllerEntitySet(1)/Data2',
             method: 'POST',
-            body: fs.createReadStream(path.join(__dirname, 'fixtures', 'logo_jaystack.png'))
+            body: fs.createReadStream(path.join(__dirname, 'fixtures', 'logo_odata.png'))
           });
           testServer.on('data', (data) => resolve(data));
           testServer.on('error', reject);
@@ -533,7 +533,7 @@ if (typeof describe == 'function') {
           });
 
           expect(
-            fs.readFileSync(path.join(__dirname, 'fixtures', 'logo_jaystack.png'))
+            fs.readFileSync(path.join(__dirname, 'fixtures', 'logo_odata.png'))
           ).toEqual(
             fs.readFileSync(path.join(__dirname, 'fixtures', 'tmp.png'))
           );
@@ -558,7 +558,7 @@ if (typeof describe == 'function') {
         }).on('error', reject);
       }).then((_) => {
 
-        expect(fs.readFileSync(path.join(__dirname, 'fixtures', 'tmp.png'))).toEqual(fs.readFileSync(path.join(__dirname, 'fixtures', 'logo_jaystack.png')));
+        expect(fs.readFileSync(path.join(__dirname, 'fixtures', 'tmp.png'))).toEqual(fs.readFileSync(path.join(__dirname, 'fixtures', 'logo_odata.png')));
 
         if (fs.existsSync(path.join(__dirname, 'fixtures', 'tmp.png'))) {
           fs.unlinkSync(path.join(__dirname, 'fixtures', 'tmp.png'));
@@ -573,7 +573,7 @@ if (typeof describe == 'function') {
           testServer.write({
             url: '/Images2ControllerEntitySet(1)/Data2',
             method: 'POST',
-            body: fs.createReadStream(path.join(__dirname, 'fixtures', 'logo_jaystack.png'))
+            body: fs.createReadStream(path.join(__dirname, 'fixtures', 'logo_odata.png'))
           });
           testServer.on('data', (data) => resolve(data));
           testServer.on('error', reject);
@@ -581,7 +581,7 @@ if (typeof describe == 'function') {
           expect(result).toEqual({
             statusCode: 204
           });
-          expect(fs.readFileSync(path.join(__dirname, 'fixtures', 'logo_jaystack.png'))).toEqual(fs.readFileSync(path.join(__dirname, 'fixtures', 'tmp.png')));
+          expect(fs.readFileSync(path.join(__dirname, 'fixtures', 'logo_odata.png'))).toEqual(fs.readFileSync(path.join(__dirname, 'fixtures', 'tmp.png')));
           if (fs.existsSync(path.join(__dirname, 'fixtures', 'tmp.png'))) {
             fs.unlinkSync(path.join(__dirname, 'fixtures', 'tmp.png'));
           }
@@ -601,7 +601,7 @@ if (typeof describe == 'function') {
           testServer.on('error', reject);
         }).on('error', reject);
       }).then((_) => {
-        expect(fs.readFileSync(path.join(__dirname, 'fixtures', 'tmp.png'))).toEqual(fs.readFileSync(path.join(__dirname, 'fixtures', 'logo_jaystack.png')));
+        expect(fs.readFileSync(path.join(__dirname, 'fixtures', 'tmp.png'))).toEqual(fs.readFileSync(path.join(__dirname, 'fixtures', 'logo_odata.png')));
         if (fs.existsSync(path.join(__dirname, 'fixtures', 'tmp.png'))) {
           fs.unlinkSync(path.join(__dirname, 'fixtures', 'tmp.png'));
         }

@@ -276,7 +276,7 @@ export class ImagesController extends ODataController {
 
   @odata.GET('Data2')
   getData2(@odata.key _: number, @odata.stream stream: Writable, @odata.context context: ODataHttpContext) {
-    return new ODataStream(fs.createReadStream(path.join(__dirname, '..', '..', 'src', 'test', 'fixtures', 'logo_jaystack.png'))).pipe(context.response);
+    return new ODataStream(fs.createReadStream(path.join(__dirname, '..', '..', 'src', 'test', 'fixtures', 'logo_odata.png'))).pipe(context.response);
   }
 
   @odata.POST('Data2')
@@ -843,7 +843,7 @@ export class Images2Controller extends ODataController {
 
   @odata.GET('Data2')
   *getData2(@odata.key _: number, @odata.stream stream: Writable, @odata.context context: ODataHttpContext) {
-    return yield new ODataStream(fs.createReadStream(path.join(__dirname, '..', '..', 'src', 'test', 'fixtures', 'logo_jaystack.png'))).pipe(context.response);
+    return yield new ODataStream(fs.createReadStream(path.join(__dirname, '..', '..', 'src', 'test', 'fixtures', 'logo_odata.png'))).pipe(context.response);
   }
 
   @odata.POST('Data2')

@@ -634,13 +634,13 @@ describe('OData HTTP', () => {
 
     it('stream property with ODataStream POST', (done) => {
       const req = request.post(`http://localhost:3002/ImagesControllerEntitySet(1)/Data2`);
-      fs.createReadStream(path.join(__dirname, 'fixtures', 'logo_jaystack.png')).pipe(req);
+      fs.createReadStream(path.join(__dirname, 'fixtures', 'logo_odata.png')).pipe(req);
       req.on('error', (err) => {
         done(err);
       });
       req.on('complete', (resp, body) => {
         expect(resp.statusCode).toEqual(204);
-        expect(fs.readFileSync(path.join(__dirname, 'fixtures', 'logo_jaystack.png'))).toEqual(fs.readFileSync(path.join(__dirname, 'fixtures', 'tmp.png')));
+        expect(fs.readFileSync(path.join(__dirname, 'fixtures', 'logo_odata.png'))).toEqual(fs.readFileSync(path.join(__dirname, 'fixtures', 'tmp.png')));
         if (fs.existsSync(path.join(__dirname, 'fixtures', 'tmp.png'))) {
           fs.unlinkSync(path.join(__dirname, 'fixtures', 'tmp.png'));
         }
@@ -652,7 +652,7 @@ describe('OData HTTP', () => {
       request.get(`http://localhost:3002/ImagesControllerEntitySet(1)/Data2`).on('response', (resp) => {
         expect(resp.statusCode).toEqual(200);
       }).on('error', done).pipe(fs.createWriteStream(path.join(__dirname, 'fixtures', 'tmp.png'))).on('finish', (_) => {
-        expect(fs.readFileSync(path.join(__dirname, 'fixtures', 'logo_jaystack.png'))).toEqual(fs.readFileSync(path.join(__dirname, 'fixtures', 'tmp.png')));
+        expect(fs.readFileSync(path.join(__dirname, 'fixtures', 'logo_odata.png'))).toEqual(fs.readFileSync(path.join(__dirname, 'fixtures', 'tmp.png')));
         if (fs.existsSync(path.join(__dirname, 'fixtures', 'tmp.png'))) {
           fs.unlinkSync(path.join(__dirname, 'fixtures', 'tmp.png'));
         }
@@ -662,13 +662,13 @@ describe('OData HTTP', () => {
 
     it('should return 204 after POST Data2 using generator function that yields stream', (done) => {
       const req = request.post(`http://localhost:3002/Images2ControllerEntitySet(1)/Data2`);
-      fs.createReadStream(path.join(__dirname, 'fixtures', 'logo_jaystack.png')).pipe(req);
+      fs.createReadStream(path.join(__dirname, 'fixtures', 'logo_odata.png')).pipe(req);
       req.on('error', (err) => {
         done(err);
       });
       req.on('complete', (resp, body) => {
         expect(resp.statusCode).toEqual(204);
-        expect(fs.readFileSync(path.join(__dirname, 'fixtures', 'logo_jaystack.png'))).toEqual(fs.readFileSync(path.join(__dirname, 'fixtures', 'tmp.png')));
+        expect(fs.readFileSync(path.join(__dirname, 'fixtures', 'logo_odata.png'))).toEqual(fs.readFileSync(path.join(__dirname, 'fixtures', 'tmp.png')));
         if (fs.existsSync(path.join(__dirname, 'fixtures', 'tmp.png'))) {
           fs.unlinkSync(path.join(__dirname, 'fixtures', 'tmp.png'));
         }
@@ -680,7 +680,7 @@ describe('OData HTTP', () => {
       request.get(`http://localhost:3002/Images2ControllerEntitySet(1)/Data2`).on('response', (resp) => {
         expect(resp.statusCode).toEqual(200);
       }).on('error', done).pipe(fs.createWriteStream(path.join(__dirname, 'fixtures', 'tmp.png'))).on('finish', (_) => {
-        expect(fs.readFileSync(path.join(__dirname, 'fixtures', 'logo_jaystack.png'))).toEqual(fs.readFileSync(path.join(__dirname, 'fixtures', 'tmp.png')));
+        expect(fs.readFileSync(path.join(__dirname, 'fixtures', 'logo_odata.png'))).toEqual(fs.readFileSync(path.join(__dirname, 'fixtures', 'tmp.png')));
         if (fs.existsSync(path.join(__dirname, 'fixtures', 'tmp.png'))) {
           fs.unlinkSync(path.join(__dirname, 'fixtures', 'tmp.png'));
         }
