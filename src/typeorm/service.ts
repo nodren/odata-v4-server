@@ -25,7 +25,7 @@ import { getOrCreateTransaction, TransactionContext } from './transaction';
 export class TypedService<T extends typeof BaseODataModel = any> extends ODataController {
 
   protected async _getConnection(ctx?: TransactionContext) {
-    return (await this._getQueryRunner(ctx)).connection;
+    return (await this._getQueryRunner(ctx)).manager.connection;
   }
 
   protected _getEntityType(): T {
@@ -48,7 +48,7 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
 
   protected async _getRepository(ctx?: TransactionContext): Promise<Repository<InstanceType<T>>> {
     // @ts-ignore
-    return (await this._getConnection(ctx)).getRepository(this._getEntityType());
+    return (await this._getEntityManager(ctx)).getRepository(this._getEntityType());
   }
 
   private _getServerType(): typeof TypedODataServer {
@@ -135,7 +135,7 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
     if (isArray(body)) {
       await Promise.all(body.map((item) => this._applyTransforms(item, ctx)));
     } else {
-      const conn = await this._getConnection(ctx);
+      const conn = await this._getQueryRunner(ctx);
       const meta = await conn.getMetadata(this._getEntityType());
       const columns = meta.columns;
       columns.forEach(({ propertyName, transformer }) => {

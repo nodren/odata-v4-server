@@ -15,8 +15,8 @@ export class BaseODataModel {
     return getControllerInstance(controllers[entitySetName]);
   };
 
-  protected async _getConnection(ctx: TransactionContext) {
-    return (await this._getQueryRunner(ctx)).connection;
+  protected async _getConnection(ctx?: TransactionContext) {
+    return (await this._getQueryRunner(ctx)).manager.connection;
   }
 
   protected async _getEntityManager(ctx: TransactionContext) {
