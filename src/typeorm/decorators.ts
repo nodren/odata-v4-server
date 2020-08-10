@@ -11,6 +11,7 @@ import { TypedODataServer } from './server';
 import { TypedService } from './service';
 
 const KEY_CONN_NAME = 'odata:controller:connection';
+const KEY_ODATA_ENTITY_PROP = 'odata.entity:entity_prop';
 const KEY_ODATA_ENTITY_SET = 'odata.entity:entity_set_name';
 const KEY_ODATA_PROP_NAVIGATION = 'odata.entity:entity_prop_navigation';
 const KEY_ODATA_ENTITY_NAVIGATIONS = 'odata.entity:entity_navigations';
@@ -119,6 +120,11 @@ export function ODataModel(options: EntityOptions = {}, entitySetName?: string) 
 }
 
 /**
+ * define an odata entity type/domain model
+ */
+export const ODataEntityType = ODataModel;
+
+/**
  * ODataColumn
  *
  * combine the `Edm` & `typeorm` decorator
@@ -182,10 +188,55 @@ export function ODataColumn(options: ColumnOptions = {}) {
         throw new NotImplementedError(`Not support the type of field '${propertyName}'.`);
     }
 
+    Reflect.defineMetadata(KEY_ODATA_ENTITY_PROP, options, object, propertyName);
     Column(options)(object, propertyName);
 
   };
 }
+
+/**
+ * get property column options
+ *
+ * @param target
+ * @param propsName
+ */
+export function getPropertyOptions(target: typeof BaseODataModel, propsName: string): ColumnOptions {
+  if (target.prototype instanceof BaseODataModel) {
+    return Reflect.getMetadata(KEY_ODATA_ENTITY_PROP, target.prototype, propsName);
+  }
+  return Reflect.getMetadata(KEY_ODATA_ENTITY_PROP, target, propsName);
+}
+
+/**
+ * create property with default option
+ *
+ * @param defaultOption
+ */
+export function createPropertyDecorator(defaultOption: ColumnOptions) {
+  return function (options?: ColumnOptions) {
+    return function (target, propName) {
+      return ODataColumn({ ...defaultOption, ...options })(target, propName);
+    };
+  };
+}
+
+/**
+ * define key property for odata entity type
+ *
+ * @param options
+ */
+export const KeyProperty = createPropertyDecorator({ primary: true });
+
+
+/**
+ * define property for odata entity type
+ */
+export const Property = createPropertyDecorator({});
+
+/**
+ * define optional property for odata entity type
+ */
+export const OptionalProperty = createPropertyDecorator({ nullable: true });
 
 interface BaseNavigation<T extends typeof BaseODataModel = any> {
   /**

@@ -226,5 +226,38 @@ describe('Typeorm Test Suite', () => {
 
   });
 
+  it('should perform default value for instance', async () => {
+
+    @ODataModel()
+    class T3 extends BaseODataModel {
+
+      @ODataColumn({ primary: true, generated: 'increment' })
+      id: number;
+
+      @ODataColumn({ default: 'unknown' })
+      name: string;
+
+    }
+
+    const conn = await createTmpConnection({
+      name: 'default_value_unit_conn',
+      entityPrefix: 'odata_server_unit_index_03_',
+      entities: [T3]
+    });
+
+    const { server, client } = await createServerAndClient(conn, T3);
+
+    try {
+
+      const es = client.getEntitySet<T3>('T3s');
+      const body = await es.create({});
+      expect(body.name).toBe('unknown');
+
+    } finally {
+      await shutdown(server);
+    }
+
+  });
+
 
 });

@@ -316,10 +316,12 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
     return reSaveRequired;
 
   }
+
   @odata.POST
   async create(@odata.body body: QueryDeepPartialEntity<InstanceType<T>>, @odata.txContext ctx?: TransactionContext) {
     const repo = await this._getRepository(ctx);
     await this._transformInboundPayload(body);
+
     const instance = body;
     await this._executeHooks({ txContext: ctx, hookType: HookType.beforeCreate, data: instance });
 
