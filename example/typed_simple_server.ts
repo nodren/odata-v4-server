@@ -2,19 +2,21 @@ import * as express from "express";
 import 'reflect-metadata';
 import { createTypedODataServer } from '../src';
 import { SchoolEntities } from "../test/typeorm/school_model";
+import { createTmpConnection } from "../test/typeorm/utils";
+
 
 const run = async () => {
 
-  const server = await createTypedODataServer({
+  const conn = await createTmpConnection({
     name: 'default',
-    type: 'sqljs',
     synchronize: true,
     logging: true,
     cache: true,
     entityPrefix: "odata_server_example_school_",
-    entities: SchoolEntities
-  }, ...SchoolEntities);
+    entities: SchoolEntities,
+  })
 
+  const server = await createTypedODataServer(conn, ...SchoolEntities);
 
   const app = express()
 

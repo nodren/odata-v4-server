@@ -5,7 +5,6 @@ import { createServerAndClient, createTmpConnection } from './utils';
 
 describe('Batch Test Suite', () => {
 
-
   it('should raise error when payload wrong', async () => {
 
     @ODataEntityType()
