@@ -135,7 +135,7 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
     if (isArray(body)) {
       await Promise.all(body.map((item) => this._applyTransforms(item, ctx)));
     } else {
-      const conn = await this._getQueryRunner(ctx);
+      const conn = await this._getConnection(ctx);
       const meta = await conn.getMetadata(this._getEntityType());
       const columns = meta.columns;
       columns.forEach(({ propertyName, transformer }) => {
