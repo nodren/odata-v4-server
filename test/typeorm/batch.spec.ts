@@ -1,3 +1,4 @@
+import { v4 } from 'uuid';
 import { BaseODataModel, KeyProperty, ODataEntityType, OptionalProperty } from '../../src';
 import { shutdown } from '../utils/server';
 import { createServerAndClient, createTmpConnection } from './utils';
@@ -60,6 +61,8 @@ describe('Batch Test Suite', () => {
 
     }
 
+    const testName = v4();
+
     const conn = await createTmpConnection({
       name: 'batch_transaction_test_conn',
       entityPrefix: 'batch_unit_test_02',
@@ -73,11 +76,11 @@ describe('Batch Test Suite', () => {
       const es = client.getEntitySet<B2>('B2s');
 
       const requests = [
-        es.batch().create({ name: 'v1' }),
-        es.batch().create({ name: 'v1' })
+        es.batch().create({ name: testName }),
+        es.batch().create({ name: testName })
       ];
 
-      const responses= await client.execBatchRequestsJson(requests);
+      const responses = await client.execBatchRequestsJson(requests);
 
       expect(responses).toHaveLength(2);
       // first request should success
@@ -85,7 +88,7 @@ describe('Batch Test Suite', () => {
       // second request should be failed, because the name have the unique constraint
       expect(responses[1].status).toBe(500);
 
-      const items = await es.find({ name: 'v1' });
+      const items = await es.find({ name: testName });
       // no items should be created
       // whole batch request will be put into 'default' atom group by default (without the parameter)
       // and each atom group will share single batch request
