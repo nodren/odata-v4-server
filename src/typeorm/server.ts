@@ -3,9 +3,8 @@ import { Connection, ConnectionOptions, createConnection, getConnection } from '
 import { odata } from '..';
 import { createLogger } from '../logger';
 import { ODataServer } from '../server';
-import { withConnection } from './connection';
 import { createDBHelper } from './db_helper';
-import { getODataEntitySetName, withDBHelper, withEntityType, withODataServerType } from './decorators';
+import { getODataEntitySetName, withConnection, withDBHelper, withEntityType, withODataServerType } from './decorators';
 import { BaseHookProcessor, withHook } from './hooks';
 import { BaseODataModel } from './model';
 import { TypedService } from './service';

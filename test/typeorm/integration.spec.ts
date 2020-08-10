@@ -10,6 +10,7 @@ describe('Typed OData Server Integration Test Suite', () => {
       name: 'typed_service_int_test',
       entityPrefix: 'odata_server_unit_int_',
       synchronize: true,
+      // logging: true,
       entities: SchoolEntities
     });
 

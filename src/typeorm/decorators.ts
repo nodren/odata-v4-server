@@ -2,13 +2,15 @@ import { has } from '@newdash/newdash/has';
 import { isEmpty } from '@newdash/newdash/isEmpty';
 import toInteger from '@newdash/newdash/toInteger';
 import 'reflect-metadata';
-import { Column, ColumnOptions, Entity, EntityOptions, JoinColumn, ManyToOne, OneToMany, OneToOne } from 'typeorm';
+import { Column, ColumnOptions, Entity, EntityOptions } from 'typeorm';
 import { Edm, ODataServer } from '..';
 import { NotImplementedError, ServerInternalError } from '../error';
 import { DBHelper } from './db_helper';
 import { BaseODataModel } from './model';
 import { TypedODataServer } from './server';
+import { TypedService } from './service';
 
+const KEY_CONN_NAME = 'odata:controller:connection';
 const KEY_ODATA_ENTITY_SET = 'odata.entity:entity_set_name';
 const KEY_ODATA_PROP_NAVIGATION = 'odata.entity:entity_prop_navigation';
 const KEY_ODATA_ENTITY_NAVIGATIONS = 'odata.entity:entity_navigations';
@@ -272,21 +274,21 @@ export function ODataNavigation<T extends typeof BaseODataModel>(options: Naviga
     switch (options.type) {
       case 'OneToMany':
         // @ts-ignore
-        OneToMany(options.entity, options.targetForeignKey)(target, propertyName);
+        // OneToMany(options.entity, options.targetForeignKey)(target, propertyName);
         Edm.Collection(Edm.EntityType(Edm.ForwardRef(options.entity)))(target, propertyName);
         // @ts-ignore
         Edm.ForeignKey(options.targetForeignKey)(target, propertyName);
         break;
       case 'ManyToOne':
-        ManyToOne(options.entity)(target, propertyName);
-        JoinColumn({ name: options.foreignKey })(target, propertyName);
+        // ManyToOne(options.entity)(target, propertyName);
+        // JoinColumn({ name: options.foreignKey })(target, propertyName);
         Edm.EntityType(Edm.ForwardRef(options.entity))(target, propertyName);
         Edm.ForeignKey(options.foreignKey)(target, propertyName);
         break;
       case 'OneToOne':
-        OneToOne(options.entity)(target, propertyName);
+        // OneToOne(options.entity)(target, propertyName);
         Edm.EntityType(Edm.ForwardRef(options.entity))(target, propertyName);
-        JoinColumn({ name: options.foreignKey })(target, propertyName);
+        // JoinColumn({ name: options.foreignKey })(target, propertyName);
         Edm.ForeignKey(options.foreignKey)(target, propertyName);
       default:
         break;
@@ -328,3 +330,25 @@ export function withODataServerType(serverType: typeof TypedODataServer) {
 export function getODataServerType(target: any): typeof ODataServer {
   return Reflect.getMetadata(KEY_WITH_ODATA_SERVER, target);
 }
+
+
+/**
+ * indicate the controller use the connection name
+ * if user not use this decorator, or set empty connection name, the controller will use the 'default' connection of typeorm
+ *
+ * @param connectionName typeorm connection name
+ */
+export function withConnection(connectionName: string = 'default') {
+  return function (controller: typeof TypedService) {
+    Reflect.defineMetadata(KEY_CONN_NAME, connectionName, controller);
+  };
+}
+
+/**
+ * getConnectName for typed controller
+ * @param target
+ */
+export function getConnectionName(target: typeof TypedService | typeof BaseODataModel) {
+  return Reflect.getMetadata(KEY_CONN_NAME, target);
+}
+

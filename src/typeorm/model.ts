@@ -1,8 +1,7 @@
 import { getConnection, Repository } from 'typeorm';
 import { getControllerInstance } from '../controller';
 import { getPublicControllers } from '../odata';
-import { getConnectionName } from './connection';
-import { getODataEntitySetName, getODataServerType } from './decorators';
+import { getConnectionName, getODataEntitySetName, getODataServerType } from './decorators';
 import { TypedService } from './service';
 import { getOrCreateTransaction, TransactionContext } from './transaction';
 
