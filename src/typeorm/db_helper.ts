@@ -1,8 +1,32 @@
 import isEmpty from '@newdash/newdash/isEmpty';
-import { ConnectionOptions, DatabaseType } from 'typeorm';
+import { ConnectionOptions, DatabaseType, ValueTransformer } from 'typeorm';
 import { ODataQuery } from '..';
+import { ServerInternalError } from '../error';
 import { transformQueryAst } from './visitor';
 
+export const DateTimeTransformer: ValueTransformer = {
+  from: (databaseColumn: number): Date => {
+    if (typeof databaseColumn == 'string') { // fix mysql driver return string for column
+      databaseColumn = parseInt(databaseColumn);
+    }
+    if (databaseColumn) {
+      return new Date(databaseColumn);
+    }
+    return new Date(0);
+  },
+  to: (date): number => {
+    switch (typeof date) {
+      case 'string':
+        return new Date(date).getTime();
+      case 'object':
+        if (date instanceof Date) {
+          return date.getTime();
+        }
+        throw new ServerInternalError('not supported property type');
+      default: return 0;
+    }
+  }
+};
 
 export interface BuildSQLOption {
   schema?: string;

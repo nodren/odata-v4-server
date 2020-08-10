@@ -5,7 +5,7 @@ import 'reflect-metadata';
 import { Column, ColumnOptions, Entity, EntityOptions } from 'typeorm';
 import { Edm, ODataServer } from '..';
 import { NotImplementedError, ServerInternalError } from '../error';
-import { DBHelper } from './db_helper';
+import { DateTimeTransformer, DBHelper } from './db_helper';
 import { BaseODataModel } from './model';
 import { TypedODataServer } from './server';
 import { TypedService } from './service';
@@ -18,30 +18,6 @@ const KEY_ODATA_ENTITY_TYPE = 'odata.entity:entity_type';
 const KEY_TYPEORM_DB_TYPE = 'odata.typeorm:db_type';
 const KEY_WITH_ODATA_SERVER = 'odata:with_server';
 
-
-const DateTimeTransformer = {
-  from: (databaseColumn: number): Date => {
-    if (typeof databaseColumn == 'string') { // fix mysql driver return string for column
-      databaseColumn = parseInt(databaseColumn);
-    }
-    if (databaseColumn) {
-      return new Date(databaseColumn);
-    }
-    return new Date(0);
-  },
-  to: (date): number => {
-    switch (typeof date) {
-      case 'string':
-        return new Date(date).getTime();
-      case 'object':
-        if (date instanceof Date) {
-          return date.getTime();
-        }
-        throw new ServerInternalError('not supported property type');
-      default: return 0;
-    }
-  }
-};
 
 /**
  * define odata action for entity
@@ -273,22 +249,15 @@ export function ODataNavigation<T extends typeof BaseODataModel>(options: Naviga
 
     switch (options.type) {
       case 'OneToMany':
-        // @ts-ignore
-        // OneToMany(options.entity, options.targetForeignKey)(target, propertyName);
         Edm.Collection(Edm.EntityType(Edm.ForwardRef(options.entity)))(target, propertyName);
-        // @ts-ignore
-        Edm.ForeignKey(options.targetForeignKey)(target, propertyName);
+        Edm.ForeignKey(options.targetForeignKey as string)(target, propertyName);
         break;
       case 'ManyToOne':
-        // ManyToOne(options.entity)(target, propertyName);
-        // JoinColumn({ name: options.foreignKey })(target, propertyName);
         Edm.EntityType(Edm.ForwardRef(options.entity))(target, propertyName);
         Edm.ForeignKey(options.foreignKey)(target, propertyName);
         break;
       case 'OneToOne':
-        // OneToOne(options.entity)(target, propertyName);
         Edm.EntityType(Edm.ForwardRef(options.entity))(target, propertyName);
-        // JoinColumn({ name: options.foreignKey })(target, propertyName);
         Edm.ForeignKey(options.foreignKey)(target, propertyName);
       default:
         break;
