@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.26](https://github.com/Soontao/odata-v4-server/compare/v0.2.25...v0.2.26) (2020-08-10)
+
+
+### Features
+
+* [#22](https://github.com/Soontao/odata-v4-server/issues/22) update events ([811da43](https://github.com/Soontao/odata-v4-server/commit/811da4369ba993ab6941fa51903b674644619f13))
+* [#23](https://github.com/Soontao/odata-v4-server/issues/23) module rename ([614f594](https://github.com/Soontao/odata-v4-server/commit/614f5943e0d899e1b610111d97c5d69f9fe62de7))
+* [#23](https://github.com/Soontao/odata-v4-server/issues/23) remove jaystack resource ([8ded1d0](https://github.com/Soontao/odata-v4-server/commit/8ded1d0ad6b5a1dd8396a0018dac9689068db135))
+* [#23](https://github.com/Soontao/odata-v4-server/issues/23) rename ([f882af5](https://github.com/Soontao/odata-v4-server/commit/f882af54e2a3b39c34a1817e98ef7a01ea7dd0a3))
+* [#24](https://github.com/Soontao/odata-v4-server/issues/24) remove typeorm association ([e23bf95](https://github.com/Soontao/odata-v4-server/commit/e23bf957f946fd201841aa5dc77d28546a16b5a9))
+* [#25](https://github.com/Soontao/odata-v4-server/issues/25) add payload validation for batch request ([1eccd08](https://github.com/Soontao/odata-v4-server/commit/1eccd080cac9d5e392531f8be9414e09b6860284))
+* [#25](https://github.com/Soontao/odata-v4-server/issues/25) basic support batch request in json format ([4c70ecb](https://github.com/Soontao/odata-v4-server/commit/4c70ecb8f91a22e7fccfb93b38dfa9d3b1ad610d))
+
+
+### Bug Fixes
+
+* [#25](https://github.com/Soontao/odata-v4-server/issues/25), response key ([59941a0](https://github.com/Soontao/odata-v4-server/commit/59941a04590ce577ed628a09f7bddfbbfb064bf5))
+
 ### [0.2.25](https://github.com/Soontao/odata-v4-server/compare/v0.2.24...v0.2.25) (2020-08-07)
 
 
