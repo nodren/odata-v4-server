@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.27](https://github.com/Soontao/odata-v4-server/compare/v0.2.26...v0.2.27) (2020-08-10)
+
+
+### Features
+
+* [#26](https://github.com/Soontao/odata-v4-server/issues/26) & other enhance ([dbb0603](https://github.com/Soontao/odata-v4-server/commit/dbb06030851be0778c3f1f1626cd4c33bb8e1da8))
+* [#26](https://github.com/Soontao/odata-v4-server/issues/26) decorators update ([031f341](https://github.com/Soontao/odata-v4-server/commit/031f34180a94c10bf25d67eb0006dd3d1c1bb8ce))
+
+
+### Bug Fixes
+
+* connection issue ([a12a9c8](https://github.com/Soontao/odata-v4-server/commit/a12a9c86583de98854af4d8bbd635bfae6bedd0a))
+* get connection from wrong location ([e7259b5](https://github.com/Soontao/odata-v4-server/commit/e7259b58a0abb1e5aabf9b9085f14a2bd4663de4))
+* hana instance data issue ([b5add91](https://github.com/Soontao/odata-v4-server/commit/b5add91515ad988da3103a9bfbd04487a9d714e2))
+
 ### [0.2.26](https://github.com/Soontao/odata-v4-server/compare/v0.2.25...v0.2.26) (2020-08-10)
 
 
