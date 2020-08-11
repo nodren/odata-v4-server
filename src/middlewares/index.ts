@@ -1,6 +1,6 @@
+export * from './batch';
+export * from './error';
+export * from './headers';
+export * from './request';
 export * from './swagger';
-export * from './withHeaders';
-export * from './withODataBatchRequestHandler';
-export * from './withODataErrorHandler';
-export * from './withODataRequestHandler';
 

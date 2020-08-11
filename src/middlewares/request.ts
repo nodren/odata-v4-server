@@ -3,7 +3,7 @@ import { ODataHttpContext, ODataServer } from '..';
 import { createLogger } from '../logger';
 import { ODataProcessorOptions } from '../processor';
 import { commitTransaction, createTransactionContext, rollbackTransaction } from '../type';
-import { ensureODataContentType, ensureODataHeaders } from './withHeaders';
+import { ensureODataContentType, ensureODataHeaders } from './headers';
 
 const logger = createLogger('request:simple');
 

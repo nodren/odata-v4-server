@@ -18,7 +18,6 @@ const validateRequestBody = validateBySchema({
   type: 'object',
   properties: {
     requests: {
-      title: 'request-item',
       type: 'array',
       required: true,
       minItems: 1,
