@@ -6,7 +6,7 @@ import { Column, ColumnOptions, Entity, EntityOptions } from 'typeorm';
 import { Edm, ODataServer } from '..';
 import { NotImplementedError, ServerInternalError } from '../error';
 import { DateTimeTransformer, DBHelper } from './db_helper';
-import { BaseODataModel } from './model';
+import { BaseODataModel } from './entity';
 import { TypedODataServer } from './server';
 import { TypedService } from './service';
 

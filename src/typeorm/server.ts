@@ -5,8 +5,8 @@ import { createLogger } from '../logger';
 import { ODataServer } from '../server';
 import { createDBHelper } from './db_helper';
 import { getODataEntitySetName, withConnection, withDBHelper, withEntityType, withODataServerType } from './decorators';
+import { BaseODataModel, validateEntityType } from './entity';
 import { BaseHookProcessor, withHook } from './hooks';
-import { BaseODataModel, validateEntityType } from './model';
 import { TypedService } from './service';
 
 const logger = createLogger('type:server');
@@ -14,7 +14,18 @@ const logger = createLogger('type:server');
 /**
  * typed odata server
  */
-export class TypedODataServer extends ODataServer { }
+export class TypedODataServer extends ODataServer {
+
+  /**
+   * get service instance for entity
+   *
+   * @param entityType entity type of service
+   */
+  public static getService<E extends typeof BaseODataModel>(entityType: E): TypedService<E> {
+    return this.getControllerInstance(entityType);
+  };
+
+}
 
 type TypedODataItems = typeof BaseODataModel | typeof BaseHookProcessor
 

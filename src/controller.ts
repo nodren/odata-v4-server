@@ -42,24 +42,3 @@ export class ODataControllerBase {
 export class ODataController extends ODataBase<ODataControllerBase, typeof ODataControllerBase>(ODataControllerBase) {
 
 }
-
-/**
- * get controller instance
- *
- * @singleton
- *
- * @param ct
- * @param args
- */
-export function getControllerInstance(ct: typeof ODataController, ...args: any[]): ODataController {
-  if (ct == undefined) {
-    throw new Error('must provide controller type');
-  }
-  if (!getControllerInstance.registry.has(ct)) {
-    // @ts-ignore
-    getControllerInstance.registry.set(ct, new ct(...args));
-  }
-  return getControllerInstance.registry.get(ct);
-}
-
-getControllerInstance['registry'] = new Map();

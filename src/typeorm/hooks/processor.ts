@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { BaseODataModel } from '../model';
+import { BaseODataModel } from '../entity';
 import { getHookMetadata, HookContext } from './hooks';
 import { HookType } from './hook_type';
 

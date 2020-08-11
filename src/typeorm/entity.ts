@@ -3,22 +3,24 @@ import { isFunction } from '@newdash/newdash/isFunction';
 import isUndefined from '@newdash/newdash/isUndefined';
 import { getConnection, Repository } from 'typeorm';
 import { getKeyProperties, getProperties } from '..';
-import { getControllerInstance } from '../controller';
 import { ForeignKeyValidationError, StartupError } from '../error';
-import { getPublicControllers } from '../odata';
-import { getConnectionName, getODataEntityNavigations, getODataEntitySetName, getODataServerType } from './decorators';
+import { getConnectionName, getODataEntityNavigations, getODataServerType } from './decorators';
+import { TypedODataServer } from './server';
 import { TypedService } from './service';
 import { getOrCreateTransaction, TransactionContext } from './transaction';
 
 
 export class BaseODataModel {
 
-  protected _gerService<E extends typeof BaseODataModel>(entity: E): TypedService<E> {
-    const serverType = getODataServerType(this.constructor);
-    const controllers = getPublicControllers(serverType);
-    const entitySetName = getODataEntitySetName(entity);
+  private _getServerType(): typeof TypedODataServer {
     // @ts-ignore
-    return getControllerInstance(controllers[entitySetName]);
+    return getODataServerType(this.constructor);
+  }
+
+  protected _gerService<E extends typeof BaseODataModel>(entity: E): TypedService<E> {
+    const serverType = this._getServerType();
+    // @ts-ignore
+    return serverType.getControllerInstance(entity);
   };
 
   protected async _getConnection(ctx?: TransactionContext) {

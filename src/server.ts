@@ -247,9 +247,41 @@ export class ODataServerBase extends Transform {
     }
     return router;
   }
+
+  private static _controllerInstanceRegistry: Map<typeof ODataController, ODataController>;
+
+  protected static getControllerInstance(controllerOrEntityType: any): ODataController {
+    if (this._controllerInstanceRegistry == undefined) {
+      this._controllerInstanceRegistry = new Map();
+    }
+
+    if (controllerOrEntityType == undefined) {
+      throw new Error('must provide controller type');
+    }
+
+    let serviceType: any = undefined;
+    if (controllerOrEntityType.prototype instanceof ODataController) {
+      serviceType = controllerOrEntityType;
+    } else {
+      serviceType = this.getController(controllerOrEntityType);
+    }
+
+    if (serviceType == undefined) {
+      throw new TypeError(`${controllerOrEntityType?.name} is not a controller or entity type.`);
+    }
+
+    if (!this._controllerInstanceRegistry.has(serviceType)) {
+      this._controllerInstanceRegistry.set(serviceType, new serviceType());
+    }
+    return this._controllerInstanceRegistry.get(serviceType);
+  }
+
 }
 
-export class ODataServer extends ODataBase<ODataServerBase, typeof ODataServerBase>(ODataServerBase) { }
+export class ODataServer extends ODataBase<ODataServerBase, typeof ODataServerBase>(ODataServerBase) {
+
+
+}
 
 /** Create Express server for OData Server
  * @param server OData Server instance

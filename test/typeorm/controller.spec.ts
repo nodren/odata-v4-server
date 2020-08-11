@@ -7,7 +7,7 @@ import { createServerAndClient, createTmpConnection } from './utils';
 
 describe('Typed Controller Test Suite', () => {
 
-  it('should support call controller from hook', async () => {
+  it('should support call service from hook', async () => {
 
     @ODataModel()
     class A1 extends BaseODataModel {

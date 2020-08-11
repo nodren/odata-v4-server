@@ -7,14 +7,13 @@ import 'reflect-metadata';
 import { getConnection, Repository } from 'typeorm';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 import { Edm, getKeyProperties, odata, ODataQuery } from '..';
-import { getControllerInstance, ODataController } from '../controller';
+import { ODataController } from '../controller';
 import { ResourceNotFoundError, ServerInternalError } from '../error';
 import { Literal } from '../literal';
-import { getPublicControllers } from '../odata';
 import { DBHelper } from './db_helper';
-import { getConnectionName, getDBHelper, getODataEntityNavigations, getODataEntitySetName, getODataEntityType, getODataServerType } from './decorators';
+import { getConnectionName, getDBHelper, getODataEntityNavigations, getODataEntityType, getODataServerType } from './decorators';
+import { BaseODataModel } from './entity';
 import { findHooks, HookContext, HookEvents, HookType } from './hooks';
-import { BaseODataModel } from './model';
 import { TypedODataServer } from './server';
 import { getOrCreateTransaction, TransactionContext } from './transaction';
 
@@ -57,9 +56,7 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
 
   protected _getService<E extends typeof BaseODataModel>(entity: E): TypedService<E> {
     const serverType = this._getServerType();
-    const controllers = getPublicControllers(serverType);
-    const entitySetName = getODataEntitySetName(entity);
-    return getControllerInstance(controllers[entitySetName]);
+    return serverType.getControllerInstance(entity);
   };
 
   /**

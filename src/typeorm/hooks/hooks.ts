@@ -1,5 +1,5 @@
 import sortBy from '@newdash/newdash/sortBy';
-import { BaseODataModel } from '../model';
+import { BaseODataModel } from '../entity';
 import { TypedODataServer } from '../server';
 import { TypedService } from '../service';
 import { TransactionContext } from '../transaction';

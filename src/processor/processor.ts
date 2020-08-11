@@ -10,7 +10,7 @@ import * as qs from 'qs';
 import { Readable, Transform, TransformOptions } from 'stream';
 import * as url from 'url';
 import * as util from 'util';
-import { getControllerInstance, ODataController, ODataControllerBase } from '../controller';
+import { ODataController, ODataControllerBase } from '../controller';
 import * as Edm from '../edm';
 import { MethodNotAllowedError, NotImplementedError, ResourceNotFoundError, ServerInternalError } from '../error';
 import { IODataResult } from '../index';
@@ -962,7 +962,7 @@ export class ODataProcessor extends Transform {
       ? 'get'
       : this.method;
 
-    this.instance = getControllerInstance(ctrl);
+    this.instance = this.serverType.getControllerInstance(ctrl);
 
     let fn;
     if (typeof filter == 'string' || !filter) {
@@ -1028,7 +1028,7 @@ export class ODataProcessor extends Transform {
     switch (method) {
       case 'get':
       case 'delete':
-        currentResult = fnCaller(getControllerInstance(ctrl), fn, params);
+        currentResult = fnCaller(this.serverType.getControllerInstance(ctrl), fn, params);
         break;
 
       case 'post':
@@ -1055,7 +1055,7 @@ export class ODataProcessor extends Transform {
             }
           });
         }
-        currentResult = fnCaller(getControllerInstance(ctrl), fn, params);
+        currentResult = fnCaller(this.serverType.getControllerInstance(ctrl), fn, params);
         break;
     }
 
