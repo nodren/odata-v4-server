@@ -1,8 +1,8 @@
 import * as express from "express";
 import 'reflect-metadata';
 import { createTypedODataServer } from '../src';
-import { SchoolEntities } from "../test/typeorm/school_model";
-import { createTmpConnection } from "../test/typeorm/utils";
+import { SchoolEntities } from "../test/type/school_model";
+import { createTmpConnection } from "../test/type/utils";
 
 
 const run = async () => {
