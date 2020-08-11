@@ -33,8 +33,11 @@ export interface ODataHttpContext {
 }
 
 
-/** ODataServer base class to be extended by concrete OData Server data sources */
+/**
+ * ODataServer base class to be extended by concrete OData Server data sources
+ **/
 export class ODataServerBase extends Transform {
+
   private static _metadataCache: any
   static namespace: string
   static container = new ContainerBase();
@@ -175,30 +178,29 @@ export class ODataServerBase extends Transform {
     return ServiceDocument.processEdmx(this.$metadata().edmx);
   }
 
-  static addController(controller: typeof ODataController, isPublic?: boolean);
-  static addController(controller: typeof ODataController, isPublic?: boolean, elementType?: Function);
-  static addController(controller: typeof ODataController, entitySetName?: string, elementType?: Function);
-  static addController(controller: typeof ODataController, entitySetName?: string | boolean, elementType?: Function) {
+  protected static addController(controller: typeof ODataController, isPublic?: boolean);
+  protected static addController(controller: typeof ODataController, isPublic?: boolean, elementType?: Function);
+  protected static addController(controller: typeof ODataController, entitySetName?: string, elementType?: Function);
+  protected static addController(controller: typeof ODataController, entitySetName?: string | boolean, elementType?: Function) {
     odata.controller(controller, <string>entitySetName, elementType)(this);
   }
-  static getController(elementType: Function) {
+
+  protected static getController(elementType: Function) {
     for (const i in this.prototype) {
-      if (this.prototype[i] &&
-        this.prototype[i].prototype &&
-        this.prototype[i].prototype instanceof ODataController &&
-        this.prototype[i].prototype.elementType == elementType) {
-        return this.prototype[i];
+      const prop = this.prototype[i];
+      if (prop?.prototype instanceof ODataController && prop?.prototype?.elementType == elementType) {
+        return prop;
       }
     }
     return null;
   }
 
-  static create(): express.Router;
-  static create(port: number): http.Server;
-  static create(path: string, port: number): http.Server;
-  static create(port: number, hostname: string): http.Server;
-  static create(path?: string | RegExp | number, port?: number | string, hostname?: string): http.Server;
-  static create(path?: string | RegExp | number, port?: number | string, hostname?: string): http.Server | express.Router {
+  public static create(): express.Router;
+  public static create(port: number): http.Server;
+  public static create(path: string, port: number): http.Server;
+  public static create(port: number, hostname: string): http.Server;
+  public static create(path?: string | RegExp | number, port?: number | string, hostname?: string): http.Server;
+  public static create(path?: string | RegExp | number, port?: number | string, hostname?: string): http.Server | express.Router {
     const server = this;
     const router = express.Router();
 
@@ -280,12 +282,12 @@ export class ODataServerBase extends Transform {
 
 export class ODataServer extends ODataBase<ODataServerBase, typeof ODataServerBase>(ODataServerBase) {
 
-
 }
 
-/** Create Express server for OData Server
+/**
+ * Create Express server for OData Server
  * @param server OData Server instance
- * @return       Express Router object
+ * @return Express Router object
  */
 export function createODataServer(server: typeof ODataServer): express.Router;
 

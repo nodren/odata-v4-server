@@ -29,10 +29,10 @@ export class TypedODataServer extends ODataServer {
 
 type TypedODataItems = typeof BaseODataModel | typeof BaseHookProcessor
 
-export async function createTypedODataServer(connectionOpt: Connection, ...configurations: Array<TypedODataItems>): Promise<typeof ODataServer>;
-export async function createTypedODataServer(connectionOpt: ConnectionOptions, ...configurations: Array<TypedODataItems>): Promise<typeof ODataServer>;
-export async function createTypedODataServer(connectionName: string, ...configurations: Array<TypedODataItems>): Promise<typeof ODataServer>;
-export async function createTypedODataServer(connection: any, ...configurations: Array<TypedODataItems>): Promise<typeof ODataServer> {
+export async function createTypedODataServer(connectionOpt: Connection, ...configurations: Array<TypedODataItems>): Promise<typeof TypedODataServer>;
+export async function createTypedODataServer(connectionOpt: ConnectionOptions, ...configurations: Array<TypedODataItems>): Promise<typeof TypedODataServer>;
+export async function createTypedODataServer(connectionName: string, ...configurations: Array<TypedODataItems>): Promise<typeof TypedODataServer>;
+export async function createTypedODataServer(connection: any, ...configurations: Array<TypedODataItems>): Promise<typeof TypedODataServer> {
 
   return new Promise((resolve, reject) => {
 

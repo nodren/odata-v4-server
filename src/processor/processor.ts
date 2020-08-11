@@ -523,7 +523,7 @@ export class ODataProcessor extends Transform {
     const entitySets = this.entitySets = odata.getPublicControllers(this.serverType);
 
     this.workflow = [
-      async (body) => {
+      async (body: any) => {
         const resourcePath = this.resourcePath = await new ResourcePathVisitor(this.serverType, this.entitySets).Visit(ast);
         this.odataContext = createODataContext(context, entitySets, server, resourcePath, this);
 
