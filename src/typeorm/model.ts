@@ -1,9 +1,15 @@
+import forEach from '@newdash/newdash/forEach';
+import { isFunction } from '@newdash/newdash/isFunction';
+import isUndefined from '@newdash/newdash/isUndefined';
 import { getConnection, Repository } from 'typeorm';
+import { getKeyProperties, getProperties } from '..';
 import { getControllerInstance } from '../controller';
+import { ForeignKeyValidationError, StartupError } from '../error';
 import { getPublicControllers } from '../odata';
-import { getConnectionName, getODataEntitySetName, getODataServerType } from './decorators';
+import { getConnectionName, getODataEntityNavigations, getODataEntitySetName, getODataServerType } from './decorators';
 import { TypedService } from './service';
 import { getOrCreateTransaction, TransactionContext } from './transaction';
+
 
 export class BaseODataModel {
 
@@ -33,5 +39,56 @@ export class BaseODataModel {
   protected async _getRepository(ctx: any, entity?: any) {
     return (await this._getConnection(ctx)).getRepository(entity || this.constructor);
   }
+
+}
+
+export function getClassName(type: new () => any) {
+  return type.name;
+}
+
+
+export function isEntityHasProperty(entityType: typeof BaseODataModel, propName: string) {
+  const properties = getProperties(entityType);
+  return properties.includes(propName);
+}
+
+/**
+ * validate entity type keys & foreign keys
+ *
+ * @param entityType
+ */
+export function validateEntityType(entityType: typeof BaseODataModel) {
+  const entityName = getClassName(entityType);
+  const keyNames = getKeyProperties(entityType);
+
+  if (keyNames?.length != 1) {
+    throw new StartupError(`${entityName} must have one and only one key property.`);
+  }
+
+  const navigations = getODataEntityNavigations(entityType);
+
+  forEach(navigations, (navOption, navPropName) => {
+
+    const targetEntityType = isFunction(navOption.entity) && navOption?.entity();
+
+    if (isUndefined(targetEntityType)) {
+      throw new ForeignKeyValidationError(`entity '${entityName}' navigation '${navPropName}' lost the target entity type.`);
+    }
+
+    if ('foreignKey' in navOption) {
+      if (!isEntityHasProperty(entityType, navOption.foreignKey)) {
+        throw new ForeignKeyValidationError(`entity '${entityName}' navigation '${navPropName}' has foreign key '${navOption.foreignKey}, but it not exist on this entity type.'`);
+      }
+    }
+
+    if ('targetForeignKey' in navOption) {
+      if (!isEntityHasProperty(targetEntityType, navOption.targetForeignKey as string)) {
+        const targetEntityTypeName = getClassName(targetEntityType);
+        throw new ForeignKeyValidationError(`entity '${entityName}' navigation '${navPropName}' has a ref foreign key '${navOption.targetForeignKey as string}' on entity ${targetEntityTypeName}, but it not exist on that entity type.'`);
+      }
+    }
+
+
+  });
 
 }

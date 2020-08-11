@@ -285,10 +285,13 @@ export type NavigationOptions<T extends typeof BaseODataModel = any> = OneToMany
 export function ODataNavigation<T extends typeof BaseODataModel>(options: NavigationOptions<T>) {
   return function (target: any, propertyName: string): void {
 
+    const entityName = target?.constructor?.name;
+
     // @ts-ignore
     if (isEmpty(options?.foreignKey) && isEmpty(options?.targetForeignKey)) {
-      throw new ServerInternalError(`navigation must define the ref 'foreign key' in ${target?.constructor?.name} ${propertyName}`);
+      throw new ServerInternalError(`navigation the ref 'foreign key' must be defined in ${entityName} ${propertyName}`);
     }
+
 
     const navigations = getODataEntityNavigations(target);
 
@@ -338,6 +341,9 @@ export function getODataNavigation(target: any, propertyName: any): NavigationOp
  * @param propertyName
  */
 export function getODataEntityNavigations(target: any): { [key: string]: NavigationOptions } {
+  if (target.prototype instanceof BaseODataModel) {
+    return Reflect.getMetadata(KEY_ODATA_ENTITY_NAVIGATIONS, target.prototype) || {};
+  }
   return Reflect.getMetadata(KEY_ODATA_ENTITY_NAVIGATIONS, target) || {};
 }
 

@@ -1,3 +1,4 @@
+
 export class CustomError extends Error {
   constructor(message?: string) {
     super(message);
@@ -6,6 +7,23 @@ export class CustomError extends Error {
     Error.captureStackTrace(this, this?.constructor || CustomError);
   }
 }
+
+export class StartupError extends CustomError {
+
+  constructor(message = 'validation failed') {
+    super(message);
+  }
+
+}
+
+export class ForeignKeyValidationError extends StartupError {
+
+  constructor(message = 'fk validation failed') {
+    super(message);
+  }
+
+}
+
 
 export class HttpRequestError extends CustomError {
   statusCode: number
