@@ -1,6 +1,5 @@
 import { isUndefined } from 'util';
-import { BaseODataModel, Edm, odata, ODataAction, ODataColumn, ODataModel, ODataNavigation, ResourceNotFoundError } from '../../../src';
-import { TransactionContext } from '../../../src/typeorm/transaction';
+import { BaseODataModel, Edm, odata, ODataAction, ODataColumn, ODataModel, ODataNavigation, ResourceNotFoundError, TransactionContext } from '../../../src';
 import { Class } from './Class';
 import { Profile } from './Profile';
 

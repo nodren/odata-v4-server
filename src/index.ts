@@ -1,21 +1,22 @@
 import 'reflect-metadata';
+import * as _Edm from './edm';
+import * as _odata from './odata';
 
 // exports Edm decorator system
-export * from './edm';
-import * as _Edm from './edm';
-export const Edm = _Edm;
-
-export * from './odata';
-import * as _odata from './odata';
-export const odata = _odata;
+export { QueryOptionsNode as ODataQuery } from '@odata/parser';
 export * from './controller';
-export * from './processor';
-export * from './server';
-export * from './metadata';
-export * from './result';
-export * from './visitor';
+export * from './edm';
 export * from './error';
 export * from './literal';
-export { QueryOptionsNode as ODataQuery } from '@odata/parser';
+export * from './metadata';
+export * from './odata';
+export * from './processor';
+export * from './result';
+export * from './server';
+export * from './type';
+export * from './visitor';
+export const Edm = _Edm;
 
-export * from './typeorm';
+export const odata = _odata;
+
+

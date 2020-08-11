@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from 'express';
 import { ODataHttpContext, ODataServer } from '..';
 import { createLogger } from '../logger';
 import { ODataProcessorOptions } from '../processor';
-import { commitTransaction, createTransactionContext, rollbackTransaction } from '../typeorm';
+import { commitTransaction, createTransactionContext, rollbackTransaction } from '../type';
 import { ensureODataContentType, ensureODataHeaders } from './withHeaders';
 
 const logger = createLogger('request:simple');

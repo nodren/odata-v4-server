@@ -17,7 +17,7 @@ import { IODataResult } from '../index';
 import * as odata from '../odata';
 import { ODataResult } from '../result';
 import { ODataHttpContext, ODataServer } from '../server';
-import { BaseODataModel, getODataNavigation } from '../typeorm';
+import { BaseODataModel, getODataNavigation } from '../type';
 import { isIterator, isPromise, isStream } from '../utils';
 import { NavigationPart, ODATA_TYPE, ResourcePathVisitor } from '../visitor';
 import { fnCaller } from './fnCaller';

@@ -1,11 +1,11 @@
 import { Token } from '@odata/parser/lib/lexer';
 import * as fs from 'fs';
 import { ObjectID } from 'mongodb';
-import { createFilter } from 'odata-v4-inmemory';
 import * as path from 'path';
 import { PassThrough, Readable, Writable } from 'stream';
 import * as streamBuffers from 'stream-buffers';
 import { Edm, odata, ODataController, ODataEntity, ODataHttpContext, ODataMethodType, ODataProcessor, ODataResult, ODataServer, ODataStream } from '../src';
+import { createFilter } from './in-memory';
 import { Category, Product } from './model/model';
 import { GeneratorCategory, GeneratorProduct } from './model/ModelsForGenerator';
 import { CategoryPromise, ProductPromise } from './model/ModelsForPromise';

@@ -9,7 +9,7 @@ import { ODataHttpContext, ODataServer } from '..';
 import { BadRequestError } from '../error';
 import { createLogger } from '../logger';
 import { ODataRequestMethods } from '../processor';
-import { commitTransaction, createTransactionContext, rollbackTransaction } from '../typeorm';
+import { commitTransaction, createTransactionContext, rollbackTransaction } from '../type';
 
 const logger = createLogger('request:batch');
 

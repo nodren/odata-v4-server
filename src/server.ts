@@ -17,7 +17,7 @@ import * as odata from './odata';
 import { IODataConnector, ODataBase } from './odata';
 import { ODataMetadataType, ODataProcessor, ODataProcessorOptions } from './processor';
 import { ODataResult } from './result';
-import { commitTransaction, createTransactionContext, rollbackTransaction, TransactionContext } from './typeorm/transaction';
+import { commitTransaction, createTransactionContext, rollbackTransaction, TransactionContext } from './type';
 
 
 /** HTTP context interface when using the server HTTP request handler */
