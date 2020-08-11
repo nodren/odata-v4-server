@@ -1,4 +1,4 @@
-import { Token, TokenType } from '@odata/parser/lib/lexer';
+import { Token, TokenType } from '@odata/parser';
 
 
 export interface VisitorFuncRes {
@@ -26,7 +26,7 @@ export const ODataMethodMap = {
   tolower: (v) => v.toLowerCase(),
   toupper: (v) => v.toUpperCase(),
   trim: (v) => v.trim(),
-  concat: (v,i) => typeof v == 'number' ? v.toString().concat(i) : v.concat(i),
+  concat: (v, i) => typeof v == 'number' ? v.toString().concat(i) : v.concat(i),
   year: (v) => v.getFullYear(),
   month: (v) => v.getMonth() + 1,
   day: (v) => v.getDate(),
@@ -71,10 +71,10 @@ export class FilterVisitor implements VisitorMap {
   }
 
   //todo fix AST so that we dont need this
-  private VisitFirstMemberExpression(node: Token, context: any)  {
+  private VisitFirstMemberExpression(node: Token, context: any) {
     if (Array.isArray(node.value)) {
       const [current, next] = node.value;
-      return this.VisitODataIdentifier(<Token>{value:{ current, next}}, context);
+      return this.VisitODataIdentifier(<Token>{ value: { current, next } }, context);
     }
     return this.Visit(node.value, context);
   }
@@ -183,21 +183,21 @@ export class FilterVisitor implements VisitorMap {
 
   protected getLiteral(node: Token): any {
     switch (node.value) {
-      case 'null':          return  null;
-      case 'Edm.SByte':     return  parseInt(node.raw);
-      case 'Edm.Decimal':   return  parseFloat(node.raw);
-      case 'Edm.Double':    switch (node.raw) {
+      case 'null': return null;
+      case 'Edm.SByte': return parseInt(node.raw);
+      case 'Edm.Decimal': return parseFloat(node.raw);
+      case 'Edm.Double': switch (node.raw) {
         case 'INF': return Infinity;
         default: return parseFloat(node.raw);
       }
-      case 'Edm.Boolean':   return  node.raw === 'true';
+      case 'Edm.Boolean': return node.raw === 'true';
       //todo: check if string is actually a valid literal type
       case 'string':
       case 'Edm.String':
-        return decodeURIComponent(node.raw).replace(/'/g,'').replace(/\"/g,'');
+        return decodeURIComponent(node.raw).replace(/'/g, '').replace(/\"/g, '');
       case 'Edm.DateTimeOffset':
       case 'Edm.Date':
-        return  new Date(node.raw);
+        return new Date(node.raw);
       case 'Edm.TimeOfDay':
         return new Date(`1970-01-01T${node.raw}Z`);
       case 'Edm.Duration':

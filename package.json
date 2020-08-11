@@ -20,7 +20,8 @@
   "keywords": [
     "OData",
     "Rest",
-    "OData(V4)"
+    "OData(V4)",
+    "ORM"
   ],
   "license": "MIT",
   "contributors": [
