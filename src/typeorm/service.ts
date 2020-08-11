@@ -55,8 +55,7 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
   }
 
   protected _getService<E extends typeof BaseODataModel>(entity: E): TypedService<E> {
-    const serverType = this._getServerType();
-    return serverType.getControllerInstance(entity);
+    return this._getServerType().getService(entity);
   };
 
   /**

@@ -18,9 +18,7 @@ export class BaseODataModel {
   }
 
   protected _gerService<E extends typeof BaseODataModel>(entity: E): TypedService<E> {
-    const serverType = this._getServerType();
-    // @ts-ignore
-    return serverType.getControllerInstance(entity);
+    return this._getServerType().getService(entity);
   };
 
   protected async _getConnection(ctx?: TransactionContext) {

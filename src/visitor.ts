@@ -471,6 +471,7 @@ export class ResourcePathVisitor {
     this.path += `/${part.name}`;
     this.path += '(\\(';
     if (context.isCollection) {
+      // @ts-ignore
       type = this.serverType.getController(type);
     }
     context.parameters = Edm.getParameters(type, part.name.split('.').pop());
