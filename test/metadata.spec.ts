@@ -1,3 +1,4 @@
+// @ts-nocheck
 import * as fs from 'fs';
 import { ObjectID } from 'mongodb';
 import * as path from 'path';
