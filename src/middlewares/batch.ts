@@ -49,7 +49,7 @@ export function withODataBatchRequestHandler(server: typeof ODataServer) {
     try {
       const body: JsonBatchBundle = req.body;
 
-      const fastFail = req.get('continue-on-error').trim() == 'false';
+      const fastFail = (req.get('continue-on-error') || '').trim() == 'false';
 
       // validate inbound payload
       const errors = validateRequestBody(body);
