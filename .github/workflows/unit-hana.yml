@@ -4,8 +4,8 @@ on: push
 jobs:
   test:
 
-    runs-on: self-hosted
-    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
     
     strategy:
       matrix:
@@ -33,7 +33,8 @@ jobs:
       run: npm run coverage
       env:
         CI: true
-        HANA_USER: ODATASERVER
-        HANA_PASSWORD: ${{ secrets.LOCAL_HANA_PWD }}
-        HANA_HOST: hxehost
-        HANA_PORT: 39015
+        HANA_USER: ${{ secrets.CLOUD_HANA_USER }}
+        HANA_PASSWORD: ${{ secrets.CLOUD_HANA_PWD }}
+        HANA_HOST: ${{ secrets.CLOUD_HANA_HOST }}
+        HANA_PORT: ${{ secrets.CLOUD_HANA_PORT }}
+        HANA_CLOUD_VERIFY: true
