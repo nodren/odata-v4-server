@@ -8,6 +8,7 @@ import { NextFunction, Request, Response } from 'express';
 import { ODataHttpContext, ODataServer } from '..';
 import { BadRequestError } from '../error';
 import { createLogger } from '../logger';
+import { ERROR_BATCH_REQUEST_FAST_FAIL } from '../messages';
 import { ODataRequestMethods } from '../processor';
 import { commitTransaction, createTransactionContext, rollbackTransaction } from '../type';
 
@@ -48,6 +49,8 @@ export function withODataBatchRequestHandler(server: typeof ODataServer) {
     try {
       const body: JsonBatchBundle = req.body;
 
+      const fastFail = req.get('continue-on-error').trim() == 'false';
+
       // validate inbound payload
       const errors = validateRequestBody(body);
 
@@ -70,6 +73,21 @@ export function withODataBatchRequestHandler(server: typeof ODataServer) {
           const batchRequest = groupRequests[idx];
 
           try {
+
+            // if something wrong before, and fast fail switched on, return fast fail result.
+            if (anyThingWrong && fastFail) {
+              groupResults.push({
+                id: batchRequest.id,
+                status: 500,
+                body: {
+                  error: {
+                    code: 500,
+                    message: ERROR_BATCH_REQUEST_FAST_FAIL
+                  }
+                }
+              });
+              continue;
+            }
 
             const ctx: ODataHttpContext = {
               url: batchRequest.url,
