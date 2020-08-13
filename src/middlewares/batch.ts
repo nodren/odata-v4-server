@@ -3,7 +3,7 @@ import flatten from '@newdash/newdash/flatten';
 import groupBy from '@newdash/newdash/groupBy';
 import isArray from '@newdash/newdash/isArray';
 import { map } from '@newdash/newdash/map';
-import { JsonBatchBundle, JsonBatchRequest } from '@odata/parser';
+import { JsonBatchRequest, JsonBatchRequestBundle, JsonBatchResponse } from '@odata/parser';
 import { NextFunction, Request, Response } from 'express';
 import { ODataHttpContext, ODataServer } from '..';
 import { BadRequestError } from '../error';
@@ -40,6 +40,19 @@ const validateRequestBody = validateBySchema({
 });
 
 /**
+ * check if request required the 'fast fail' processing
+ *
+ * @param req
+ */
+const isFastFail = (req: Request) => {
+  const h = req.get('continue-on-error');
+  if (h && h.trim() == 'false') {
+    return true;
+  }
+  return false;
+};
+
+/**
  * create $batch requests handler
  *
  * @param server
@@ -47,9 +60,9 @@ const validateRequestBody = validateBySchema({
 export function withODataBatchRequestHandler(server: typeof ODataServer) {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const body: JsonBatchBundle = req.body;
+      const body: JsonBatchRequestBundle = req.body;
 
-      const fastFail = (req.get('continue-on-error') || '').trim() == 'false';
+      const fastFail = isFastFail(req);
 
       // validate inbound payload
       const errors = validateRequestBody(body);
@@ -63,28 +76,26 @@ export function withODataBatchRequestHandler(server: typeof ODataServer) {
 
       const collectedResults = await Promise.all(map(groups, async (groupRequests, groupName) => {
         // each atomicityGroup will run in SINGLE transaction
-        const groupResults = [];
+        const groupResults: JsonBatchResponse[] = [];
         const txContext = createTransactionContext();
-
         // if any item process failed, this value will be true
-        let anyThingWrong = false;
+        let anyItemProcessedFailed = false;
 
         for (let idx = 0; idx < groupRequests.length; idx++) {
+
           const batchRequest = groupRequests[idx];
+
+          const batchRequestId = `group('${batchRequest.atomicityGroup}'), requestId('${batchRequest.id}'), url('${batchRequest.url}')`;
 
           try {
 
+            logger('processing batch request with %s', batchRequestId);
+
             // if something wrong before, and fast fail switched on, return fast fail result.
-            if (anyThingWrong && fastFail) {
+            if (anyItemProcessedFailed && fastFail) {
               groupResults.push({
-                id: batchRequest.id,
-                status: 500,
-                body: {
-                  error: {
-                    code: 500,
-                    message: ERROR_BATCH_REQUEST_FAST_FAIL
-                  }
-                }
+                id: batchRequest.id, status: 500,
+                body: { error: { code: 500, message: ERROR_BATCH_REQUEST_FAST_FAIL } }
               });
               continue;
             }
@@ -112,8 +123,12 @@ export function withODataBatchRequestHandler(server: typeof ODataServer) {
 
           } catch (err) {
 
-            anyThingWrong = true;
+            logger('processing batch request with %s failed, %s', batchRequestId, err);
+
+            anyItemProcessedFailed = true;
+
             const statusCode = err.statusCode || 500;
+
             groupResults.push({
               id: batchRequest.id,
               status: statusCode,
@@ -128,7 +143,7 @@ export function withODataBatchRequestHandler(server: typeof ODataServer) {
           }
         }
 
-        if (anyThingWrong) {
+        if (anyItemProcessedFailed) {
           await rollbackTransaction(txContext);
         } else {
           await commitTransaction(txContext);
