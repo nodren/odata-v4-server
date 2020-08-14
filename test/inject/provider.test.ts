@@ -115,4 +115,33 @@ describe('Inject Provider Test Suite', () => {
 
   });
 
+  it('should support inject provider provider function', async () => {
+
+    const uuid = v4();
+
+    class H {
+
+      @inject('value')
+      value: any
+
+    }
+
+    const container = new InjectContainer();
+
+    container.registerProvider(createInstanceProvider('uuid', uuid));
+
+    class P1 implements InstanceProvider {
+      type = 'value'
+      async provide(@inject('uuid') uuid) { return uuid; }
+    }
+
+    container.registerProvider(new P1);
+
+    const h = await container.getInstance(H);
+
+    expect(h.value).toBe(uuid);
+
+
+  });
+
 });

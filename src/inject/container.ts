@@ -59,7 +59,7 @@ export class InjectContainer {
 
       for (let idx = 0; idx < paramsInfo.length; idx++) {
         const paramInfo = paramsInfo[idx];
-        params[paramInfo.parameterIndex] = await this.getInstance(paramInfo.type());
+        params[paramInfo.parameterIndex] = await this.getInstance(paramInfo.type);
       }
 
     }

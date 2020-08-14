@@ -34,6 +34,9 @@ export function getClassConstructorParams(target): InjectParameter[] {
 }
 
 export function getClassMethodParams(target, targetKey): InjectParameter[] {
+  if (target.prototype) {
+    return Reflect.getMetadata(KEY_INJECT_PARAMS, target.prototype, targetKey) || [];
+  }
   return Reflect.getMetadata(KEY_INJECT_PARAMS, target, targetKey) || [];
 }
 
