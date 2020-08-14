@@ -28,7 +28,7 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
   /**
    * get main connection (without transaction)
    */
-  protected async _getConnection(): Connection;
+  protected async _getConnection(): Promise<Connection>;
   /**
    * get transactional connection
    *
@@ -291,13 +291,12 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
           const navigationData = parentBody[navigationName];
           const options = navigations[navigationName];
           const deepInsertElementType = options.entity();
-          // TO DO
-          // verify this two keys are existed on entity definition
+
           const parentObjectFKName = options.foreignKey;
           const navTargetFKName = options.targetForeignKey;
 
           if (isEmpty(parentObjectFKName) && isEmpty(navTargetFKName)) {
-            throw new ServerInternalError(`fk not existed on entity ${this._getEntityType().name} or ${deepInsertElementType.name}`);
+            throw new ServerInternalError(`fk is not defined on entity ${this._getEntityType().name} or ${deepInsertElementType.name}`);
           }
 
           const service = this._getService(deepInsertElementType);

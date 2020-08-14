@@ -4,6 +4,7 @@ import 'reflect-metadata';
 import { ODataController } from './controller';
 import { EntitySet, EntityType } from './edm';
 import { ODataServer } from './server';
+import { TypedService } from './type';
 import {
   getAllPropertyNames, getFunctionParameters,
 
@@ -32,6 +33,8 @@ const ODataIdParameter: string = 'odata:idparameter';
 const ODataTypeParameter: string = 'odata:typeparameter';
 const ODataNamespace: string = 'odata:namespace';
 const ODataTxContextParameter = 'odata:tx_contextparameter';
+const ODataTypedService = 'odata:service';
+
 
 /** Set element type
  * @param elementType The type of element
@@ -45,7 +48,7 @@ export function type(elementType: Function, targetKey?, parameterIndex?): Functi
     const paramName = parameterNames[parameterIndex];
     Reflect.defineMetadata(ODataTypeParameter, paramName, target, targetKey);
   } else {
-    return function(constructor: Function) {
+    return function (constructor: Function) {
       constructor.prototype.elementType = elementType;
     };
   }
@@ -68,7 +71,7 @@ export const withController = controller;
  * @param namespace Namespace to be set
  */
 export function namespace(namespace: string) {
-  return function(target: any, targetKey?: string) {
+  return function (target: any, targetKey?: string) {
     if (targetKey) {
       if (target[targetKey]) {
         target[targetKey].namespace = namespace;
@@ -89,7 +92,7 @@ export function getNamespace(target: any, targetKey?: string) {
  * @param name  Name of the container
  */
 export function container(name: string) {
-  return function(target: any, targetKey?: string) {
+  return function (target: any, targetKey?: string) {
     if (targetKey) {
       target[targetKey].containerName = name;
     } else {
@@ -102,7 +105,7 @@ export function container(name: string) {
  * @param parser Parser to use (@odata/parser compatible functional parser)
  */
 export function parser(parser: any) {
-  return function(target: typeof ODataServer) {
+  return function (target: typeof ODataServer) {
     target.parser = parser;
   };
 }
@@ -135,7 +138,7 @@ export interface IODataConnector {
  * @param connector Connector to use
  */
 export function connector(connector: IODataConnector) {
-  return function(target: typeof ODataServer) {
+  return function (target: typeof ODataServer) {
     target.connector = connector;
   };
 }
@@ -160,8 +163,8 @@ export interface IODataValidator {
  * @param connector Connector to use
  */
 export function validation(validator: IODataValidator, options: IODataValidatorOptions) {
-  return function(target: typeof ODataServer | typeof ODataController) {
-    target.validator = function(odataQuery: string | Token) {
+  return function (target: typeof ODataServer | typeof ODataController) {
+    target.validator = function (odataQuery: string | Token) {
       return validator.validate(odataQuery, options);
     };
   };
@@ -171,7 +174,7 @@ export function validation(validator: IODataValidator, options: IODataValidatorO
  * @param errorHandler Error request handler to use
  */
 export function error(errorHandler: ErrorRequestHandler) {
-  return function(target: typeof ODataServer) {
+  return function (target: typeof ODataServer) {
     target.errorHandler = errorHandler;
   };
 }
@@ -202,7 +205,7 @@ export function controller(controller: typeof ODataController, entitySetName?: s
  * @param elementType   Type of the element.
  */
 export function controller(controller: typeof ODataController, entitySetName?: string | boolean, elementType?: Function) {
-  return function(server: typeof ODataServer) {
+  return function (server: typeof ODataServer) {
 
     server.prototype[controller.name] = controller;
 
@@ -241,7 +244,7 @@ export function getPublicControllers(server: typeof ODataServer) {
  * @param server The server where you turn the CORS on
  * */
 export const cors = (function cors() {
-  return function(server: typeof ODataServer) {
+  return function (server: typeof ODataServer) {
     (<any>server).cors = true;
   };
 })();
@@ -250,14 +253,14 @@ function odataMethodFactory(type: string, navigationProperty?: string): ODataMet
   if (type.indexOf('/') < 0) {
     type = type.toLowerCase();
   }
-  const decorator: any = function(target, targetKey) {
+  const decorator: any = function (target, targetKey) {
     const existingMethods: any[] = Reflect.getMetadata(ODataMethod, target, targetKey) || [];
     existingMethods.unshift(type);
     Reflect.defineMetadata(ODataMethod, existingMethods, target, targetKey);
   };
-  const createRefFn = function(navigationProperty) {
+  const createRefFn = function (navigationProperty) {
     const fn = odataMethodFactory(`${type}/${navigationProperty}`);
-    (<RefExpressionDecorator>fn).$ref = function(target, targetKey) {
+    (<RefExpressionDecorator>fn).$ref = function (target, targetKey) {
       const existingMethods: any[] = Reflect.getMetadata(ODataMethod, target, targetKey) || [];
       existingMethods.unshift(`${type}/${navigationProperty}/$ref`);
       Reflect.defineMetadata(ODataMethod, existingMethods, target, targetKey);
@@ -267,7 +270,7 @@ function odataMethodFactory(type: string, navigationProperty?: string): ODataMet
   if (typeof navigationProperty == 'string') {
     return createRefFn(navigationProperty);
   }
-  const fn: any = <ExpressionDecorator> function(target: any, targetKey?: string): any {
+  const fn: any = <ExpressionDecorator> function (target: any, targetKey?: string): any {
     if (typeof target == 'string') {
       return createRefFn(target);
     }
@@ -276,7 +279,7 @@ function odataMethodFactory(type: string, navigationProperty?: string): ODataMet
     }
     decorator(target, targetKey);
   };
-  (<ExpressionDecorator>fn).$value = function(target, targetKey) {
+  (<ExpressionDecorator>fn).$value = function (target, targetKey) {
     const existingMethods: any[] = Reflect.getMetadata(ODataMethod, target, targetKey) || [];
     existingMethods.unshift(`${type}/$value`);
     Reflect.defineMetadata(ODataMethod, existingMethods, target, targetKey);
@@ -486,7 +489,7 @@ export function key(target: any, targetKey: string, parameterIndex: number);
  */
 export function key(target: any, targetKey?: string, parameterIndex?: number): any {
   let name;
-  const decorator = function(target, targetKey, parameterIndex: number) {
+  const decorator = function (target, targetKey, parameterIndex: number) {
     const parameterNames = getFunctionParameters(target, targetKey);
     const existingParameters: any[] = Reflect.getOwnMetadata(ODataKeyParameters, target, targetKey) || [];
     const paramName = parameterNames[parameterIndex];
@@ -532,7 +535,7 @@ export function link(target: any, targetKey: string, parameterIndex: number);
  */
 export function link(target: any, targetKey?: string, parameterIndex?: number): any {
   let name;
-  const decorator = function(target, targetKey, parameterIndex: number) {
+  const decorator = function (target, targetKey, parameterIndex: number) {
     const parameterNames = getFunctionParameters(target, targetKey);
     const existingParameters: any[] = Reflect.getOwnMetadata(ODataLinkParameters, target, targetKey) || [];
     const paramName = parameterNames[parameterIndex];
@@ -626,7 +629,7 @@ export function findODataMethod(target, method, keys) {
  * @internal
  * @param key the metadata key
  */
-export const createMethodParameterAnnotation = (key: any) => function(target, targetKey, parameterIndex: number) {
+export const createMethodParameterAnnotation = (key: any) => function (target, targetKey, parameterIndex: number) {
   const parameterNames = getFunctionParameters(target, targetKey);
   const paramName = parameterNames[parameterIndex];
   Reflect.defineMetadata(key, paramName, target, targetKey);
@@ -699,6 +702,27 @@ export const context = createMethodParameterAnnotation(ODataContextParameter);
  */
 export const txContext = createMethodParameterAnnotation(ODataTxContextParameter);
 
+
+export function typedService(serviceType: typeof TypedService) {
+
+  return function (target, targetKey, parameterIndex: number) {
+    const parameterNames = getFunctionParameters(target, targetKey);
+    const paramName = parameterNames[parameterIndex];
+
+    const info = {
+      serviceType,
+      paramName
+    };
+
+    Reflect.defineMetadata(ODataTypedService, paramName, target, targetKey);
+  };
+
+}
+
+export function getTypedServiceInfo(target, targetKey) {
+  return Reflect.getMetadata(ODataTypedService, target.prototype, targetKey);
+}
+
 /** Gives the decorated context parameter.
  * @param target    The prototype of the class for an instance member
  * @param targetKey The name of the class method
@@ -765,7 +789,7 @@ export const getTypeParameter = createMethodParameterGetter(ODataTypeParameter);
  * @param type OData decorator type.
  */
 export function parameter(name: string, type: Function) {
-  return function(target?: any, targetKey?: string) {
+  return function (target?: any, targetKey?: string) {
     const parameterNames = getFunctionParameters(target, targetKey);
     const parameterIndex = parameterNames.indexOf(name);
     if (parameterIndex >= 0) {
@@ -779,7 +803,7 @@ export function parameter(name: string, type: Function) {
  * @param parameters Object that contains the name of the parameter as key and the type of the parameter as value.
  */
 export function parameters(parameters: any) {
-  return function(target?: any, targetKey?: string) {
+  return function (target?: any, targetKey?: string) {
     for (const prop in parameters) {
       parameter(prop, parameters[prop])(target, targetKey);
     }

@@ -1,7 +1,7 @@
 import forEach from '@newdash/newdash/forEach';
 import { isFunction } from '@newdash/newdash/isFunction';
 import isUndefined from '@newdash/newdash/isUndefined';
-import { getConnection, Repository } from 'typeorm';
+import { Connection, getConnection, Repository } from 'typeorm';
 import { getKeyProperties, getProperties } from '..';
 import { ForeignKeyValidationError, StartupError } from '../error';
 import { getConnectionName, getODataEntityNavigations, getODataServerType } from './decorators';
@@ -20,7 +20,16 @@ export class BaseODataModel {
   protected _gerService<E extends typeof BaseODataModel>(entity: E): TypedService<E> {
     return this._getServerType().getService(entity);
   };
-
+  /**
+   * get main connection (without transaction)
+   */
+  protected async _getConnection(): Promise<Connection>;
+  /**
+   * get transactional connection
+   *
+   * @param ctx
+   */
+  protected async _getConnection(ctx?: TransactionContext): Promise<Connection>;
   protected async _getConnection(ctx?: TransactionContext) {
     return (await this._getQueryRunner(ctx)).manager.connection;
   }
