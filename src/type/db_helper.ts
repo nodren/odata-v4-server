@@ -33,6 +33,7 @@ export interface BuildSQLOption {
   tableName: string;
   query: ODataQuery;
   countKey: string;
+  colNameMapper?: (columnName: string) => string
 }
 
 export interface BuildSQLResult {
@@ -50,26 +51,35 @@ export interface DBHelper {
 
 }
 
+const buildName = (...names: string[]): string => names.filter(Boolean).join('.');
+
+const buildNameWithQuote = (...names: string[]): string => names.filter(Boolean).map((name) => `"${name}"`).join('.');
 
 class BaseDBHelper implements DBHelper {
 
-  buildSQL({ schema, tableName, query, countKey }) {
-    let objName = tableName;
+  getDatabaseType(): EDatabaseType {
+    return 'default';
+  }
 
-    if (schema) {
-      objName = `"${schema}"."${tableName}"`;
-    } else {
-      objName = `"${tableName}"`;
+  buildSQL({ schema, tableName, query, countKey, colNameMapper }) {
+
+    if (colNameMapper == undefined) {
+      colNameMapper = (v) => v;
     }
 
-    const { sqlQuery, count, where, selectedFields } = transformQueryAst(query, (col) => `${objName}."${col}"`);
+    const fullTableName = buildNameWithQuote(schema, tableName);
 
-    const queryStatement = `select ${isEmpty(selectedFields) ? '*' : selectedFields.join(', ')} from ${objName} ${sqlQuery};`;
+    const { sqlQuery, count, where, selectedFields } = transformQueryAst(
+      query,
+      (col) => buildNameWithQuote(schema, tableName, colNameMapper(col))
+    );
+
+    const queryStatement = `SELECT ${isEmpty(selectedFields) ? '*' : selectedFields.join(', ')} FROM ${fullTableName} ${sqlQuery};`;
     let countStatement = undefined;
 
     if (count) {
       // use the uppercase 'total' field for hana database
-      countStatement = `select count(1) as "${countKey}" from ${objName}`;
+      countStatement = `SELECT count(1) as "${countKey}" FROM ${fullTableName}`;
       if (where) { countStatement += ` where ${where}`; }
     }
 
@@ -77,10 +87,6 @@ class BaseDBHelper implements DBHelper {
       queryStatement,
       countStatement
     };
-  }
-
-  getDatabaseType(): EDatabaseType {
-    return 'default';
   }
 
 
@@ -92,23 +98,29 @@ export class DefaultDBHelper extends BaseDBHelper {
 
 export class MySqlDBHelper extends BaseDBHelper {
 
-  buildSQL({ schema, tableName, query, countKey }) {
-    let objName = tableName;
+  getDatabaseType(): EDatabaseType {
+    return 'mysql';
+  }
 
-    if (schema) {
-      objName = `${schema}.${tableName}`;
-    } else {
-      objName = `${tableName}`;
+  buildSQL({ schema, tableName, query, countKey, colNameMapper }) {
+
+    if (colNameMapper == undefined) {
+      colNameMapper = (v) => v;
     }
 
-    const { sqlQuery, count, where, selectedFields } = transformQueryAst(query, (col) => `${objName}.${col}`);
+    const fullTableName = buildName(schema, tableName);
 
-    const queryStatement = `select ${isEmpty(selectedFields) ? '*' : selectedFields.join(', ')} from ${objName} ${sqlQuery};`;
+    const { sqlQuery, count, where, selectedFields } = transformQueryAst(
+      query,
+      (col) => buildName(schema, tableName, colNameMapper(col))
+    );
+
+    const queryStatement = `select ${isEmpty(selectedFields) ? '*' : selectedFields.join(', ')} from ${fullTableName} ${sqlQuery};`;
 
     let countStatement = undefined;
 
     if (count) {
-      countStatement = `select count(1) as ${countKey} from ${objName}`;
+      countStatement = `select count(1) as ${countKey} from ${fullTableName}`;
       if (where) { countStatement += ` where ${where}`; }
     }
 
@@ -116,6 +128,7 @@ export class MySqlDBHelper extends BaseDBHelper {
       queryStatement,
       countStatement
     };
+
   }
 }
 

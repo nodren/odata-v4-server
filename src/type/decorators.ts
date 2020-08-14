@@ -230,6 +230,16 @@ export const KeyProperty = createPropertyDecorator({ primary: true });
 
 
 /**
+ * auto increment key property
+ */
+export const IncKeyProperty = createPropertyDecorator({ primary: true, generated: 'increment' });
+
+/**
+ * uuid generated key property
+ */
+export const UUIDKeyProperty = createPropertyDecorator({ primary: true, generated: 'uuid' });
+
+/**
  * define property for odata entity type
  */
 export const Property = createPropertyDecorator({});

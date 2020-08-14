@@ -4,7 +4,7 @@ import { isArray } from '@newdash/newdash/isArray';
 import { isEmpty } from '@newdash/newdash/isEmpty';
 import { defaultParser, ODataQueryParam } from '@odata/parser';
 import 'reflect-metadata';
-import { getConnection, Repository } from 'typeorm';
+import { Connection, getConnection, Repository } from 'typeorm';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 import { getKeyProperties, ODataQuery } from '..';
 import { ODataController } from '../controller';
@@ -25,8 +25,21 @@ import { getOrCreateTransaction, TransactionContext } from './transaction';
  */
 export class TypedService<T extends typeof BaseODataModel = any> extends ODataController {
 
+  /**
+   * get main connection (without transaction)
+   */
+  protected async _getConnection(): Connection;
+  /**
+   * get transactional connection
+   *
+   * @param ctx
+   */
+  protected async _getConnection(ctx?: TransactionContext): Promise<Connection>;
   protected async _getConnection(ctx?: TransactionContext) {
-    return (await this._getQueryRunner(ctx)).manager.connection;
+    if (ctx) {
+      return (await this._getQueryRunner(ctx)).manager.connection;
+    }
+    return getConnection(getConnectionName(this.constructor));
   }
 
   protected _getEntityType(): T {
@@ -134,7 +147,7 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
       await Promise.all(body.map((item) => this._applyTransforms(item, ctx)));
     } else {
       const conn = await this._getConnection(ctx);
-      const meta = await conn.getMetadata(this._getEntityType());
+      const meta = conn.getMetadata(this._getEntityType());
       const columns = meta.columns;
       columns.forEach(({ propertyName, transformer }) => {
         if (transformer && Object.prototype.hasOwnProperty.call(body, propertyName)) {
@@ -161,6 +174,22 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
     }
     // without key, generally in navigation
     return {};
+  }
+
+  private _columnNameMappingStore: Map<string, string>;
+
+  private async createColumnMapper() {
+    if (this._columnNameMappingStore == undefined) {
+      this._columnNameMappingStore = new Map();
+      const conn = await this._getConnection();
+      const meta = conn.getMetadata(this._getEntityType());
+      const columns = meta.columns;
+      for (let idx = 0; idx < columns.length; idx++) {
+        const column = columns[idx];
+        this._columnNameMappingStore.set(column.propertyName, column.databaseName);
+      }
+    }
+    return (propName) => this._columnNameMappingStore.get(propName);
   }
 
   async find(query: ODataQueryParam, ctx?: TransactionContext): Promise<Array<InstanceType<T>>>;
@@ -191,11 +220,14 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
 
       const helper = this._getDBHelper();
 
+      const columnMapper = await this.createColumnMapper();
+
       const { queryStatement, countStatement } = helper.buildSQL({
         tableName,
         schema,
         query,
-        countKey: 'TOTAL'
+        countKey: 'TOTAL',
+        colNameMapper: columnMapper
       });
 
       // query all ids firstly

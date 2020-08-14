@@ -1,7 +1,8 @@
 // @ts-nocheck
-import { OData } from '@odata/client';
+import { OData, ODataV4 } from '@odata/client';
 import '@odata/client/lib/polyfill';
-import { ConnectionOptions, createConnection } from 'typeorm';
+import { Server } from 'http';
+import { Connection, ConnectionOptions, createConnection } from 'typeorm';
 import { createTypedODataServer } from '../../src';
 import { randomPort } from '../utils/randomPort';
 import { ready } from '../utils/server';
@@ -53,7 +54,13 @@ export const createTmpConnection = (opt?: Partial<ConnectionOptions>) => {
   return createConnection(Object.assign(defaultOpt, opt, { synchronize: true }));
 };
 
-export const createServerAndClient = async (conn, ...items: any[]) => {
+export async function createServerAndClient(conn: Partial<ConnectionOptions>, ...items: any[]): { server: Server, client: ODataV4 }
+export async function createServerAndClient(conn: Connection, ...items: any[]): { server: Server, client: ODataV4 }
+export async function createServerAndClient(conn, ...items: any[]) {
+
+  if (!(conn instanceof Connection)) {
+    conn = await createTmpConnection(conn);
+  }
 
   const s = await createTypedODataServer(conn, ...items);
   const httpServer = s.create(randomPort());
