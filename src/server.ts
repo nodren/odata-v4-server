@@ -10,7 +10,7 @@ import * as swaggerUi from 'swagger-ui-express';
 import { ODataController } from './controller';
 import { ContainerBase } from './edm';
 import { HttpRequestError } from './error';
-import { createInstanceProvider, InjectContainer } from './inject';
+import { createInstanceProvider, InjectContainer, SubLevelInjectContainer } from './inject';
 import { createMetadataJSON } from './metadata';
 import { ensureODataHeaders, withODataBatchRequestHandler, withODataErrorHandler, withODataHeader, withODataRequestHandler, withODataVersionVerify, withSwaggerDocument } from './middlewares';
 import * as odata from './odata';
@@ -156,12 +156,22 @@ export class ODataServerBase extends Transform {
     }
   }
 
+
+  private static _injectContainer: InjectContainer;
+
+  static getInjectContainer() {
+    if (this._injectContainer == undefined) {
+      this._injectContainer = new InjectContainer();
+      this._injectContainer.registerProvider(createInstanceProvider('server_type', this));
+    }
+    return this._injectContainer;
+  }
+
   static async createProcessor(context: any, options?: ODataProcessorOptions) {
-    const container = new InjectContainer();
-    container.registerProvider(createInstanceProvider('request_context', context));
-    container.registerProvider(createInstanceProvider('server_type', this));
-    container.registerProvider(createInstanceProvider('processor_option', options));
-    return container.getInstance(ODataProcessor);
+    const subLevelInjectContainer = new SubLevelInjectContainer(this.getInjectContainer());
+    subLevelInjectContainer.registerProvider(createInstanceProvider('request_context', context));
+    subLevelInjectContainer.registerProvider(createInstanceProvider('processor_option', options));
+    return subLevelInjectContainer.getInstance(ODataProcessor);
   }
 
   static $metadata(): ServiceMetadata;
