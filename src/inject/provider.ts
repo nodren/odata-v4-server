@@ -5,11 +5,11 @@ export enum InstanceScope {
 }
 
 export interface InstanceProvider<T = any> {
-  type: string;
+  type: any;
   provide: (...args: any[]) => Promise<T>;
 }
 
-export const createInstanceProvider = (instanceId: string, instance: any) => new class implements InstanceProvider {
+export const createInstanceProvider = (instanceId: any, instance: any) => new class implements InstanceProvider {
   type = instanceId;
   provide = async () => instance
 };

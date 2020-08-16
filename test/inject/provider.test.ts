@@ -162,5 +162,31 @@ describe('Inject Provider Test Suite', () => {
 
   });
 
+  it('should support provide sub class instance',async () => {
+
+    class A {
+
+    }
+
+    class B extends A {
+
+    }
+
+    class C extends B {
+
+    }
+
+    const container = new InjectContainer();
+    container.registerProvider(createInstanceProvider(C, new C()));
+    const a = await container.getInstance(A);
+    const b = await container.getInstance(B);
+
+
+    expect(a).toBeInstanceOf(C);
+    expect(b).toBeInstanceOf(C);
+    expect(b).toBe(a);
+
+  });
+
 
 });

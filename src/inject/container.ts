@@ -1,5 +1,5 @@
 import { alg, Graph } from 'graphlib';
-import { getClassConstructorParams, getClassInjectionInformation, getClassMethodParams, InjectParameter, LazyRef } from './decorators';
+import { getClassConstructorParams, getClassInjectionInformation, getClassMethodParams, inject, InjectParameter, LazyRef } from './decorators';
 import { InstanceProvider } from './provider';
 import { getOrDefault } from './utils';
 
@@ -38,16 +38,16 @@ export class InjectContainer {
     // if class has cycle dependency in constructor, throw error
     this._checkDependency(type);
 
-    if (this._providers.has(type)) {
+    if (this.hasInProviders(type)) {
 
-      const provider = this._providers.get(type);
+      const provider = this.getProvider(type);
 
-      if (!this._store.has(type)) {
+      if (!this.hasInStore(type)) {
         const inst = await this.injectExecute(provider, provider.provide);
-        this._store.set(type, inst);
+        this.setStore(type, inst);
       }
 
-      return this._store.get(type);
+      return this.getStore(type);
 
     }
 
@@ -57,6 +57,54 @@ export class InjectContainer {
 
     throw new TypeError(`Not found provider for type: '${type?.name || type}'`);
 
+  }
+
+  protected hasInStore(type) {
+    if (typeof type == 'function') {
+      for (const [k] of this._store) {
+        if (k.prototype instanceof type) {
+          return true;
+        }
+      }
+    }
+    return this._store.has(type);
+  }
+
+  protected setStore(type, value) {
+    this._store.set(type, value);
+  }
+
+  protected getStore(type) {
+    if (typeof type == 'function') {
+      for (const [k, v] of this._store) {
+        if (k.prototype instanceof type) {
+          return v;
+        }
+      }
+    }
+    return this._store.get(type);
+  }
+
+  protected hasInProviders(type) {
+    if (typeof type == 'function') {
+      for (const [k] of this._providers) {
+        if (k.prototype instanceof type) {
+          return true;
+        }
+      }
+    }
+    return this._providers.has(type);
+  }
+
+  protected getProvider(type) {
+    if (typeof type == 'function') {
+      for (const [k, p] of this._providers) {
+        if (k.prototype instanceof type) {
+          return p;
+        }
+      }
+    }
+    return this._providers.get(type);
   }
 
 
@@ -84,7 +132,7 @@ export class InjectContainer {
 
   private async _defaultClassProvider<T extends new (...args: any[]) => any>(type: T): Promise<InstanceType<T>> {
 
-    if (!this._store.has(type)) {
+    if (!this.hasInStore(type)) {
 
 
       const info = getClassInjectionInformation(type);
@@ -99,7 +147,7 @@ export class InjectContainer {
       }
 
       const inst = new type(...constructParams);
-      this._store.set(type, inst);
+      this.setStore(type, inst);
 
       if (info.size > 0) {
         const keys = info.keys();
@@ -113,7 +161,7 @@ export class InjectContainer {
 
     }
 
-    return this._store.get(type);
+    return this.getStore(type);
   }
 
   private _getProviderParams(provider) {
@@ -138,8 +186,8 @@ export class InjectContainer {
       const typeName = getTypeName(t);
       let params: InjectParameter[] = [];
 
-      if (this._providers.has(t)) {
-        params = this._getProviderParams(this._providers.get(t));
+      if (this.hasInProviders(t)) {
+        params = this._getProviderParams(this.getProvider(t));
       } else if (typeof t == 'function') {
         params = this._getClassParams(t);
       }
@@ -182,3 +230,47 @@ export class InjectContainer {
 
 }
 
+
+export class SubLevelInjectContainer extends InjectContainer {
+
+  private _global: InjectContainer;
+
+  constructor(@inject(InjectContainer) globalContainer: InjectContainer) {
+    super();
+    this._global = globalContainer;
+  }
+
+  hasInStore(type) {
+    // @ts-ignore
+    return super.hasInStore(type) || this._global.hasInStore(type);
+  }
+
+  getStore(type) {
+    if (this.hasInStore(type)) {
+      if (super.hasInStore(type)) {
+        return super.getStore(type);
+      }
+      // @ts-ignore
+      return this._global.getStore(type);
+    }
+    return undefined;
+  }
+
+  hasInProviders(type) {
+    // @ts-ignore
+    return super.hasInProviders(type) || this._global.hasInProviders(type);
+  }
+
+  getProvider(type) {
+    if (this.hasInProviders(type)) {
+      if (super.hasInProviders(type)) {
+        return super.getProvider(type);
+      }
+      // @ts-ignore
+      return this._global.getProvider(type);
+    }
+    return undefined;
+  }
+
+
+}
