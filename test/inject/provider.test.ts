@@ -144,4 +144,23 @@ describe('Inject Provider Test Suite', () => {
 
   });
 
+  it('should support inject container itself', async () => {
+
+
+    class I {
+
+      @inject()
+      ctx: InjectContainer
+
+    }
+
+    const container = new InjectContainer();
+
+    const i = await container.getInstance(I);
+
+    expect(i.ctx).toBe(container);
+
+  });
+
+
 });

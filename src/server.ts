@@ -10,6 +10,7 @@ import * as swaggerUi from 'swagger-ui-express';
 import { ODataController } from './controller';
 import { ContainerBase } from './edm';
 import { HttpRequestError } from './error';
+import { createInstanceProvider, InjectContainer } from './inject';
 import { createMetadataJSON } from './metadata';
 import { ensureODataHeaders, withODataBatchRequestHandler, withODataErrorHandler, withODataHeader, withODataRequestHandler, withODataVersionVerify, withSwaggerDocument } from './middlewares';
 import * as odata from './odata';
@@ -77,7 +78,7 @@ export class ODataServerBase extends Transform {
 
     try {
 
-      const processor = this.createProcessor(context, <ODataProcessorOptions>{
+      const processor = await this.createProcessor(context, <ODataProcessorOptions>{
         objectMode: true,
         metadata: context.metadata || ODataMetadataType.minimal
       });
@@ -155,8 +156,12 @@ export class ODataServerBase extends Transform {
     }
   }
 
-  static createProcessor(context: any, options?: ODataProcessorOptions) {
-    return new ODataProcessor(context, this, options);
+  static async createProcessor(context: any, options?: ODataProcessorOptions) {
+    const container = new InjectContainer();
+    container.registerProvider(createInstanceProvider('request_context', context));
+    container.registerProvider(createInstanceProvider('server_type', this));
+    container.registerProvider(createInstanceProvider('processor_option', options));
+    return container.getInstance(ODataProcessor);
   }
 
   static $metadata(): ServiceMetadata;

@@ -37,7 +37,7 @@ export function withODataRequestHandler(server: typeof ODataServer) {
 
       ensureODataHeaders(req, res);
 
-      const processor = server.createProcessor(ctx, <ODataProcessorOptions>{
+      const processor = await server.createProcessor(ctx, <ODataProcessorOptions>{
         metadata: res['metadata']
       });
 

@@ -14,6 +14,7 @@ import { ODataController, ODataControllerBase } from '../controller';
 import * as Edm from '../edm';
 import { MethodNotAllowedError, NotImplementedError, ResourceNotFoundError, ServerInternalError } from '../error';
 import { IODataResult } from '../index';
+import { inject, InjectContainer } from '../inject';
 import * as odata from '../odata';
 import { ODataResult } from '../result';
 import { ODataHttpContext, ODataServer } from '../server';
@@ -497,7 +498,14 @@ export class ODataProcessor extends Transform {
   private elementType: any;
   private resultCount = 0;
 
-  constructor(context, server, options?: ODataProcessorOptions) {
+  @inject()
+  private injectContainer: InjectContainer;
+
+  constructor(
+    @inject('request_context') context,
+    @inject('server_type') server,
+    @inject('processor_option') options?: ODataProcessorOptions
+  ) {
     super(<TransformOptions>{
       objectMode: true
     });
@@ -507,7 +515,8 @@ export class ODataProcessor extends Transform {
     this.options = options || <ODataProcessorOptions>{};
 
     const method = this.method = context.method.toLowerCase();
-    if (ODataRequestMethods.indexOf(method) < 0) {
+
+    if (!ODataRequestMethods.includes(method)) {
       throw new MethodNotAllowedError();
     }
 
@@ -581,6 +590,7 @@ export class ODataProcessor extends Transform {
         return body;
       }
     ];
+
   }
 
   _transform(chunk: any, _: string, done: Function) {

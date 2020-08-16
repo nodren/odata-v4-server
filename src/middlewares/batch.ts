@@ -111,7 +111,7 @@ export function withODataBatchRequestHandler(server: typeof ODataServer) {
               tx: txContext
             };
 
-            const processor = server.createProcessor(ctx, { metadata: res['metadata'] });
+            const processor = await server.createProcessor(ctx, { metadata: res['metadata'] });
 
             const result = await processor.execute(batchRequest.body);
 
