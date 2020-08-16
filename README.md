@@ -40,6 +40,7 @@ NodeJS OData(V4) Server Implementation.
 * support async controller functions using `Promise`, `async/await`
 * support `OData` V4.01 JSON format `$batch` operation
 * support dependency inject
+* support `deep insert`
 
 ## Concepts
 
