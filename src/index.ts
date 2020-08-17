@@ -14,6 +14,7 @@ export * from './odata';
 export * from './processor';
 export * from './result';
 export * from './server';
+export * from './transaction';
 export * from './type';
 export * from './visitor';
 export { Edm, odata };
