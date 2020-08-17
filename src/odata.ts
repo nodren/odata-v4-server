@@ -33,6 +33,8 @@ const ODataIdParameter: string = 'odata:idparameter';
 const ODataTypeParameter: string = 'odata:typeparameter';
 const ODataNamespace: string = 'odata:namespace';
 const ODataTxContextParameter = 'odata:tx_contextparameter';
+const ODataInjectContainer = 'odata:inject_container';
+
 const ODataTypedService = 'odata:service';
 
 
@@ -702,6 +704,16 @@ export const context = createMethodParameterAnnotation(ODataContextParameter);
  */
 export const txContext = createMethodParameterAnnotation(ODataTxContextParameter);
 
+/**
+ *
+ * Gives the current transaction context.
+ *
+ * @param target            The prototype of the class for an instance member
+ * @param targetKey         The name of the class method
+ * @param parameterIndex    The ordinal index of the parameter in the function’s parameter list
+ */
+export const injectContainer = createMethodParameterAnnotation(ODataInjectContainer);
+
 
 export function typedService(serviceType: typeof TypedService) {
 
@@ -735,6 +747,14 @@ export const getContextParameter = createMethodParameterGetter(ODataContextParam
  * @param targetKey The name of the class method
  */
 export const getTxContextParameter = createMethodParameterGetter(ODataTxContextParameter);
+
+/**
+ * Gives the decorated inject container parameter
+ *
+ * @param target    The prototype of the class for an instance member
+ * @param targetKey The name of the class method
+ */
+export const getInjectContainerParameter = createMethodParameterGetter(ODataInjectContainer);
 
 /** Gives a writable stream that will perform OData result transformation on the result and then sends it forward to your response stream.
  * @param target            The prototype of the class for an instance member

@@ -17,7 +17,7 @@ export class BaseODataModel {
     return getODataServerType(this.constructor);
   }
 
-  protected _gerService<E extends typeof BaseODataModel>(entity: E): TypedService<E> {
+  protected async _gerService<E extends typeof BaseODataModel>(entity: E): Promise<TypedService<E>> {
     return this._getServerType().getService(entity);
   };
   /**

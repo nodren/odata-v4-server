@@ -209,7 +209,7 @@ describe('Hooks Test Suite', () => {
 
     const h1 = createHookProcessor(async (ctx) => {
       hookInvokeSeq.push('h1');
-      await ctx.getService(Student3).create({ name2: 'first' }, ctx.txContext);
+      await (await ctx.getService(Student3)).create({ name2: 'first' }, ctx.txContext);
     }, Student2, HookType.beforeCreate, 0);
 
     const h2 = createHookProcessor(async (ctx) => {

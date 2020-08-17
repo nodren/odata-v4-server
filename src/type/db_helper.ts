@@ -55,7 +55,7 @@ const buildName = (...names: string[]): string => names.filter(Boolean).join('.'
 
 const buildNameWithQuote = (...names: string[]): string => names.filter(Boolean).map((name) => `"${name}"`).join('.');
 
-class BaseDBHelper implements DBHelper {
+export class BaseDBHelper implements DBHelper {
 
   getDatabaseType(): EDatabaseType {
     return 'default';

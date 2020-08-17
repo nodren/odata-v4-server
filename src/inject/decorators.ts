@@ -5,6 +5,7 @@ import sortBy from '@newdash/newdash/sortBy';
 const KEY_INJECT = 'inject:key_inject';
 const KEY_INJECT_CLASS = 'inject:key_inject_class';
 const KEY_INJECT_PARAMS = 'inject:method_inject_params';
+const KEY_TRANSIENT = 'inject:transient';
 
 export interface InjectInformation {
   injectType: 'classProperty' | 'classMethod'
@@ -23,6 +24,19 @@ export function getClassInjectionInformation(target): Map<string, InjectInformat
     return Reflect.getMetadata(KEY_INJECT_CLASS, target.prototype) || new Map<string, InjectInformation>();
   }
   return Reflect.getMetadata(KEY_INJECT_CLASS, target) || new Map<string, InjectInformation>();
+}
+
+/**
+ * transient type, not singleton, do not cache it
+ *
+ * @param target
+ */
+export function transient(target) {
+  Reflect.defineMetadata(KEY_TRANSIENT, true, target);
+}
+
+export function isTransient(target) {
+  return Boolean(Reflect.getOwnMetadata(KEY_TRANSIENT, target));
 }
 
 export function setClassInjectInformation(target, info) {

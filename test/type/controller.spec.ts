@@ -50,7 +50,7 @@ describe('Typed Controller Test Suite', () => {
 
       async execute(hookCtx: HookContext<A1>): Promise<void> {
 
-        const service = hookCtx.getService(A2);
+        const service = await hookCtx.getService(A2);
         const items = await service.find(
           ODataQueryParam.New().filter(ODataFilter.New().field('name').eq(testUserName)),
           hookCtx.txContext

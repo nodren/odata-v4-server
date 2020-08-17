@@ -1,8 +1,13 @@
 import { alg, Graph } from 'graphlib';
-import { getClassConstructorParams, getClassInjectionInformation, getClassMethodParams, inject, InjectParameter, LazyRef } from './decorators';
+import { getClassConstructorParams, getClassInjectionInformation, getClassMethodParams, inject, InjectParameter, isTransient, LazyRef, transient } from './decorators';
 import { InstanceProvider } from './provider';
 import { getOrDefault } from './utils';
 
+
+/**
+ * tmp inject context, store injection temp object in single construction
+ */
+export type InjectContext = Map<any, any>
 
 /**
  * inject container
@@ -22,10 +27,14 @@ export class InjectContainer {
     this._providers.set(provider.type, provider);
   }
 
-  async getInstance<T extends new (...args: any[]) => any>(type: LazyRef<T>): Promise<InstanceType<T>>;
-  async getInstance<T extends new (...args: any[]) => any>(type: T): Promise<InstanceType<T>>;
-  async getInstance(type: string): Promise<any>;
-  async getInstance(type) {
+  async getInstance<T extends new (...args: any[]) => any>(type: LazyRef<T>, ctx?: Map<any, any>): Promise<InstanceType<T>>;
+  async getInstance<T extends new (...args: any[]) => any>(type: T, ctx?: Map<any, any>): Promise<InstanceType<T>>;
+  async getInstance(type: string, ctx?: Map<any, any>): Promise<any>;
+  async getInstance(type: any, ctx: Map<any, any>) {
+
+    if (ctx == undefined) {
+      ctx = new Map();
+    }
 
     if (type instanceof LazyRef) {
       type = type.getRef();
@@ -38,25 +47,55 @@ export class InjectContainer {
     // if class has cycle dependency in constructor, throw error
     this._checkDependency(type);
 
-    if (this.hasInProviders(type)) {
-
-      const provider = this.getProvider(type);
-
-      if (!this.hasInStore(type)) {
-        const inst = await this.injectExecute(provider, provider.provide);
-        this.setStore(type, inst);
-      }
-
-      return this.getStore(type);
-
+    // prefer use context
+    if (ctx.has(type)) {
+      return ctx.get(type);
     }
 
-    if (typeof type == 'function') {
-      return await this._defaultClassProvider(type);
+    let withStore = this._withStore.bind(this);
+    let producer = undefined;
+
+    // user define the provider
+    if (this.hasInProviders(type)) {
+      const provider = this.getProvider(type);
+      if (Boolean(provider.transient) || (typeof provider.type == 'function' && isTransient(provider.type))) {
+        withStore = this._withContext.bind(this);
+      }
+      producer = () => this.injectExecute(provider, provider.provide);
+    }
+
+    // use default provider for classes
+    else if (typeof type == 'function') {
+      if (isTransient(type)) {
+        withStore = this._withContext.bind(this);
+      }
+      producer = () => this._defaultClassProvider(type, ctx);
+    }
+
+    if (producer) {
+      return withStore(type, producer, ctx);
     }
 
     throw new TypeError(`Not found provider for type: '${type?.name || type}'`);
 
+  }
+
+  private async _withContext(type, producer, ctx) {
+    if (!ctx.has(type)) {
+      const inst = await producer();
+      ctx.set(type, inst);
+    }
+    return ctx.get(type);
+  }
+
+  private async _withStore(type, producer, ctx) {
+    if (!this.hasInStore(type)) {
+      const inst = await producer();
+      this.setStore(type, inst);
+    }
+    const inst = this.getStore(type);
+    ctx.set(type, inst);
+    return inst;
   }
 
   protected hasInStore(type) {
@@ -130,38 +169,35 @@ export class InjectContainer {
     return method.apply(instance, params);
   }
 
-  private async _defaultClassProvider<T extends new (...args: any[]) => any>(type: T): Promise<InstanceType<T>> {
+  private async _defaultClassProvider<T extends new (...args: any[]) => any>(type: T, ctx?: Map<any, any>): Promise<InstanceType<T>> {
 
-    if (!this.hasInStore(type)) {
+    const info = getClassInjectionInformation(type);
+    const constructParametersInfo = getClassConstructorParams(type);
+    const constructParams = [];
 
-
-      const info = getClassInjectionInformation(type);
-      const constructParametersInfo = getClassConstructorParams(type);
-      const constructParams = [];
-
-      if (constructParametersInfo.length > 0) {
-        for (let idx = 0; idx < constructParametersInfo.length; idx++) {
-          const paramInfo = constructParametersInfo[idx];
-          constructParams[paramInfo.parameterIndex] = await this.getInstance(paramInfo.type);
-        }
+    if (constructParametersInfo.length > 0) {
+      for (let idx = 0; idx < constructParametersInfo.length; idx++) {
+        const paramInfo = constructParametersInfo[idx];
+        constructParams[paramInfo.parameterIndex] = await this.getInstance(paramInfo.type, ctx);
       }
-
-      const inst = new type(...constructParams);
-      this.setStore(type, inst);
-
-      if (info.size > 0) {
-        const keys = info.keys();
-        for (const key of keys) {
-          const prop = info.get(key);
-          if (prop.injectType == 'classProperty') {
-            inst[key] = await this.getInstance(prop.type);
-          }
-        }
-      }
-
     }
 
-    return this.getStore(type);
+    const inst = new type(...constructParams);
+
+    ctx.set(type, inst);
+
+    if (info.size > 0) {
+      const keys = info.keys();
+      for (const key of keys) {
+        const prop = info.get(key);
+        if (prop.injectType == 'classProperty') {
+          inst[key] = await this.getInstance(prop.type, ctx);
+        }
+      }
+    }
+
+    return inst;
+
   }
 
   private _getProviderParams(provider) {
@@ -230,7 +266,7 @@ export class InjectContainer {
 
 }
 
-
+@transient
 export class SubLevelInjectContainer extends InjectContainer {
 
   private _global: InjectContainer;

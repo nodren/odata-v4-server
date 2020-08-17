@@ -1,5 +1,5 @@
 import { Server } from 'http';
-import { getClassConstructorParams, getClassInjectionInformation, inject } from '../../src/index';
+import { getClassConstructorParams, getClassInjectionInformation, inject, isTransient, transient } from '../../src/index';
 
 describe('Inject Decorators Test Suite', () => {
 
@@ -46,6 +46,20 @@ describe('Inject Decorators Test Suite', () => {
     expect(methodRunInjection.parameters[0].parameterIndex).toBe(0);
     expect(methodRunInjection.parameters[1].type).toBe(Date);
     expect(methodRunInjection.parameters[1].parameterIndex).toBe(1);
+
+
+  });
+
+  it('should support transient decorator', () => {
+
+
+    @transient
+    class A { }
+
+    class B extends A {}
+
+    expect(isTransient(A)).toBe(true);
+    expect(isTransient(B)).toBe(false);
 
 
   });

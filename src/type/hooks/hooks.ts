@@ -25,7 +25,7 @@ export interface HookContext<T = any> {
   /**
    * get service instance for entity
    */
-  getService: <E extends typeof BaseODataModel>(entity: E) => TypedService<E>;
+  getService: <E extends typeof BaseODataModel>(entity: E) => Promise<TypedService<E>>;
 
   /**
    * transaction released id

@@ -1,4 +1,5 @@
 // @ts-nocheck
+import forEach from '@newdash/newdash/forEach';
 import { get } from '@newdash/newdash/get';
 import { isEmpty } from '@newdash/newdash/isEmpty';
 import { isUndefined } from '@newdash/newdash/isUndefined';
@@ -14,7 +15,7 @@ import { ODataController, ODataControllerBase } from '../controller';
 import * as Edm from '../edm';
 import { MethodNotAllowedError, NotImplementedError, ResourceNotFoundError, ServerInternalError } from '../error';
 import { IODataResult } from '../index';
-import { inject, InjectContainer } from '../inject';
+import { createInstanceProvider, inject, InjectContainer, SubLevelInjectContainer } from '../inject';
 import * as odata from '../odata';
 import { ODataResult } from '../result';
 import { ODataHttpContext, ODataServer } from '../server';
@@ -499,11 +500,11 @@ export class ODataProcessor extends Transform {
   private resultCount = 0;
 
   @inject()
-  private injectContainer: InjectContainer;
+  private container: InjectContainer;
 
   constructor(
     @inject('request_context') context,
-    @inject('server_type') server,
+    @inject('server_type') server: typeof ODataServer,
     @inject('processor_option') options?: ODataProcessorOptions
   ) {
     super(<TransformOptions>{
@@ -972,7 +973,7 @@ export class ODataProcessor extends Transform {
       ? 'get'
       : this.method;
 
-    this.instance = this.serverType.getControllerInstance(ctrl);
+    this.instance = await this.serverType.getControllerInstance(ctrl);
 
     let fn;
     if (typeof filter == 'string' || !filter) {
@@ -1038,7 +1039,7 @@ export class ODataProcessor extends Transform {
     switch (method) {
       case 'get':
       case 'delete':
-        currentResult = fnCaller(this.serverType.getControllerInstance(ctrl), fn, params);
+        currentResult = fnCaller(await this.serverType.getControllerInstance(ctrl), fn, params);
         break;
 
       case 'post':
@@ -1065,7 +1066,7 @@ export class ODataProcessor extends Transform {
             }
           });
         }
-        currentResult = fnCaller(this.serverType.getControllerInstance(ctrl), fn, params);
+        currentResult = fnCaller(await this.serverType.getControllerInstance(ctrl), fn, params);
         break;
     }
 
@@ -1831,6 +1832,7 @@ export class ODataProcessor extends Transform {
     const bodyParam = odata.getBodyParameter(container, name);
     const typeParam = odata.getTypeParameter(container, name);
     const txContextParam = odata.getTxContextParameter(container, name);
+    const injectContainerParam = odata.getInjectContainerParameter(container, name);
 
     const elementType = result?.elementType || this.ctrl?.prototype?.elementType || null;
 
@@ -1932,6 +1934,17 @@ export class ODataProcessor extends Transform {
     if (typeParam) {
       params[typeParam] = params[typeParam] || elementType;
     }
+
+    if (injectContainerParam) {
+      const c = await this.container.getInstance(SubLevelInjectContainer);
+
+      forEach(params, (value, key) => {
+        c.registerProvider(createInstanceProvider(`param:${key}`, value));
+      });
+
+      params[injectContainerParam] = c;
+    }
+
   }
 
   async execute(body?: any): Promise<ODataResult> {

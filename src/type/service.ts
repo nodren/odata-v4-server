@@ -69,7 +69,7 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
     return getODataServerType(this.constructor);
   }
 
-  protected _getService<E extends typeof BaseODataModel>(entity: E): TypedService<E> {
+  protected async _getService<E extends typeof BaseODataModel>(entity: E): Promise<TypedService<E>> {
     return this._getServerType().getService(entity);
   };
 
@@ -299,7 +299,7 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
             throw new ServerInternalError(`fk is not defined on entity ${this._getEntityType().name} or ${deepInsertElementType.name}`);
           }
 
-          const service = this._getService(deepInsertElementType);
+          const service = await this._getService(deepInsertElementType);
           const [navTargetKeyName] = getKeyProperties(deepInsertElementType);
 
           switch (options.type) {

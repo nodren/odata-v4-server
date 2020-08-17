@@ -18,7 +18,7 @@ import * as odata from './odata';
 import { IODataConnector, ODataBase } from './odata';
 import { ODataMetadataType, ODataProcessor, ODataProcessorOptions } from './processor';
 import { ODataResult } from './result';
-import { commitTransaction, createTransactionContext, rollbackTransaction, TransactionContext } from './type';
+import { commitTransaction, createTransactionContext, rollbackTransaction, TransactionContext } from './type/transaction';
 
 
 /** HTTP context interface when using the server HTTP request handler */
@@ -168,10 +168,10 @@ export class ODataServerBase extends Transform {
   }
 
   static async createProcessor(context: any, options?: ODataProcessorOptions) {
-    const subLevelInjectContainer = new SubLevelInjectContainer(this.getInjectContainer());
-    subLevelInjectContainer.registerProvider(createInstanceProvider('request_context', context));
-    subLevelInjectContainer.registerProvider(createInstanceProvider('processor_option', options));
-    return subLevelInjectContainer.getInstance(ODataProcessor);
+    const requestContainer = await this.getInjectContainer().getInstance(SubLevelInjectContainer);
+    requestContainer.registerProvider(createInstanceProvider('request_context', context));
+    requestContainer.registerProvider(createInstanceProvider('processor_option', options));
+    return requestContainer.getInstance(ODataProcessor);
   }
 
   static $metadata(): ServiceMetadata;
@@ -265,15 +265,11 @@ export class ODataServerBase extends Transform {
     return router;
   }
 
-  private static _controllerInstanceRegistry: Map<typeof ODataController, ODataController>;
 
-  protected static getControllerInstance(controllerOrEntityType: any): ODataController {
-    if (this._controllerInstanceRegistry == undefined) {
-      this._controllerInstanceRegistry = new Map();
-    }
+  protected static async getControllerInstance(controllerOrEntityType: any): Promise<ODataController> {
 
     if (controllerOrEntityType == undefined) {
-      throw new Error('must provide controller type');
+      throw new Error('must provide the controller type');
     }
 
     let serviceType: any = undefined;
@@ -287,10 +283,8 @@ export class ODataServerBase extends Transform {
       throw new TypeError(`${controllerOrEntityType?.name} is not a controller or entity type.`);
     }
 
-    if (!this._controllerInstanceRegistry.has(serviceType)) {
-      this._controllerInstanceRegistry.set(serviceType, new serviceType());
-    }
-    return this._controllerInstanceRegistry.get(serviceType);
+
+    return this.getInjectContainer().getInstance(serviceType);
   }
 
 }

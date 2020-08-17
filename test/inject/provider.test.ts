@@ -1,5 +1,5 @@
 import { v4 } from 'uuid';
-import { createInstanceProvider, inject, InjectContainer, InstanceProvider, InstanceScope, LazyRef } from '../../src';
+import { createInstanceProvider, inject, InjectContainer, InstanceProvider, LazyRef } from '../../src';
 
 
 describe('Inject Provider Test Suite', () => {
@@ -32,7 +32,6 @@ describe('Inject Provider Test Suite', () => {
 
     class IDProvider implements InstanceProvider {
       type = 'id';
-      scope = InstanceScope.SINGLETON;
       async provide() {
         return testUUID;
       }
