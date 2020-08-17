@@ -1,6 +1,7 @@
 import '@odata/client/lib/polyfill';
 import { isArray } from 'util';
-import { BaseHookProcessor, BaseODataModel, beforeCreate, createHookProcessor, findHooks, HookContext, HookProcessor, HookType, ODataColumn, ODataModel, TypedODataServer, withEntitySetName, withHook } from '../../src';
+import { BaseHookProcessor, BaseODataModel, beforeCreate, findHooks, HookContext, HookProcessor, HookType, inject, ODataColumn, ODataModel, TypedODataServer, withEntitySetName, withHook } from '../../src';
+import { InjectKey } from '../../src/constants';
 import { shutdown } from '../utils/server';
 import { createServerAndClient, createTmpConnection } from './utils';
 
@@ -15,9 +16,36 @@ describe('Hooks Test Suite', () => {
     const t1 = class extends BaseODataModel { };
     const t2 = class extends BaseODataModel { };
 
-    const p1 = createHookProcessor(async (ctx) => { });
-    const p2 = createHookProcessor(async (ctx) => { });
-    const p3 = createHookProcessor(async (ctx) => { }, t1);
+    const p1 = new class extends BaseHookProcessor {
+      order() {
+        return 0;
+      }
+      support(entityType?: any, hookType?: HookType): boolean {
+        return true;
+      }
+      async execute(ctx: HookContext<any>): Promise<void> {
+      }
+    };
+    const p2 = new class extends BaseHookProcessor {
+      order() {
+        return 0;
+      }
+      support(entityType?: any, hookType?: HookType): boolean {
+        return true;
+      }
+      async execute(ctx: HookContext<any>): Promise<void> {
+      }
+    };
+    const p3 = new class extends BaseHookProcessor {
+      order() {
+        return 0;
+      }
+      support(entityType?: any, hookType?: HookType): boolean {
+        return entityType == t1;
+      }
+      async execute(ctx: HookContext<any>): Promise<void> {
+      }
+    };
 
     const p4 = class extends BaseHookProcessor {
       order() {
@@ -87,11 +115,26 @@ describe('Hooks Test Suite', () => {
 
     const entities = [Student];
 
-    const hook = createHookProcessor(
-      async ({ data }) => { if (!isArray(data)) { data.age = DEFAULT_AGE; } },
-      Student,
-      HookType.beforeCreate
-    );
+    class Hook1 extends BaseHookProcessor {
+
+      support(entityType?: any, hookType?: HookType): boolean {
+        let rt = true;
+        if (entityType != undefined && entityType !== Student) {
+          rt = false;
+        }
+        if (hookType != undefined && hookType !== HookType.beforeCreate) {
+          rt = false;
+        }
+        return rt;
+      }
+
+      async execute(@inject(InjectKey.HookContext) ctx: HookContext<any>): Promise<void> {
+        if (!isArray(ctx.data)) {
+          ctx.data.age = DEFAULT_AGE;
+        }
+      }
+
+    }
 
     const conn = await createTmpConnection({
       name: 'hook_test_conn',
@@ -99,7 +142,7 @@ describe('Hooks Test Suite', () => {
       entities
     });
 
-    const { server, client } = await createServerAndClient(conn, hook, ...entities);
+    const { server, client } = await createServerAndClient(conn, Hook1, ...entities);
 
     const es = client.getEntitySet<Student>('Students');
 
@@ -141,7 +184,7 @@ describe('Hooks Test Suite', () => {
     @beforeCreate(Student)
     class BeforeStudentCreationHook extends HookProcessor<Student> {
 
-      async execute(ctx: HookContext<Student>): Promise<void> {
+      async execute(@inject(InjectKey.HookContext) ctx: HookContext<Student>): Promise<void> {
         ctx.data.age = DEFAULT_AGE;
       }
 
@@ -207,16 +250,27 @@ describe('Hooks Test Suite', () => {
 
     const hookInvokeSeq = [];
 
-    const h1 = createHookProcessor(async (ctx) => {
-      hookInvokeSeq.push('h1');
-      await (await ctx.getService(Student3)).create({ name2: 'first' }, ctx.txContext);
-    }, Student2, HookType.beforeCreate, 0);
+    @beforeCreate(Student2, 0)
+    class h1 extends HookProcessor<Student2> {
 
-    const h2 = createHookProcessor(async (ctx) => {
-      hookInvokeSeq.push('h2');
-      throw new Error('something wrong!');
-    }, Student2, HookType.beforeCreate, 1);
+      async execute(@inject(InjectKey.HookContext) ctx: HookContext<Student2>): Promise<void> {
+        hookInvokeSeq.push('h1');
+        const student3s = await ctx.getService(Student3);
+        await ctx.ic.injectExecute(student3s, student3s.create, { name2: 'first' });
+      }
 
+    }
+
+
+    @beforeCreate(Student2, 1)
+    class h2 extends HookProcessor<Student2> {
+
+      async execute(@inject(InjectKey.HookContext) ctx: HookContext<Student2>): Promise<void> {
+        hookInvokeSeq.push('h2');
+        throw new Error('something wrong!');
+      }
+
+    }
 
     const conn = await createTmpConnection({
       name: 'hook_class_tx_conn',

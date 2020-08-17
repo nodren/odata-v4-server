@@ -1,6 +1,8 @@
 // @ts-nocheck
 import { Connection, ConnectionOptions, createConnection, getConnection } from 'typeorm';
 import { odata } from '..';
+import { InjectKey } from '../constants';
+import { createInstanceProvider } from '../inject';
 import { createLogger } from '../logger';
 import { ODataServer } from '../server';
 import { createDBHelper } from './db_helper';
@@ -74,6 +76,10 @@ export async function createTypedODataServer(connection: any, ...configurations:
 
         const serverType = class extends TypedODataServer { };
 
+        const iContainer = serverType.getInjectContainer();
+
+        iContainer.registerProvider(createInstanceProvider(InjectKey.GlobalConnection, connObj));
+
         Object.defineProperty(serverType, 'name', { value: `TypedServerWithConn_${connName}` });
 
         configurations.filter((i) => Boolean(i)).forEach((configuration) => {
@@ -94,7 +100,7 @@ export async function createTypedODataServer(connection: any, ...configurations:
             const entitySetName = getODataEntitySetName(configuration);
 
             // define controller name to use decorator
-            Object.defineProperty(controllerType, 'name', { value: `${entitySetName}Controller` });
+            Object.defineProperty(controllerType, 'name', { value: `${entitySetName}Service` });
 
             withODataServerType(serverType)(controllerType);
 

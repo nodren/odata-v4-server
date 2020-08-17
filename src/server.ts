@@ -7,6 +7,7 @@ import * as express from 'express';
 import * as http from 'http';
 import { Readable, Transform, TransformOptions, Writable } from 'stream';
 import * as swaggerUi from 'swagger-ui-express';
+import { InjectKey } from './constants';
 import { ODataController } from './controller';
 import { ContainerBase } from './edm';
 import { HttpRequestError } from './error';
@@ -162,15 +163,15 @@ export class ODataServerBase extends Transform {
   static getInjectContainer() {
     if (this._injectContainer == undefined) {
       this._injectContainer = new InjectContainer();
-      this._injectContainer.registerProvider(createInstanceProvider('server_type', this));
+      this._injectContainer.registerProvider(createInstanceProvider(InjectKey.ServerType, this));
     }
     return this._injectContainer;
   }
 
   static async createProcessor(context: any, options?: ODataProcessorOptions) {
     const requestContainer = await this.getInjectContainer().getInstance(SubLevelInjectContainer);
-    requestContainer.registerProvider(createInstanceProvider('request_context', context));
-    requestContainer.registerProvider(createInstanceProvider('processor_option', options));
+    requestContainer.registerProvider(createInstanceProvider(InjectKey.RequestContext, context));
+    requestContainer.registerProvider(createInstanceProvider(InjectKey.ProcessorOption, options));
     return requestContainer.getInstance(ODataProcessor);
   }
 

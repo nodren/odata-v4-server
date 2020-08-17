@@ -1,4 +1,5 @@
 import sortBy from '@newdash/newdash/sortBy';
+import { InjectContainer } from '../../inject';
 import { TransactionContext } from '../../transaction';
 import { BaseODataModel } from '../entity';
 import { TypedODataServer } from '../server';
@@ -48,6 +49,11 @@ export interface HookContext<T = any> {
    * key for update/delete/read
    */
   key?: any;
+
+  /**
+   * inject container
+   */
+  ic: InjectContainer
 
 
 }

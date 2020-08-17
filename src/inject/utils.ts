@@ -5,3 +5,5 @@ export function getOrDefault(map: Map<any, any>, key, value) {
   }
   return map.get(key);
 };
+
+export type Class = new(...args: any) => any

@@ -7,9 +7,11 @@ import 'reflect-metadata';
 import { Connection, getConnection, Repository } from 'typeorm';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 import { getKeyProperties, ODataQuery } from '..';
+import { InjectKey } from '../constants';
 import { ODataController } from '../controller';
 import * as Edm from '../edm';
 import { ResourceNotFoundError, ServerInternalError } from '../error';
+import { InjectContainer } from '../inject';
 import { Literal } from '../literal';
 import * as odata from '../odata';
 import { getOrCreateTransaction, TransactionContext } from '../transaction';
@@ -87,6 +89,10 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
       ctx.entityType = this._getEntityType();
     }
 
+    ctx.ic = await ctx.ic.createSubContainer();
+
+    ctx.ic.registerInstance(InjectKey.HookContext, ctx);
+
     if (ctx.hookType == undefined) {
       throw new ServerInternalError('Hook Type must be specify by controller');
     }
@@ -111,11 +117,11 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
       if (isEvent) {
         // is event, just trigger executor but not wait it finished
         // @ts-ignore
-        hook.execute(ctx).catch(console.error); // create transaction context here
+        ctx.ic.injectExecute(hook, hook.execute).catch(console.error); // create transaction context here
       } else {
         // is hook, wait them executed
         // @ts-ignore
-        await hook.execute(ctx);
+        await ctx.ic.injectExecute(hook, hook.execute);
       }
 
     }
@@ -159,7 +165,11 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
   }
 
   @odata.GET
-  async findOne(@odata.key key, @odata.txContext ctx?: TransactionContext): Promise<InstanceType<T>> {
+  async findOne(
+    @odata.key key,
+    @odata.txContext ctx?: TransactionContext,
+    @odata.injectContainer ic?: InjectContainer
+  ): Promise<InstanceType<T>> {
     if (key != undefined && key != null) {
       // with key
       const repo = await this._getRepository(ctx);
@@ -168,7 +178,11 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
         throw new ResourceNotFoundError(`Resource not found: ${this._getEntityType()?.name}[${key}]`);
       }
       await this._executeHooks({
-        txContext: ctx, hookType: HookType.afterLoad, data, entityType: this._getEntityType()
+        txContext: ctx,
+        hookType: HookType.afterLoad,
+        data,
+        entityType: this._getEntityType(),
+        ic
       });
       return data;
     }
@@ -196,7 +210,11 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
   async find(query: string, ctx?: TransactionContext): Promise<Array<InstanceType<T>>>;
   async find(query: ODataQuery, ctx?: TransactionContext): Promise<Array<InstanceType<T>>>;
   @odata.GET
-  async find(@odata.query query, @odata.txContext ctx?: TransactionContext) {
+  async find(
+    @odata.query query,
+    @odata.txContext ctx?: TransactionContext,
+    @odata.injectContainer ic?: InjectContainer
+  ) {
 
     const conn = await this._getConnection(ctx);
     const repo = await this._getRepository(ctx);
@@ -256,7 +274,7 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
 
     if (data.length > 0) {
       await this._executeHooks({
-        txContext: ctx, hookType: HookType.afterLoad, data
+        txContext: ctx, hookType: HookType.afterLoad, data, ic
       });
     }
 
@@ -275,7 +293,7 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
    *
    * @returns require the parent object re-save again
    */
-  private async _deepInsert(parentBody: any, ctx: TransactionContext): Promise<boolean> {
+  private async _deepInsert(parentBody: any, @odata.txContext ctx: TransactionContext, @odata.injectContainer ic: InjectContainer): Promise<boolean> {
     let reSaveRequired = false;
 
     const navigations = getODataEntityNavigations(this._getEntityType().prototype);
@@ -308,7 +326,7 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
                 parentBody[navigationName] = await Promise.all(
                   navigationData.map((navigationItem) => {
                     navigationItem[navTargetFKName] = parentBody[parentObjectKeyName];
-                    return service.create(navigationItem, ctx);
+                    return ic.injectExecute(service, service.create, navigationItem);
                   })
                 );
               } else {
@@ -318,7 +336,7 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
               break;
             case 'ManyToOne':
               reSaveRequired = true;
-              parentBody[navigationName] = await service.create(navigationData, ctx);
+              parentBody[navigationName] = await ic.injectExecute(service, service.create, navigationData);
               parentBody[parentObjectFKName] = parentBody[navigationName][navTargetKeyName];
               break;
             default:
@@ -327,7 +345,7 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
                 navigationData[navTargetFKName] = parentBody[parentObjectKeyName];
               }
 
-              parentBody[navigationName] = await service.create(navigationData, ctx);
+              parentBody[navigationName] = await ic.injectExecute(service, service.create, navigationData);
 
               if (parentObjectFKName) {
                 // save the fk to parent table
@@ -347,59 +365,76 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
   }
 
   @odata.POST
-  async create(@odata.body body: QueryDeepPartialEntity<InstanceType<T>>, @odata.txContext ctx?: TransactionContext) {
+  async create(
+    @odata.body body: QueryDeepPartialEntity<InstanceType<T>>,
+    @odata.txContext ctx?: TransactionContext,
+    @odata.injectContainer ic?: InjectContainer
+  ) {
     const repo = await this._getRepository(ctx);
     await this._transformInboundPayload(body);
 
     const instance = body;
-    await this._executeHooks({ txContext: ctx, hookType: HookType.beforeCreate, data: instance });
+    await this._executeHooks({ txContext: ctx, hookType: HookType.beforeCreate, data: instance, ic });
 
     // creation (INSERT only)
     await repo.insert(instance);
 
     // deep insert
-    const reSaveRequired = await this._deepInsert(instance, ctx);
+    const reSaveRequired = await ic.injectExecute(this, this._deepInsert, instance);
     // merge deep insert fk
     if (reSaveRequired) {
       await repo.save(instance);
     }
 
-    await this._executeHooks({ txContext: ctx, hookType: HookType.afterCreate, data: instance });
+    await this._executeHooks({ txContext: ctx, hookType: HookType.afterCreate, data: instance, ic });
     return instance;
   }
 
   // create or update
   @odata.PUT
-  async save(@odata.key key, @odata.body body: QueryDeepPartialEntity<InstanceType<T>>, @odata.txContext ctx?: TransactionContext) {
+  async save(
+    @odata.key key,
+    @odata.body body: QueryDeepPartialEntity<InstanceType<T>>,
+    @odata.txContext ctx?: TransactionContext,
+    @odata.injectContainer ic: InjectContainer) {
     const repo = await this._getRepository(ctx);
     if (key) {
       const item = await repo.findOne(key);
       // if exist
       if (item) {
-        return this.update(key, body, ctx);
+        return ic.injectExecute(this, this.update, key, body);
       }
     }
-    return this.create(body, ctx);
+    return ic.injectExecute(this, this.create, body);
   }
 
   // odata patch will not response any content
   @odata.PATCH
-  async update(@odata.key key, @odata.body body: QueryDeepPartialEntity<InstanceType<T>>, @odata.txContext ctx?: TransactionContext) {
+  async update(
+    @odata.key key,
+    @odata.body body: QueryDeepPartialEntity<InstanceType<T>>,
+    @odata.txContext ctx?: TransactionContext,
+    @odata.injectContainer ic: InjectContainer
+  ) {
     await this._transformInboundPayload(body);
     const repo = await this._getRepository(ctx);
     const instance = body;
-    await this._executeHooks({ txContext: ctx, hookType: HookType.beforeUpdate, data: instance, key });
+    await this._executeHooks({ txContext: ctx, hookType: HookType.beforeUpdate, data: instance, key, ic });
     await repo.update(key, instance);
-    await this._executeHooks({ txContext: ctx, hookType: HookType.afterUpdate, data: instance, key });
+    await this._executeHooks({ txContext: ctx, hookType: HookType.afterUpdate, data: instance, key, ic });
   }
 
   // odata delete will not response any content
   @odata.DELETE
-  async delete(@odata.key key, @odata.txContext ctx?: TransactionContext) {
+  async delete(
+    @odata.key key,
+    @odata.txContext ctx?: TransactionContext,
+    @odata.injectContainer ic: InjectContainer
+  ) {
     const repo = await this._getRepository(ctx);
-    await this._executeHooks({ txContext: ctx, hookType: HookType.beforeDelete, key });
+    await this._executeHooks({ txContext: ctx, hookType: HookType.beforeDelete, key, ic });
     await repo.delete(key);
-    await this._executeHooks({ txContext: ctx, hookType: HookType.afterDelete, key });
+    await this._executeHooks({ txContext: ctx, hookType: HookType.afterDelete, key, ic });
   }
 
 }

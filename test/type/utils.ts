@@ -54,8 +54,10 @@ export const createTmpConnection = (opt?: Partial<ConnectionOptions>) => {
   return createConnection(Object.assign(defaultOpt, opt, { synchronize: true }));
 };
 
-export async function createServerAndClient(conn: Partial<ConnectionOptions>, ...items: any[]): { server: Server, client: ODataV4 }
-export async function createServerAndClient(conn: Connection, ...items: any[]): { server: Server, client: ODataV4 }
+interface R { server: Server, client: ODataV4 }
+
+export async function createServerAndClient(conn: Partial<ConnectionOptions>, ...items: any[]): Promise<R>
+export async function createServerAndClient(conn: Connection, ...items: any[]): Promise<R>
 export async function createServerAndClient(conn, ...items: any[]) {
 
   if (!(conn instanceof Connection)) {

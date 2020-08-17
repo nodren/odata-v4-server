@@ -1,6 +1,7 @@
 import { ODataFilter, ODataQueryParam } from '@odata/parser';
 import { v4 } from 'uuid';
-import { BaseODataModel, beforeCreate, HookContext, HookProcessor, ODataColumn, ODataModel } from '../../src';
+import { BaseODataModel, beforeCreate, HookContext, HookProcessor, inject, ODataColumn, ODataModel } from '../../src';
+import { InjectKey } from '../../src/constants';
 import { shutdown } from '../utils/server';
 import { createServerAndClient, createTmpConnection } from './utils';
 
@@ -48,12 +49,14 @@ describe('Typed Controller Test Suite', () => {
     @beforeCreate(A1)
     class BeforeA1CreationHook extends HookProcessor<A1> {
 
-      async execute(hookCtx: HookContext<A1>): Promise<void> {
+      async execute(@inject(InjectKey.HookContext) hookCtx: HookContext<A1>): Promise<void> {
 
         const service = await hookCtx.getService(A2);
-        const items = await service.find(
-          ODataQueryParam.New().filter(ODataFilter.New().field('name').eq(testUserName)),
-          hookCtx.txContext
+
+        const items = await hookCtx.ic.injectExecute(
+          service,
+          service.find,
+          ODataQueryParam.New().filter(ODataFilter.New().field('name').eq(testUserName))
         );
 
         if (items.length > 0) {

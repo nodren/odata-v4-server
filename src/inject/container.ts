@@ -1,7 +1,7 @@
 import { alg, Graph } from 'graphlib';
 import { getClassConstructorParams, getClassInjectionInformation, getClassMethodParams, inject, InjectParameter, isTransient, LazyRef, transient } from './decorators';
-import { InstanceProvider } from './provider';
-import { getOrDefault } from './utils';
+import { createInstanceProvider, InstanceProvider } from './provider';
+import { Class, getOrDefault } from './utils';
 
 
 /**
@@ -23,8 +23,20 @@ export class InjectContainer {
     this._store = new Map();
   }
 
+  public static New() {
+    return new InjectContainer();
+  }
+
   public registerProvider(provider: InstanceProvider) {
     this._providers.set(provider.type, provider);
+  }
+
+  public registerInstance(type: any, instance: any) {
+    this.registerProvider(createInstanceProvider(type, instance));
+  }
+
+  public async createSubContainer(): Promise<InjectContainer> {
+    return this.getInstance(SubLevelInjectContainer);
   }
 
   async getInstance<T extends new (...args: any[]) => any>(type: LazyRef<T>, ctx?: Map<any, any>): Promise<InstanceType<T>>;
@@ -146,6 +158,30 @@ export class InjectContainer {
     return this._providers.get(type);
   }
 
+  async wrap<T extends Class, I = InstanceType<T>, K = keyof I>(t: T): Promise<{
+    [K in keyof I]: InstanceType<T>[K] extends Function ? (...args: Parameters<InstanceType<T>[K]>) => Promise<ReturnType<InstanceType<T>[K]>> : InstanceType<T>[K]
+  }>;
+  async wrap(t: any): Promise<any>;
+  async wrap(t: any) {
+
+    const instance = await this.getInstance(t);
+
+    return new Proxy(instance, {
+      get: (target, property) => {
+        if (property in target) {
+          const methodOrProperty = target[property];
+          if (typeof methodOrProperty == 'function') {
+            return (...args: any[]) => this.injectExecute(target, methodOrProperty, ...args);
+          }
+          return methodOrProperty;
+        }
+        return undefined;
+      }
+
+    });
+
+  }
+
 
   /**
    * execute class instance method with inject
@@ -153,16 +189,21 @@ export class InjectContainer {
    * @param instance
    * @param method
    */
-  async injectExecute(instance: any, method: Function) {
+  async injectExecute<F extends (...args: any[]) => any>(instance: any, method: F, ...args: Parameters<F>): Promise<ReturnType<F>>;
+  async injectExecute<F extends (...args: any[]) => any>(instance: any, method: F, ...args: any[]): Promise<ReturnType<F>>;
+  async injectExecute(instance, method, ...args) {
     const methodName = method.name;
     const type = instance.constructor;
     const paramsInfo = getClassMethodParams(type, methodName);
-    const params = [];
+    const params = args || [];
 
     if (paramsInfo.length > 0) {
       for (let idx = 0; idx < paramsInfo.length; idx++) {
         const paramInfo = paramsInfo[idx];
-        params[paramInfo.parameterIndex] = await this.getInstance(paramInfo.type);
+        // if user has define the parameter in `injectExecute`, prefer use that
+        if (args[paramInfo.parameterIndex] == undefined) {
+          params[paramInfo.parameterIndex] = await this.getInstance(paramInfo.type);
+        }
       }
     }
 

@@ -3,6 +3,7 @@ import { ErrorRequestHandler } from 'express';
 import 'reflect-metadata';
 import { ODataController } from './controller';
 import { EntitySet, EntityType } from './edm';
+import { inject } from './inject';
 import { ODataServer } from './server';
 import { TypedService } from './type';
 import {
@@ -49,6 +50,7 @@ export function type(elementType: Function, targetKey?, parameterIndex?): Functi
     const parameterNames = getFunctionParameters(target, targetKey);
     const paramName = parameterNames[parameterIndex];
     Reflect.defineMetadata(ODataTypeParameter, paramName, target, targetKey);
+    inject(ODataTypeParameter)(target, targetKey, parameterIndex);
   } else {
     return function (constructor: Function) {
       constructor.prototype.elementType = elementType;
@@ -492,14 +494,17 @@ export function key(target: any, targetKey: string, parameterIndex: number);
 export function key(target: any, targetKey?: string, parameterIndex?: number): any {
   let name;
   const decorator = function (target, targetKey, parameterIndex: number) {
+
     const parameterNames = getFunctionParameters(target, targetKey);
     const existingParameters: any[] = Reflect.getOwnMetadata(ODataKeyParameters, target, targetKey) || [];
     const paramName = parameterNames[parameterIndex];
+
     existingParameters.push({
       from: name || paramName,
       to: paramName
     });
     Reflect.defineMetadata(ODataKeyParameters, existingParameters, target, targetKey);
+    inject(ODataKeyParameters)(target, targetKey, parameterIndex);
   };
 
   if (typeof target == 'string' || typeof target == 'undefined' || !target) {
@@ -546,6 +551,7 @@ export function link(target: any, targetKey?: string, parameterIndex?: number): 
       to: paramName
     });
     Reflect.defineMetadata(ODataLinkParameters, existingParameters, target, targetKey);
+    inject(ODataLinkParameters)(target, targetKey, parameterIndex);
   };
 
   if (typeof target == 'string' || typeof target == 'undefined' || !target) {
@@ -635,6 +641,7 @@ export const createMethodParameterAnnotation = (key: any) => function (target, t
   const parameterNames = getFunctionParameters(target, targetKey);
   const paramName = parameterNames[parameterIndex];
   Reflect.defineMetadata(key, paramName, target, targetKey);
+  inject(key)(target, targetKey, parameterIndex);
 };
 
 /**

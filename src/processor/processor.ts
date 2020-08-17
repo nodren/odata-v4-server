@@ -1,5 +1,4 @@
 // @ts-nocheck
-import forEach from '@newdash/newdash/forEach';
 import { get } from '@newdash/newdash/get';
 import { isEmpty } from '@newdash/newdash/isEmpty';
 import { isUndefined } from '@newdash/newdash/isUndefined';
@@ -11,15 +10,16 @@ import * as qs from 'qs';
 import { Readable, Transform, TransformOptions } from 'stream';
 import * as url from 'url';
 import * as util from 'util';
+import { InjectKey } from '../constants';
 import { ODataController, ODataControllerBase } from '../controller';
 import * as Edm from '../edm';
 import { MethodNotAllowedError, NotImplementedError, ResourceNotFoundError, ServerInternalError } from '../error';
 import { IODataResult } from '../index';
-import { createInstanceProvider, inject, InjectContainer, SubLevelInjectContainer } from '../inject';
+import { inject, InjectContainer } from '../inject';
 import * as odata from '../odata';
 import { ODataResult } from '../result';
 import { ODataHttpContext, ODataServer } from '../server';
-import { BaseODataModel, getODataNavigation } from '../type';
+import { BaseODataModel, getODataNavigation, TypedODataServer } from '../type';
 import { isIterator, isPromise, isStream } from '../utils';
 import { NavigationPart, ODATA_TYPE, ResourcePathVisitor } from '../visitor';
 import { fnCaller } from './fnCaller';
@@ -503,9 +503,9 @@ export class ODataProcessor extends Transform {
   private container: InjectContainer;
 
   constructor(
-    @inject('request_context') context,
-    @inject('server_type') server: typeof ODataServer,
-    @inject('processor_option') options?: ODataProcessorOptions
+    @inject(InjectKey.RequestContext) context,
+    @inject(InjectKey.ServerType) server: typeof ODataServer,
+    @inject(InjectKey.ProcessorOption) options?: ODataProcessorOptions
   ) {
     super(<TransformOptions>{
       objectMode: true
@@ -976,6 +976,7 @@ export class ODataProcessor extends Transform {
     this.instance = await this.serverType.getControllerInstance(ctrl);
 
     let fn;
+    let ic: InjectContainer;
     if (typeof filter == 'string' || !filter) {
       // get metadata of method
       fn = odata.findODataMethod(ctrl, method, part.key);
@@ -989,7 +990,10 @@ export class ODataProcessor extends Transform {
       if (include && filter && include.query && !include.query.$filter) {
         include.query.$filter = filter;
         queryString = Object.keys(include.query).map((p) => `${p}=${include.query[p]}`).join('&');
-      } else if ((include && filter && include.query) || (!include && this.resourcePath.navigation.indexOf(part) == this.resourcePath.navigation.length - 1)) {
+      } else if (
+        (include && filter && include.query) ||
+        (!include && this.resourcePath.navigation.indexOf(part) == this.resourcePath.navigation.length - 1)
+      ) {
         queryString = Object.keys((include || this).query).map((p) => {
           if (p == '$filter' && filter) {
             (include || this).query[p] = `(${(include || this).query[p]}) and (${filter})`;
@@ -1007,9 +1011,14 @@ export class ODataProcessor extends Transform {
         // construct injected params
         const fnDesc = fn;
         fn = ctrl.prototype[fnDesc.call];
+
+        // assign other parameters
+        ic = await this.__applyParams(ctrl, fnDesc.call, params, queryString, undefined, include);
+
         // >> assign keys to params
         if (fnDesc.key.length == 1 && part.key.length == 1 && fnDesc.key[0].to != part.key[0].name) {
           params[fnDesc.key[0].to] = params[part.key[0].name];
+          ic.registerInstance(InjectKey.ODataKeyParameters, params[fnDesc.key[0].to]);
           delete params[part.key[0].name];
         } else {
           for (let i = 0; i < fnDesc.key.length; i++) {
@@ -1020,10 +1029,9 @@ export class ODataProcessor extends Transform {
           }
         }
         // <<
-        // assign other parameters
-        await this.__applyParams(ctrl, fnDesc.call, params, queryString, undefined, include);
+
       } else {
-        await this.__applyParams(ctrl, method, params, queryString, undefined, include);
+        ic = await this.__applyParams(ctrl, method, params, queryString, undefined, include);
       }
     } else {
       fn = filter;
@@ -1035,23 +1043,25 @@ export class ODataProcessor extends Transform {
 
     let currentResult: any;
 
+    const ctrlInstance = await this.serverType.getControllerInstance(ctrl);
+
     // inject parameters by type
     switch (method) {
       case 'get':
       case 'delete':
-        currentResult = fnCaller(await this.serverType.getControllerInstance(ctrl), fn, params);
         break;
-
       case 'post':
         this.odataContext += '/$entity';
-
       case 'put':
       case 'patch':
         const body = data ? Object.assign(this.body || {}, data.foreignKeys) : this.body;
         const bodyParam = odata.getBodyParameter(ctrl, fn.name);
         const typeParam = odata.getTypeParameter(ctrl, fn.name);
         if (typeParam) {
-          params[typeParam] = (body['@odata.type'] || (`${(<any>ctrl.prototype.elementType).namespace}.${(<any>ctrl.prototype.elementType).name}`)).replace(/^#/, '');
+          params[typeParam] = (
+            body['@odata.type'] ||
+            (`${ctrlInstance.elementType.namespace}.${ctrlInstance.elementType.name}`)).replace(/^#/, ''
+          );
         }
         if (bodyParam) {
           await this.__deserialize(body, ctrl.prototype.elementType);
@@ -1066,8 +1076,14 @@ export class ODataProcessor extends Transform {
             }
           });
         }
-        currentResult = fnCaller(await this.serverType.getControllerInstance(ctrl), fn, params);
+
         break;
+    }
+
+    if (ic && this.serverType.prototype == TypedODataServer) {
+      currentResult = ic.injectExecute(ctrlInstance, fn);
+    } else {
+      currentResult = fnCaller(ctrlInstance, fn, params);
     }
 
     if (isIterator(fn)) {
@@ -1821,6 +1837,7 @@ export class ODataProcessor extends Transform {
    * @param include
    */
   private async __applyParams(container: any, name: string, params: any, queryString?: string | Token, result?: any, include?) {
+    const ic = await this.container.createSubContainer();
 
     // >> get parameters name in method
     const queryParam = odata.getQueryParameter(container, name);
@@ -1833,6 +1850,7 @@ export class ODataProcessor extends Transform {
     const typeParam = odata.getTypeParameter(container, name);
     const txContextParam = odata.getTxContextParameter(container, name);
     const injectContainerParam = odata.getInjectContainerParameter(container, name);
+
 
     const elementType = result?.elementType || this.ctrl?.prototype?.elementType || null;
 
@@ -1866,6 +1884,7 @@ export class ODataProcessor extends Transform {
           validator(params[queryParam]);
         }
       }
+      ic.registerInstance(InjectKey.ODataQueryParameter, params[queryParam]);
     }
 
     if (filterParam) {
@@ -1905,45 +1924,56 @@ export class ODataProcessor extends Transform {
           validator(params[filterParam]);
         }
       }
+
+      ic.registerInstance(InjectKey.ODataFilterParameter, params[filterParam]);
+
     }
 
     if (contextParam) {
       params[contextParam] = this.context;
+      ic.registerInstance(InjectKey.ODataContextParameter, this.context);
     }
 
     if (txContextParam) {
       params[txContextParam] = this.context?.tx;
+      ic.registerInstance(InjectKey.ODataTxContextParameter, this.context?.tx);
     }
 
     if (streamParam) {
       params[streamParam] = include ? include.stream : this;
+      ic.registerInstance(InjectKey.ODataStreamParameter, params[streamParam]);
     }
 
     if (resultParam) {
       params[resultParam] = result instanceof ODataResult ? result.body : result;
+      ic.registerInstance(InjectKey.ODataResultParameter, params[resultParam]);
+
     }
 
     if (idParam) {
       params[idParam] = decodeURI(this.resourcePath.id || this.body['@odata.id']);
+      ic.registerInstance(InjectKey.ODataIdParameter, params[idParam]);
     }
 
     if (bodyParam && !params[bodyParam]) {
       params[bodyParam] = this.body;
+      ic.registerInstance(InjectKey.ODataBodyParameter, params[bodyParam]);
     }
 
     if (typeParam) {
       params[typeParam] = params[typeParam] || elementType;
+      ic.registerInstance(InjectKey.ODataTypeParameter, params[typeParam]);
     }
 
     if (injectContainerParam) {
-      const c = await this.container.getInstance(SubLevelInjectContainer);
 
-      forEach(params, (value, key) => {
-        c.registerProvider(createInstanceProvider(`param:${key}`, value));
-      });
+      params[injectContainerParam] = ic;
+      ic.registerInstance(InjectKey.ODataInjectContainer, ic);
 
-      params[injectContainerParam] = c;
     }
+
+
+    return ic;
 
   }
 

@@ -1,4 +1,4 @@
-import { createInstanceProvider, InjectContainer, SubLevelInjectContainer } from '../../src';
+import { createInstanceProvider, inject, InjectContainer, SubLevelInjectContainer } from '../../src';
 
 
 describe('Container Test Suite', () => {
@@ -72,5 +72,29 @@ describe('Container Test Suite', () => {
 
   });
 
+  it('should support wrapper of instance', async () => {
+
+
+    class A {
+
+      v: number;
+
+      sum(@inject('v1') v1?: number, @inject('v2') v2?: number): number {
+        return v1 + v2;
+      }
+
+    }
+
+    const c = InjectContainer.New();
+    c.registerInstance('v1', 1);
+    c.registerInstance('v2', 2);
+
+    const aw = await c.wrap(A);
+
+    expect(await aw.sum()).toBe(3);
+    expect(await aw.sum(15)).toBe(17);
+    expect(await aw.sum(undefined, 99)).toBe(100);
+
+  });
 
 });
