@@ -1,4 +1,5 @@
-import { createInstanceProvider, inject, InjectContainer, SubLevelInjectContainer } from '../../src';
+import { v4 } from 'uuid';
+import { createInstanceProvider, inject, InjectContainer, InstanceProvider, SubLevelInjectContainer } from '../../src';
 
 
 describe('Container Test Suite', () => {
@@ -28,8 +29,16 @@ describe('Container Test Suite', () => {
     const c2 = await c1.getInstance(SubLevelInjectContainer);
     const c3 = await c1.getInstance(SubLevelInjectContainer);
 
+    class UUIDProvider implements InstanceProvider {
+      transient = true
+      type = 'uuid'
+      async provide() { return v4(); }
+    }
+
+
     c1.registerProvider(createInstanceProvider('v1', '1'));
     c1.registerProvider(createInstanceProvider('v2', '2'));
+    c1.registerProvider(new UUIDProvider);
 
     c2.registerProvider(createInstanceProvider('v1', '21'));
     c3.registerProvider(createInstanceProvider('v1', '31'));
@@ -46,6 +55,9 @@ describe('Container Test Suite', () => {
 
     expect(await c2.getInstance('v2')).toBe('2');
     expect(await c3.getInstance('v2')).toBe('2');
+
+    expect(await c3.getInstance('uuid')).not.toBe(await c3.getInstance('uuid'));
+
 
   });
 

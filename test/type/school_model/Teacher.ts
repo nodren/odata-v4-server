@@ -27,7 +27,7 @@ export class Teacher extends BaseODataModel {
   // }
   @ODataAction
   async addClass(@Edm.Int32 classId: number, @odata.txContext ctx: TransactionContext) {
-    const classService = this._gerService(Class);
+    const classService = await this._getService(Class);
     const c = await classService.findOne(classId, ctx);
 
     if (isUndefined(c)) {

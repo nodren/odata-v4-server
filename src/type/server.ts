@@ -23,7 +23,7 @@ export class TypedODataServer extends ODataServer {
    *
    * @param entityType entity type of service
    */
-  public static async getService<E extends typeof BaseODataModel>(entityType: E): Promise<TypedService<E>> {
+  public static async getService<E extends typeof BaseODataModel>(entityType: E): Promise<TypedService<InstanceType<E>>> {
     return this.getControllerInstance(entityType);
   };
 

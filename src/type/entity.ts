@@ -17,9 +17,10 @@ export class BaseODataModel {
     return getODataServerType(this.constructor);
   }
 
-  protected async _gerService<E extends typeof BaseODataModel>(entity: E): Promise<TypedService<E>> {
-    return this._getServerType().getService(entity);
+  protected async _getService<E extends typeof BaseODataModel = any>(entityType: E): Promise<TypedService<InstanceType<E>>> {
+    return this._getServerType().getService(entityType);
   };
+
   /**
    * get main connection (without transaction)
    */

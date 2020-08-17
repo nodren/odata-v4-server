@@ -12,6 +12,7 @@
     "prebuild": "rimraf lib",
     "build": "tsc",
     "lint": "eslint src --fix",
+    "pretest": "eslint test --fix ",
     "test": "jest --forceExit",
     "coverage": "npm test -- --coverage --no-cache",
     "prepublishOnly": "npm test && npm run build",

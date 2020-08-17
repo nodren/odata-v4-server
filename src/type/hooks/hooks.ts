@@ -27,7 +27,6 @@ export interface HookContext<T = any> {
   /**
    * get service instance for entity
    */
-  // @ts-ignore
   getService: <E extends typeof BaseODataModel>(entity: E) => Promise<InjectWrappedInstance<TypedService<InstanceType<E>>>>;
 
   /**

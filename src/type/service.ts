@@ -13,6 +13,7 @@ import * as Edm from '../edm';
 import { ResourceNotFoundError, ServerInternalError } from '../error';
 import { InjectContainer } from '../inject';
 import { Literal } from '../literal';
+import { createLogger } from '../logger';
 import * as odata from '../odata';
 import { getOrCreateTransaction, TransactionContext } from '../transaction';
 import { DBHelper } from './db_helper';
@@ -20,6 +21,8 @@ import { getConnectionName, getDBHelper, getODataEntityNavigations, getODataEnti
 import { BaseODataModel } from './entity';
 import { findHooks, HookContext, HookEvents, HookType } from './hooks';
 import { TypedODataServer } from './server';
+
+const logger = createLogger('type:service');
 
 
 /**
@@ -75,8 +78,8 @@ export class TypedService<T = any> extends ODataController {
     return getODataServerType(this.constructor);
   }
 
-  protected async _getService<E extends typeof BaseODataModel = any>(entity: E): Promise<TypedService<E>> {
-    return this._getServerType().getService(entity);
+  protected async _getService<E extends typeof BaseODataModel = any>(entityType: E): Promise<TypedService<InstanceType<E>>> {
+    return this._getServerType().getService(entityType);
   };
 
   /**
@@ -116,16 +119,16 @@ export class TypedService<T = any> extends ODataController {
     const hooks = findHooks(serverType, this._getEntityType(), ctx.hookType);
 
     for (let idx = 0; idx < hooks.length; idx++) {
-      const hook = hooks[idx];
+      const hook = ctx.ic.wrap(hooks[idx]);
 
       if (isEvent) {
         // is event, just trigger executor but not wait it finished
         // @ts-ignore
-        ctx.ic.injectExecute(hook, hook.execute).catch(console.error); // create transaction context here
+        hook.execute().catch(logger); // create transaction context here
       } else {
         // is hook, wait them executed
         // @ts-ignore
-        await ctx.ic.injectExecute(hook, hook.execute);
+        await hook.execute();
       }
 
     }
@@ -400,7 +403,7 @@ export class TypedService<T = any> extends ODataController {
     @odata.key key,
     @odata.body body: QueryDeepPartialEntity<T>,
     @odata.txContext ctx?: TransactionContext,
-    @odata.injectContainer ic: InjectContainer) {
+    @odata.injectContainer ic?: InjectContainer) {
     const repo = await this._getRepository(ctx);
     if (key) {
       const item = await repo.findOne(key);
