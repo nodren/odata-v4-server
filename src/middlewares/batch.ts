@@ -10,7 +10,7 @@ import { BadRequestError } from '../error';
 import { createLogger } from '../logger';
 import { ERROR_BATCH_REQUEST_FAST_FAIL } from '../messages';
 import { ODataRequestMethods } from '../processor';
-import { commitTransaction, createTransactionContext, rollbackTransaction } from '../type/transaction';
+import { commitTransaction, createTransactionContext, rollbackTransaction } from '../transaction';
 
 const logger = createLogger('request:batch');
 

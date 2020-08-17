@@ -4,10 +4,10 @@ import isUndefined from '@newdash/newdash/isUndefined';
 import { Connection, getConnection, Repository } from 'typeorm';
 import { getKeyProperties, getProperties } from '..';
 import { ForeignKeyValidationError, StartupError } from '../error';
+import { getOrCreateTransaction, TransactionContext } from '../transaction';
 import { getConnectionName, getODataEntityNavigations, getODataServerType } from './decorators';
 import { TypedODataServer } from './server';
 import { TypedService } from './service';
-import { getOrCreateTransaction, TransactionContext } from './transaction';
 
 
 export class BaseODataModel {

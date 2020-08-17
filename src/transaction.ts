@@ -1,6 +1,6 @@
 import { Connection, QueryRunner } from 'typeorm';
 import { v4 } from 'uuid';
-import { createLogger } from '../logger';
+import { createLogger } from './logger';
 
 const logger = createLogger('type:tx');
 

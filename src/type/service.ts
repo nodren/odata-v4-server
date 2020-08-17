@@ -12,12 +12,12 @@ import * as Edm from '../edm';
 import { ResourceNotFoundError, ServerInternalError } from '../error';
 import { Literal } from '../literal';
 import * as odata from '../odata';
+import { getOrCreateTransaction, TransactionContext } from '../transaction';
 import { DBHelper } from './db_helper';
 import { getConnectionName, getDBHelper, getODataEntityNavigations, getODataEntityType, getODataServerType } from './decorators';
 import { BaseODataModel } from './entity';
 import { findHooks, HookContext, HookEvents, HookType } from './hooks';
 import { TypedODataServer } from './server';
-import { getOrCreateTransaction, TransactionContext } from './transaction';
 
 
 /**

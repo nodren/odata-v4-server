@@ -1,8 +1,8 @@
 import sortBy from '@newdash/newdash/sortBy';
+import { TransactionContext } from '../../transaction';
 import { BaseODataModel } from '../entity';
 import { TypedODataServer } from '../server';
 import { TypedService } from '../service';
-import { TransactionContext } from '../transaction';
 import { HookType } from './hook_type';
 import { BaseHookProcessor } from './processor';
 
