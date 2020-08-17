@@ -1,5 +1,6 @@
 import sortBy from '@newdash/newdash/sortBy';
 import { InjectContainer } from '../../inject';
+import { InjectWrappedInstance } from '../../inject/utils';
 import { TransactionContext } from '../../transaction';
 import { BaseODataModel } from '../entity';
 import { TypedODataServer } from '../server';
@@ -26,7 +27,8 @@ export interface HookContext<T = any> {
   /**
    * get service instance for entity
    */
-  getService: <E extends typeof BaseODataModel>(entity: E) => Promise<TypedService<E>>;
+  // @ts-ignore
+  getService: <E extends typeof BaseODataModel>(entity: E) => Promise<InjectWrappedInstance<TypedService<InstanceType<E>>>>;
 
   /**
    * transaction released id

@@ -39,7 +39,7 @@ describe('Container Test Suite', () => {
     expect(c2).not.toBe(c3);
     // but parent container will be equal
     // @ts-ignore
-    expect(c2._global).toBe(c3._global);
+    expect(c2._parent).toBe(c3._parent);
 
     expect(await c2.getInstance('v1')).toBe('21');
     expect(await c3.getInstance('v1')).toBe('31');
@@ -74,26 +74,49 @@ describe('Container Test Suite', () => {
 
   it('should support wrapper of instance', async () => {
 
+    class Base {
 
-    class A {
+      sub(@inject('v1') v1: number, @inject('v2') v2: number): number {
+        return v1 - v2;
+      }
 
+    }
+
+    class A extends Base {
+
+      @inject('v')
       v: number;
 
-      sum(@inject('v1') v1?: number, @inject('v2') v2?: number): number {
+      /**
+       * sum numbers
+       *
+       * @param v1
+       * @param v2
+       */
+      sum(@inject('v1') v1: number, @inject('v2') v2: number): number {
         return v1 + v2;
       }
 
     }
 
     const c = InjectContainer.New();
+    c.registerInstance('v', 15);
     c.registerInstance('v1', 1);
     c.registerInstance('v2', 2);
 
-    const aw = await c.wrap(A);
+    const aw = await c.getWrappedInstance(A);
 
     expect(await aw.sum()).toBe(3);
+    expect(await aw.sub()).toBe(-1);
+
     expect(await aw.sum(15)).toBe(17);
+    expect(await aw.sub(15)).toBe(13);
+
     expect(await aw.sum(undefined, 99)).toBe(100);
+    expect(await aw.sub(undefined, 99)).toBe(-98);
+
+
+    expect(aw.v).toBe(15);
 
   });
 

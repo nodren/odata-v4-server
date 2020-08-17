@@ -256,7 +256,8 @@ describe('Hooks Test Suite', () => {
       async execute(@inject(InjectKey.HookContext) ctx: HookContext<Student2>): Promise<void> {
         hookInvokeSeq.push('h1');
         const student3s = await ctx.getService(Student3);
-        await ctx.ic.injectExecute(student3s, student3s.create, { name2: 'first' });
+
+        await student3s.create({ name2: 'first' });
       }
 
     }

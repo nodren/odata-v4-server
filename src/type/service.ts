@@ -25,7 +25,11 @@ import { TypedODataServer } from './server';
 /**
  * Typeorm Service (Controller)
  */
-export class TypedService<T extends typeof BaseODataModel = any> extends ODataController {
+export class TypedService<T = any> extends ODataController {
+
+  constructor() {
+    super();
+  }
 
   /**
    * get main connection (without transaction)
@@ -62,7 +66,7 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
     return getOrCreateTransaction(conn, ctx);
   }
 
-  protected async _getRepository(ctx?: TransactionContext): Promise<Repository<InstanceType<T>>> {
+  protected async _getRepository(ctx?: TransactionContext): Promise<Repository<T>> {
     // @ts-ignore
     return (await this._getEntityManager(ctx)).getRepository(this._getEntityType());
   }
@@ -71,7 +75,7 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
     return getODataServerType(this.constructor);
   }
 
-  protected async _getService<E extends typeof BaseODataModel>(entity: E): Promise<TypedService<E>> {
+  protected async _getService<E extends typeof BaseODataModel = any>(entity: E): Promise<TypedService<E>> {
     return this._getServerType().getService(entity);
   };
 
@@ -98,7 +102,7 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
     }
 
     if (ctx.getService == undefined) {
-      ctx.getService = this._getService.bind(this);
+      ctx.getService = async (st) => ctx.ic.wrap(await this._getService.bind(this)(st));
     }
 
     const isEvent = HookEvents.includes(ctx.hookType);
@@ -169,7 +173,7 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
     @odata.key key,
     @odata.txContext ctx?: TransactionContext,
     @odata.injectContainer ic?: InjectContainer
-  ): Promise<InstanceType<T>> {
+  ): Promise<T> {
     if (key != undefined && key != null) {
       // with key
       const repo = await this._getRepository(ctx);
@@ -206,9 +210,10 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
     return (propName) => this._columnNameMappingStore.get(propName);
   }
 
-  async find(query: ODataQueryParam, ctx?: TransactionContext): Promise<Array<InstanceType<T>>>;
-  async find(query: string, ctx?: TransactionContext): Promise<Array<InstanceType<T>>>;
-  async find(query: ODataQuery, ctx?: TransactionContext): Promise<Array<InstanceType<T>>>;
+  async find(query: string, ctx?: TransactionContext): Promise<Array<T>>;
+  async find(query: ODataQuery, ctx?: TransactionContext): Promise<Array<T>>;
+  async find(query: any, ctx?: any): Promise<Array<T>>;
+  async find(query: ODataQueryParam, ctx?: TransactionContext): Promise<Array<T>>;
   @odata.GET
   async find(
     @odata.query query,
@@ -316,8 +321,7 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
           if (isEmpty(parentObjectFKName) && isEmpty(navTargetFKName)) {
             throw new ServerInternalError(`fk is not defined on entity ${this._getEntityType().name} or ${deepInsertElementType.name}`);
           }
-
-          const service = await this._getService(deepInsertElementType);
+          const service = ic.wrap(await this._getService(deepInsertElementType));
           const [navTargetKeyName] = getKeyProperties(deepInsertElementType);
 
           switch (options.type) {
@@ -326,7 +330,7 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
                 parentBody[navigationName] = await Promise.all(
                   navigationData.map((navigationItem) => {
                     navigationItem[navTargetFKName] = parentBody[parentObjectKeyName];
-                    return ic.injectExecute(service, service.create, navigationItem);
+                    return service.create(navigationItem);
                   })
                 );
               } else {
@@ -336,7 +340,7 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
               break;
             case 'ManyToOne':
               reSaveRequired = true;
-              parentBody[navigationName] = await ic.injectExecute(service, service.create, navigationData);
+              parentBody[navigationName] = await service.create(navigationData);
               parentBody[parentObjectFKName] = parentBody[navigationName][navTargetKeyName];
               break;
             default:
@@ -345,7 +349,7 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
                 navigationData[navTargetFKName] = parentBody[parentObjectKeyName];
               }
 
-              parentBody[navigationName] = await ic.injectExecute(service, service.create, navigationData);
+              parentBody[navigationName] = await service.create(navigationData);
 
               if (parentObjectFKName) {
                 // save the fk to parent table
@@ -366,7 +370,7 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
 
   @odata.POST
   async create(
-    @odata.body body: QueryDeepPartialEntity<InstanceType<T>>,
+    @odata.body body: QueryDeepPartialEntity<T>,
     @odata.txContext ctx?: TransactionContext,
     @odata.injectContainer ic?: InjectContainer
   ) {
@@ -394,7 +398,7 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
   @odata.PUT
   async save(
     @odata.key key,
-    @odata.body body: QueryDeepPartialEntity<InstanceType<T>>,
+    @odata.body body: QueryDeepPartialEntity<T>,
     @odata.txContext ctx?: TransactionContext,
     @odata.injectContainer ic: InjectContainer) {
     const repo = await this._getRepository(ctx);
@@ -412,7 +416,7 @@ export class TypedService<T extends typeof BaseODataModel = any> extends ODataCo
   @odata.PATCH
   async update(
     @odata.key key,
-    @odata.body body: QueryDeepPartialEntity<InstanceType<T>>,
+    @odata.body body: QueryDeepPartialEntity<T>,
     @odata.txContext ctx?: TransactionContext,
     @odata.injectContainer ic: InjectContainer
   ) {

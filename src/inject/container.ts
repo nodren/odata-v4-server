@@ -1,7 +1,7 @@
 import { alg, Graph } from 'graphlib';
 import { getClassConstructorParams, getClassInjectionInformation, getClassMethodParams, inject, InjectParameter, isTransient, LazyRef, transient } from './decorators';
 import { createInstanceProvider, InstanceProvider } from './provider';
-import { Class, getOrDefault } from './utils';
+import { Class, getOrDefault, InjectWrappedInstance, OptionalParameters } from './utils';
 
 
 /**
@@ -36,12 +36,13 @@ export class InjectContainer {
   }
 
   public async createSubContainer(): Promise<InjectContainer> {
+    // @ts-ignore
     return this.getInstance(SubLevelInjectContainer);
   }
 
-  async getInstance<T extends new (...args: any[]) => any>(type: LazyRef<T>, ctx?: Map<any, any>): Promise<InstanceType<T>>;
-  async getInstance<T extends new (...args: any[]) => any>(type: T, ctx?: Map<any, any>): Promise<InstanceType<T>>;
-  async getInstance(type: string, ctx?: Map<any, any>): Promise<any>;
+  async getInstance<T extends Class>(type: LazyRef<T>, ctx?: Map<any, any>): Promise<InstanceType<T>>;
+  async getInstance<T extends Class>(type: T, ctx?: Map<any, any>): Promise<InstanceType<T>>;
+  async getInstance(type: any, ctx?: Map<any, any>): Promise<any>;
   async getInstance(type: any, ctx: Map<any, any>) {
 
     if (ctx == undefined) {
@@ -90,6 +91,13 @@ export class InjectContainer {
 
     throw new TypeError(`Not found provider for type: '${type?.name || type}'`);
 
+  }
+
+  async getWrappedInstance<T extends Class>(type: LazyRef<T>, ctx?: Map<any, any>): Promise<InjectWrappedInstance<InstanceType<T>>>;
+  async getWrappedInstance<T extends Class>(type: T, ctx?: Map<any, any>): Promise<InjectWrappedInstance<InstanceType<T>>>;
+  async getWrappedInstance(type: any, ctx?: Map<any, any>): Promise<any>;
+  async getWrappedInstance(type: any, ctx: Map<any, any>) {
+    return this.wrap(await this.getInstance(type, ctx));
   }
 
   private async _withContext(type, producer, ctx) {
@@ -158,30 +166,34 @@ export class InjectContainer {
     return this._providers.get(type);
   }
 
-  async wrap<T extends Class, I = InstanceType<T>, K = keyof I>(t: T): Promise<{
-    [K in keyof I]: InstanceType<T>[K] extends Function ? (...args: Parameters<InstanceType<T>[K]>) => Promise<ReturnType<InstanceType<T>[K]>> : InstanceType<T>[K]
-  }>;
-  async wrap(t: any): Promise<any>;
-  async wrap(t: any) {
+  /**
+   * wrap a instance, container will proxy all method of instance
+   *
+   * @param instance
+   */
+  public wrap<T = any>(instance: T): InjectWrappedInstance<T>;
+  public wrap(instance: number): number;
+  public wrap(instance: any): any {
 
-    const instance = await this.getInstance(t);
-
-    return new Proxy(instance, {
-      get: (target, property) => {
-        if (property in target) {
-          const methodOrProperty = target[property];
-          if (typeof methodOrProperty == 'function') {
-            return (...args: any[]) => this.injectExecute(target, methodOrProperty, ...args);
+    if (typeof instance == 'object') {
+      return new Proxy(instance, {
+        get: (target, property) => {
+          if (property in target) {
+            const methodOrProperty = target[property];
+            if (typeof methodOrProperty == 'function') {
+              return (...args: any[]) => this.injectExecute(target, methodOrProperty, ...args);
+            }
+            return methodOrProperty;
           }
-          return methodOrProperty;
+          return undefined;
         }
-        return undefined;
-      }
 
-    });
+      });
+    }
+
+    return instance;
 
   }
-
 
   /**
    * execute class instance method with inject
@@ -189,7 +201,7 @@ export class InjectContainer {
    * @param instance
    * @param method
    */
-  async injectExecute<F extends (...args: any[]) => any>(instance: any, method: F, ...args: Parameters<F>): Promise<ReturnType<F>>;
+  async injectExecute<F extends (...args: any[]) => any>(instance: any, method: F, ...args: OptionalParameters<F>): Promise<ReturnType<F>>;
   async injectExecute<F extends (...args: any[]) => any>(instance: any, method: F, ...args: any[]): Promise<ReturnType<F>>;
   async injectExecute(instance, method, ...args) {
     const methodName = method.name;
@@ -310,16 +322,16 @@ export class InjectContainer {
 @transient
 export class SubLevelInjectContainer extends InjectContainer {
 
-  private _global: InjectContainer;
+  private _parent: InjectContainer;
 
   constructor(@inject(InjectContainer) globalContainer: InjectContainer) {
     super();
-    this._global = globalContainer;
+    this._parent = globalContainer;
   }
 
   hasInStore(type) {
     // @ts-ignore
-    return super.hasInStore(type) || this._global.hasInStore(type);
+    return super.hasInStore(type) || this._parent.hasInStore(type);
   }
 
   getStore(type) {
@@ -328,14 +340,14 @@ export class SubLevelInjectContainer extends InjectContainer {
         return super.getStore(type);
       }
       // @ts-ignore
-      return this._global.getStore(type);
+      return this._parent.getStore(type);
     }
     return undefined;
   }
 
   hasInProviders(type) {
     // @ts-ignore
-    return super.hasInProviders(type) || this._global.hasInProviders(type);
+    return super.hasInProviders(type) || this._parent.hasInProviders(type);
   }
 
   getProvider(type) {
@@ -344,7 +356,7 @@ export class SubLevelInjectContainer extends InjectContainer {
         return super.getProvider(type);
       }
       // @ts-ignore
-      return this._global.getProvider(type);
+      return this._parent.getProvider(type);
     }
     return undefined;
   }

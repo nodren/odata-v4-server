@@ -285,7 +285,7 @@ export class ODataServerBase extends Transform {
     }
 
 
-    return this.getInjectContainer().getInstance(serviceType);
+    return this.getInjectContainer().getInstance(serviceType as ODataController);
   }
 
 }

@@ -53,9 +53,7 @@ describe('Typed Controller Test Suite', () => {
 
         const service = await hookCtx.getService(A2);
 
-        const items = await hookCtx.ic.injectExecute(
-          service,
-          service.find,
+        const items = await service.find(
           ODataQueryParam.New().filter(ODataFilter.New().field('name').eq(testUserName))
         );
 
