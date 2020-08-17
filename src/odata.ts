@@ -1,6 +1,7 @@
 import { Token } from '@odata/parser/lib/lexer';
 import { ErrorRequestHandler } from 'express';
 import 'reflect-metadata';
+import { InjectKey } from './constants';
 import { ODataController } from './controller';
 import { EntitySet, EntityType } from './edm';
 import { inject } from './inject';
@@ -8,7 +9,6 @@ import { ODataServer } from './server';
 import { TypedService } from './type';
 import {
   getAllPropertyNames, getFunctionParameters,
-
   PropertyDecorator
 } from './utils';
 
@@ -20,23 +20,26 @@ export class ODataMethodType {
   static DELETE: string = 'DELETE';
 }
 
-const ODataEntitySets: string = 'odata:entitysets';
-const ODataMethod: string = 'odata:method';
-const ODataKeyParameters: string = 'odata:keyparameters';
-const ODataLinkParameters: string = 'odata:linkparameters';
-const ODataQueryParameter: string = 'odata:queryparameter';
-const ODataFilterParameter: string = 'odata:filterparameter';
-const ODataBodyParameter: string = 'odata:bodyparameter';
-const ODataContextParameter: string = 'odata:contextparameter';
-const ODataStreamParameter: string = 'odata:streamparameter';
-const ODataResultParameter: string = 'odata:resultparameter';
-const ODataIdParameter: string = 'odata:idparameter';
-const ODataTypeParameter: string = 'odata:typeparameter';
-const ODataNamespace: string = 'odata:namespace';
-const ODataTxContextParameter = 'odata:tx_contextparameter';
-const ODataInjectContainer = 'odata:inject_container';
+const {
 
-const ODataTypedService = 'odata:service';
+  ODataEntitySets,
+  ODataMethod,
+  ODataKeyParameters,
+  ODataLinkParameters,
+  ODataQueryParameter,
+  ODataFilterParameter,
+  ODataBodyParameter,
+  ODataContextParameter,
+  ODataStreamParameter,
+  ODataResultParameter,
+  ODataIdParameter,
+  ODataTypeParameter,
+  ODataNamespace,
+  ODataTxContextParameter,
+  ODataInjectContainer,
+  ODataTypedService
+
+} = InjectKey;
 
 
 /** Set element type

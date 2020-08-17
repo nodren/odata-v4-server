@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { Connection, ConnectionOptions, createConnection, getConnection } from 'typeorm';
 import { odata } from '..';
-import { InjectKey } from '../constants';
+import { InjectKey, ServerType } from '../constants';
 import { createInstanceProvider } from '../inject';
 import { createLogger } from '../logger';
 import { ODataServer } from '../server';
@@ -17,6 +17,8 @@ const logger = createLogger('type:server');
  * typed odata server
  */
 export class TypedODataServer extends ODataServer {
+
+  public static variant = ServerType.typed
 
   /**
    * get service instance for entity

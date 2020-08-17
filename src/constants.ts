@@ -42,5 +42,11 @@ export enum InjectKey {
   ODataNamespace = 'odata:namespace',
   ODataTxContextParameter = 'odata:tx_contextparameter',
   ODataInjectContainer = 'odata:inject_container',
+  ODataTypedService = 'odata:service',
+}
 
+
+export enum ServerType {
+  base = 'base',
+  typed = 'typed'
 }

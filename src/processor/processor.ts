@@ -10,7 +10,7 @@ import * as qs from 'qs';
 import { Readable, Transform, TransformOptions } from 'stream';
 import * as url from 'url';
 import * as util from 'util';
-import { InjectKey } from '../constants';
+import { InjectKey, ServerType } from '../constants';
 import { ODataController, ODataControllerBase } from '../controller';
 import * as Edm from '../edm';
 import { MethodNotAllowedError, NotImplementedError, ResourceNotFoundError, ServerInternalError } from '../error';
@@ -19,7 +19,7 @@ import { inject, InjectContainer } from '../inject';
 import * as odata from '../odata';
 import { ODataResult } from '../result';
 import { ODataHttpContext, ODataServer } from '../server';
-import { BaseODataModel, getODataNavigation, TypedODataServer } from '../type';
+import { BaseODataModel, getODataNavigation } from '../type';
 import { isIterator, isPromise, isStream } from '../utils';
 import { NavigationPart, ODATA_TYPE, ResourcePathVisitor } from '../visitor';
 import { fnCaller } from './fnCaller';
@@ -1080,7 +1080,7 @@ export class ODataProcessor extends Transform {
         break;
     }
 
-    if (ic && this.serverType.prototype == TypedODataServer) {
+    if (ic && this.serverType.variant == ServerType.typed) {
       currentResult = ic.injectExecute(ctrlInstance, fn);
     } else {
       currentResult = fnCaller(ctrlInstance, fn, params);

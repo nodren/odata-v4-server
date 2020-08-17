@@ -7,7 +7,7 @@ import * as express from 'express';
 import * as http from 'http';
 import { Readable, Transform, TransformOptions, Writable } from 'stream';
 import * as swaggerUi from 'swagger-ui-express';
-import { InjectKey } from './constants';
+import { InjectKey, ServerType } from './constants';
 import { ODataController } from './controller';
 import { ContainerBase } from './edm';
 import { HttpRequestError } from './error';
@@ -39,6 +39,8 @@ export interface ODataHttpContext {
  * ODataServer base class to be extended by concrete OData Server data sources
  **/
 export class ODataServerBase extends Transform {
+
+  public static variant = ServerType.base
 
   private static _metadataCache: any
   static namespace: string
