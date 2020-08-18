@@ -51,7 +51,7 @@ export class TypedService<T = any> extends ODataController {
     return qr.manager;
   }
 
-  protected async _getRepository(@inject(InjectKey.ODataTypeParameter) entityType): Promise<Repository<T>> {
+  protected async _getRepository(@inject(InjectKey.ODataTypeParameter) entityType: any): Promise<Repository<T>> {
     return (await this._getEntityManager()).getRepository(entityType);
   }
 

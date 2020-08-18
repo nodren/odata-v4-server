@@ -23,7 +23,7 @@ describe('Container Test Suite', () => {
 
   });
 
-  it('should support transient class', async () => {
+  it('should support transient providers', async () => {
 
     const c1 = new InjectContainer();
     const c2 = await c1.getInstance(SubLevelInjectContainer);
@@ -41,7 +41,11 @@ describe('Container Test Suite', () => {
     c1.registerProvider(new UUIDProvider);
 
     c2.registerProvider(createInstanceProvider('v1', '21'));
-    c3.registerProvider(createInstanceProvider('v1', '31'));
+    c2.registerProvider(createInstanceProvider('vt2', '21', true));
+
+    c3.registerInstance('v1', '31');
+    c3.registerInstance('vt2', '31');
+
 
     // SubLevelInjectContainer is transient container,
     // each time will create new instance
@@ -54,7 +58,12 @@ describe('Container Test Suite', () => {
     expect(await c3.getInstance('v1')).toBe('31');
 
     expect(await c2.getInstance('v2')).toBe('2');
-    expect(await c3.getInstance('v2')).toBe('2');
+    expect(await c3.getInstance('v2')).toBe('2'); // sub level will get stored value from parent
+
+    // transient 'vt2' value in 'c2'
+    expect(await c2.getInstance('vt2')).toBe('21'); // transient provider will not store
+    expect(await c3.getInstance('vt2')).toBe('31'); // and sub level will not get it
+
 
     expect(await c3.getInstance('uuid')).not.toBe(await c3.getInstance('uuid'));
 
@@ -87,28 +96,27 @@ describe('Container Test Suite', () => {
   it('should support wrapper of instance', async () => {
 
     class Base {
-
       sub(@inject('v1') v1: number, @inject('v2') v2: number): number {
         return v1 - v2;
       }
-
     }
 
     class A extends Base {
-
       @inject('v')
       v: number;
 
-      /**
-       * sum numbers
-       *
-       * @param v1
-       * @param v2
-       */
       sum(@inject('v1') v1: number, @inject('v2') v2: number): number {
         return v1 + v2;
       }
-
+      async _getV1(@inject('v1') v1?: number) {
+        return v1;
+      }
+      async _getV2(@inject('v2') v2?: number) {
+        return v2;
+      }
+      async _getSum(): Promise<number> {
+        return (await this._getV1()) + (await this._getV2());
+      }
     }
 
     const c = InjectContainer.New();
@@ -118,6 +126,7 @@ describe('Container Test Suite', () => {
 
     const aw = await c.getWrappedInstance(A);
 
+    // all function will be transformed to 'async' function
     expect(await aw.sum()).toBe(3);
     expect(await aw.sub()).toBe(-1);
 
@@ -127,7 +136,9 @@ describe('Container Test Suite', () => {
     expect(await aw.sum(undefined, 99)).toBe(100);
     expect(await aw.sub(undefined, 99)).toBe(-98);
 
-
+    // even no parameter given, and no parameter given in '_getSum'
+    // the 'this' will be replaced with a dynamic proxy
+    expect(await aw._getSum()).toBe(3);
     expect(aw.v).toBe(15);
 
   });

@@ -598,7 +598,7 @@ export class ODataProcessor extends Transform {
 
   }
 
-  _initInjectContainer(ic: InjectContainer) {
+  private _initInjectContainer(ic: InjectContainer) {
 
     if (this.container == undefined) {
       this.container = ic;
