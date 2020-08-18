@@ -11,22 +11,22 @@ export enum InjectKey {
 
   Request = 'request:request',
   Response = 'request:response',
-  RequestContext = 'request:request_context',
+  RequestContext = 'odata:contextparameter',
   RequestTxId = 'request:transaction:uuid',
-  RequestTransaction = 'request:transaction',
+  RequestTransaction = 'odata:tx_contextparameter',
   RequestMethod = 'request:method',
-  RequestEntityType = 'request:entity_type',
-  RequestEntityKey = 'request:entity_key',
-  RequestEntityQuery = 'request:entity_query',
-  RequestBody = 'request:body',
+  RequestEntityType = 'odata:typeparameter',
+  RequestEntityKey = 'odata:keyparameters',
+  RequestEntityQuery = 'odata:queryparameter',
+  RequestBody = 'odata:bodyparameter',
 
   HookContext = 'request:hook:context',
 
   DatabaseHelper = 'global:db_helper',
 
   GlobalConnection = 'global:connection',
-  Connection = 'request:connection',
-  QueryRunner = 'request:queryRunner',
+  TransactionConnection = 'request:tx_connection',
+  TransactionQueryRunner = 'request:tx_queryRunner',
 
 
   // copy from odata
@@ -53,3 +53,9 @@ export enum ServerType {
   base = 'base',
   typed = 'typed'
 }
+
+
+export const INDICATOR_WRAPPED_OBJECT = '__wrapped_object__';
+
+export const WRAPPED_ORIGINAL_OBJECT_PROPERTY = '__wrapped_original_object__';
+

@@ -1,5 +1,7 @@
 import { Connection, QueryRunner } from 'typeorm';
 import { v4 } from 'uuid';
+import { InjectKey } from './constants';
+import { inject, InstanceProvider } from './inject';
 import { createLogger } from './logger';
 
 const logger = createLogger('type:tx');
@@ -8,6 +10,24 @@ const transactionStorage = new Map<string, QueryRunner>();
 
 export interface TransactionContext {
   uuid: string
+}
+
+export class TransactionQueryRunnerProvider implements InstanceProvider {
+  type = InjectKey.TransactionQueryRunner
+  transient = false
+
+  async provide(@inject(InjectKey.GlobalConnection) conn: Connection, @inject(InjectKey.RequestTransaction) tx: TransactionContext) {
+    return await getOrCreateTransaction(conn, tx);
+  }
+}
+
+
+export class TransactionConnectionProvider implements InstanceProvider {
+  type = InjectKey.TransactionConnection
+  transient = false
+  async provide(@inject(InjectKey.TransactionQueryRunner) qr: QueryRunner) {
+    return qr.manager.connection;
+  }
 }
 
 /**

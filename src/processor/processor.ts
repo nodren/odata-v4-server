@@ -19,6 +19,7 @@ import { inject, InjectContainer } from '../inject';
 import * as odata from '../odata';
 import { ODataResult } from '../result';
 import { ODataHttpContext, ODataServer } from '../server';
+import { TransactionConnectionProvider, TransactionQueryRunnerProvider } from '../transaction';
 import { getODataNavigation } from '../type';
 import { isIterator, isPromise, isStream } from '../utils';
 import { NavigationPart, ODATA_TYPE, ResourcePathVisitor } from '../visitor';
@@ -593,17 +594,25 @@ export class ODataProcessor extends Transform {
       }
     ];
 
-    this.container = ic;
+    this._initInjectContainer(ic);
 
-    this.container.registerInstance(InjectKey.RequestTransaction, this.context?.tx);
-    this.container.registerInstance(InjectKey.ODataTxContextParameter, this.context?.tx);
-    this.container.registerInstance(InjectKey.RequestBody, this.context?.request?.body);
-    this.container.registerInstance(InjectKey.ODataInjectContainer, ic);
-    this.container.registerInstance(InjectKey.RequestMethod, this.context?.request?.method);
-    this.container.registerInstance(InjectKey.RequestEntityType, this.elementType);
-    this.container.registerInstance(InjectKey.RequestTxId, this.context?.tx?.uuid);
-    this.container.registerInstance(InjectKey.Request, this.context?.response);
-    this.container.registerInstance(InjectKey.Response, this.context?.request);
+  }
+
+  _initInjectContainer(ic: InjectContainer) {
+
+    if (this.container == undefined) {
+      this.container = ic;
+      this.container.registerInstance(InjectKey.ODataTxContextParameter, this.context?.tx);
+      this.container.registerInstance(InjectKey.RequestBody, this.context?.request?.body);
+      this.container.registerInstance(InjectKey.ODataInjectContainer, ic);
+      this.container.registerInstance(InjectKey.RequestMethod, this.context?.request?.method);
+      this.container.registerInstance(InjectKey.RequestEntityType, this.elementType);
+      this.container.registerInstance(InjectKey.RequestTxId, this.context?.tx?.uuid);
+      this.container.registerInstance(InjectKey.Request, this.context?.response);
+      this.container.registerInstance(InjectKey.Response, this.context?.request);
+      this.container.registerProvider(new TransactionConnectionProvider());
+      this.container.registerProvider(new TransactionQueryRunnerProvider());
+    }
 
   }
 
@@ -1093,8 +1102,9 @@ export class ODataProcessor extends Transform {
         break;
     }
 
-    if (ic && this.serverType.variant == ServerType.typed) {
-      currentResult = ic.injectExecute(ctrlInstance, fn);
+    if (ic) {
+      const preferParams = fnCaller.getFnParam(fn, params);
+      currentResult = await ic.injectExecute(ctrlInstance, fn, ...preferParams);
     } else {
       currentResult = fnCaller(ctrlInstance, fn, params);
     }
@@ -1874,7 +1884,6 @@ export class ODataProcessor extends Transform {
     const txContextParam = odata.getTxContextParameter(container, name);
     const injectContainerParam = odata.getInjectContainerParameter(container, name);
 
-
     const elementType = result?.elementType || this.ctrl?.prototype?.elementType || null;
 
     if (queryParam) {
@@ -1910,90 +1919,101 @@ export class ODataProcessor extends Transform {
       ic.registerInstance(InjectKey.ODataQueryParameter, params[queryParam]);
     }
 
-    if (filterParam) {
-      let filterAst = queryString;
-      const resourceFilterAst = findOne(this.resourcePath?.ast?.value?.query, TokenType.Filter);
 
+    let filterAst = queryString;
+    const resourceFilterAst = findOne(this.resourcePath?.ast?.value?.query, TokenType.Filter);
+
+    if (typeof filterAst == 'string') {
+      // @ts-ignore
+      filterAst = qs.parse(filterAst).$filter;
       if (typeof filterAst == 'string') {
-        // @ts-ignore
-        filterAst = qs.parse(filterAst).$filter;
-        if (typeof filterAst == 'string') {
-          filterAst = this.serverType.parser.filter(filterAst, {
-            // metadata: this.resourcePath.ast.metadata || this.serverType.$metadata().edmx
-          });
-          const lastNavigationPath = this.resourcePath.navigation[this.resourcePath.navigation.length - 1];
-          const queryType = lastNavigationPath.type == 'QualifiedEntityTypeName' ?
-            this.resourcePath.navigation[this.resourcePath.navigation.length - 1].node[ODATA_TYPE] :
-            (result || this.ctrl.prototype).elementType;
-          await new ResourcePathVisitor(this.serverType, this.entitySets).Visit(<Token>filterAst, {}, queryType);
-        }
-      } else {
-        const token = <Token>queryString;
-        filterAst = findOne(token, TokenType.Filter);
+        filterAst = this.serverType.parser.filter(filterAst, {
+          // metadata: this.resourcePath.ast.metadata || this.serverType.$metadata().edmx
+        });
+        const lastNavigationPath = this.resourcePath.navigation[this.resourcePath.navigation.length - 1];
+        const queryType = lastNavigationPath.type == 'QualifiedEntityTypeName' ?
+          this.resourcePath.navigation[this.resourcePath.navigation.length - 1].node[ODATA_TYPE] :
+          (result || this.ctrl.prototype).elementType;
+        await new ResourcePathVisitor(this.serverType, this.entitySets).Visit(<Token>filterAst, {}, queryType);
       }
+    } else {
+      const token = <Token>queryString;
+      filterAst = findOne(token, TokenType.Filter);
+    }
 
-      if (filterAst && !include) {
-        // if filter string are deep equal, do not merge, avoid duplicate items
-        if (filterAst?.raw != resourceFilterAst?.raw) {
-          filterAst = deepmerge(filterAst, (resourceFilterAst || {}).value || {});
-        }
+    if (filterAst && !include) {
+      // if filter string are deep equal, do not merge, avoid duplicate items
+      if (filterAst?.raw != resourceFilterAst?.raw) {
+        filterAst = deepmerge(filterAst, (resourceFilterAst || {}).value || {});
       }
+    }
 
+    if (filterParam) {
       params[filterParam] = this.serverType.connector ? this.serverType.connector.createFilter(filterAst, elementType) : filterAst;
-
       if (container.prototype instanceof ODataControllerBase) {
         const validator = (<typeof ODataControllerBase>container).validator;
         if (validator) {
           validator(params[filterParam]);
         }
       }
-
-      ic.registerInstance(InjectKey.ODataFilterParameter, params[filterParam]);
-
     }
+
+    ic.registerInstance(InjectKey.ODataFilterParameter, this.serverType.connector ? this.serverType.connector.createFilter(filterAst, elementType) : filterAst);
+
 
     if (contextParam) {
       params[contextParam] = this.context;
-      ic.registerInstance(InjectKey.ODataContextParameter, this.context);
     }
+    ic.registerInstance(InjectKey.ODataContextParameter, this.context);
 
     if (txContextParam) {
       params[txContextParam] = this.context?.tx;
-      ic.registerInstance(InjectKey.ODataTxContextParameter, this.context?.tx);
     }
+
+    ic.registerInstance(InjectKey.ODataTxContextParameter, this.context?.tx);
 
     if (streamParam) {
       params[streamParam] = include ? include.stream : this;
-      ic.registerInstance(InjectKey.ODataStreamParameter, params[streamParam]);
     }
+
+    ic.registerInstance(InjectKey.ODataStreamParameter, include ? include.stream : this);
 
     if (resultParam) {
       params[resultParam] = result instanceof ODataResult ? result.body : result;
-      ic.registerInstance(InjectKey.ODataResultParameter, params[resultParam]);
-
     }
+
+    ic.registerInstance(
+      InjectKey.ODataResultParameter,
+      result instanceof ODataResult ? result.body : result
+    );
 
     if (idParam) {
       params[idParam] = decodeURI(this.resourcePath.id || this.body['@odata.id']);
-      ic.registerInstance(InjectKey.ODataIdParameter, params[idParam]);
+    }
+
+    if (this.resourcePath || this.body) {
+      ic.registerInstance(
+        InjectKey.ODataIdParameter,
+        decodeURI(get(this, 'resourcePath.id') || get(this, ['body', '@odata.id'])));
     }
 
     if (bodyParam && !params[bodyParam]) {
       params[bodyParam] = this.body;
-      ic.registerInstance(InjectKey.ODataBodyParameter, params[bodyParam]);
     }
+
+    ic.registerInstance(InjectKey.ODataBodyParameter, this.body);
 
     if (typeParam) {
       params[typeParam] = params[typeParam] || elementType;
-      ic.registerInstance(InjectKey.ODataTypeParameter, params[typeParam]);
     }
+
+    ic.registerInstance(InjectKey.ODataTypeParameter, params[typeParam] || elementType, true);
 
     if (injectContainerParam) {
-
       params[injectContainerParam] = ic;
-      ic.registerInstance(InjectKey.ODataInjectContainer, ic);
-
     }
+
+    ic.registerInstance(InjectKey.ODataInjectContainer, ic);
 
 
     return ic;

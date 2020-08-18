@@ -5,8 +5,8 @@ export interface InstanceProvider<T = any> {
   provide: (...args: any[]) => Promise<T>;
 }
 
-export const createInstanceProvider = (type: any, instance: any) => new class implements InstanceProvider {
-  transient = false;
+export const createInstanceProvider = (type: any, instance: any, transient = false) => new class implements InstanceProvider {
+  transient = transient;
   type = type;
   provide = async () => instance
 };

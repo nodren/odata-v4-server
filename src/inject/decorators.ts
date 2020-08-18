@@ -1,5 +1,6 @@
 import isUndefined from '@newdash/newdash/isUndefined';
 import sortBy from '@newdash/newdash/sortBy';
+import { INDICATOR_WRAPPED_OBJECT, WRAPPED_ORIGINAL_OBJECT_PROPERTY } from '../constants';
 
 
 const KEY_INJECT = 'inject:key_inject';
@@ -48,6 +49,9 @@ export function getClassConstructorParams(target): InjectParameter[] {
 }
 
 export function getClassMethodParams(target, targetKey): InjectParameter[] {
+  if (target[INDICATOR_WRAPPED_OBJECT] == true) {
+    target = target[WRAPPED_ORIGINAL_OBJECT_PROPERTY];
+  }
   if (target.prototype) {
     return Reflect.getMetadata(KEY_INJECT_PARAMS, target.prototype, targetKey) || [];
   }

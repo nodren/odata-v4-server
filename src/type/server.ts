@@ -81,6 +81,7 @@ export async function createTypedODataServer(connection: any, ...configurations:
         const iContainer = serverType.getInjectContainer();
 
         iContainer.registerProvider(createInstanceProvider(InjectKey.GlobalConnection, connObj));
+        iContainer.registerProvider(createInstanceProvider(InjectKey.DatabaseHelper, dbHelper));
 
         Object.defineProperty(serverType, 'name', { value: `TypedServerWithConn_${connName}` });
 
@@ -97,7 +98,9 @@ export async function createTypedODataServer(connection: any, ...configurations:
 
             logger(`load entity %s`, configuration?.name || 'Unknown entity');
 
-            const controllerType = class extends TypedService { };
+            const controllerType = class extends TypedService {
+              elementType = entityType
+            };
 
             const entitySetName = getODataEntitySetName(configuration);
 

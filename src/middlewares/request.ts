@@ -81,12 +81,15 @@ export function withODataRequestHandler(server: typeof ODataServer) {
       }
 
       await commitTransaction(txContext);
+
       res.end();
 
     } catch (err) {
 
       await rollbackTransaction(txContext);
+
       hasError = true;
+
       next(err);
 
     }

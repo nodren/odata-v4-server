@@ -1,4 +1,5 @@
 import { alg, Graph } from 'graphlib';
+import { INDICATOR_WRAPPED_OBJECT, WRAPPED_ORIGINAL_OBJECT_PROPERTY } from '../constants';
 import { getClassConstructorParams, getClassInjectionInformation, getClassMethodParams, inject, InjectParameter, isTransient, LazyRef, transient } from './decorators';
 import { createInstanceProvider, InstanceProvider } from './provider';
 import { Class, getOrDefault, InjectWrappedInstance, OptionalParameters } from './utils';
@@ -31,8 +32,8 @@ export class InjectContainer {
     this._providers.set(provider.type, provider);
   }
 
-  public registerInstance(type: any, instance: any) {
-    this.registerProvider(createInstanceProvider(type, instance));
+  public registerInstance(type: any, instance: any, transient: boolean = false) {
+    this.registerProvider(createInstanceProvider(type, instance, transient));
   }
 
   public async createSubContainer(): Promise<InjectContainer> {
@@ -89,8 +90,7 @@ export class InjectContainer {
       return withStore(type, producer, ctx);
     }
 
-    throw new TypeError(`Not found provider for type: '${type?.name || type}'`);
-
+    return undefined;
   }
 
   async getWrappedInstance<T extends Class>(type: LazyRef<T>, ctx?: Map<any, any>): Promise<InjectWrappedInstance<InstanceType<T>>>;
@@ -176,8 +176,22 @@ export class InjectContainer {
   public wrap(instance: any): any {
 
     if (typeof instance == 'object') {
-      return new Proxy(instance, {
+
+      if (instance instanceof InjectContainer) {
+        return instance;
+      }
+
+      if (instance instanceof Promise) {
+        return instance;
+      }
+
+      const p = new Proxy(instance, {
         get: (target, property) => {
+
+          if (property == 'constructor') {
+            return instance['constructor'];
+          }
+
           if (property in target) {
             const methodOrProperty = target[property];
             if (typeof methodOrProperty == 'function') {
@@ -185,10 +199,23 @@ export class InjectContainer {
             }
             return methodOrProperty;
           }
+
+          if (property == WRAPPED_ORIGINAL_OBJECT_PROPERTY) {
+            return instance;
+          }
+
+          if (property == INDICATOR_WRAPPED_OBJECT) {
+            return true;
+          }
+
           return undefined;
+
         }
 
       });
+
+      return p;
+
     }
 
     return instance;
@@ -204,6 +231,7 @@ export class InjectContainer {
   async injectExecute<F extends (...args: any[]) => any>(instance: any, method: F, ...args: OptionalParameters<F>): Promise<ReturnType<F>>;
   async injectExecute<F extends (...args: any[]) => any>(instance: any, method: F, ...args: any[]): Promise<ReturnType<F>>;
   async injectExecute(instance, method, ...args) {
+
     const methodName = method.name;
     const type = instance.constructor;
     const paramsInfo = getClassMethodParams(type, methodName);
@@ -219,7 +247,7 @@ export class InjectContainer {
       }
     }
 
-    return method.apply(instance, params);
+    return method.apply(this.wrap(instance), params);
   }
 
   private async _defaultClassProvider<T extends new (...args: any[]) => any>(type: T, ctx?: Map<any, any>): Promise<InstanceType<T>> {
