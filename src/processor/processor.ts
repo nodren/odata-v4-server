@@ -19,7 +19,7 @@ import { inject, InjectContainer } from '../inject';
 import * as odata from '../odata';
 import { ODataResult } from '../result';
 import { ODataHttpContext, ODataServer } from '../server';
-import { BaseODataModel, getODataNavigation } from '../type';
+import { getODataNavigation } from '../type';
 import { isIterator, isPromise, isStream } from '../utils';
 import { NavigationPart, ODATA_TYPE, ResourcePathVisitor } from '../visitor';
 import { fnCaller } from './fnCaller';
@@ -499,13 +499,14 @@ export class ODataProcessor extends Transform {
   private elementType: any;
   private resultCount = 0;
 
-  @inject()
   private container: InjectContainer;
 
+
   constructor(
-    @inject(InjectKey.RequestContext) context,
+    @inject(InjectKey.RequestContext) context: ODataHttpContext,
     @inject(InjectKey.ServerType) server: typeof ODataServer,
-    @inject(InjectKey.ProcessorOption) options?: ODataProcessorOptions
+    @inject(InjectKey.ProcessorOption) options?: ODataProcessorOptions,
+    @inject(InjectContainer) ic?: InjectContainer
   ) {
     super(<TransformOptions>{
       objectMode: true
@@ -591,6 +592,18 @@ export class ODataProcessor extends Transform {
         return body;
       }
     ];
+
+    this.container = ic;
+
+    this.container.registerInstance(InjectKey.RequestTransaction, this.context?.tx);
+    this.container.registerInstance(InjectKey.ODataTxContextParameter, this.context?.tx);
+    this.container.registerInstance(InjectKey.RequestBody, this.context?.request?.body);
+    this.container.registerInstance(InjectKey.ODataInjectContainer, ic);
+    this.container.registerInstance(InjectKey.RequestMethod, this.context?.request?.method);
+    this.container.registerInstance(InjectKey.RequestEntityType, this.elementType);
+    this.container.registerInstance(InjectKey.RequestTxId, this.context?.tx?.uuid);
+    this.container.registerInstance(InjectKey.Request, this.context?.response);
+    this.container.registerInstance(InjectKey.Response, this.context?.request);
 
   }
 
@@ -1233,12 +1246,14 @@ export class ODataProcessor extends Transform {
         let isAction = false;
         const schemas = this.serverType.$metadata().edmx.dataServices.schemas;
 
+        let ic: InjectContainer = undefined;
+
         // entity bound operation
         // e.g. POST /Teachers(1)/Default.addClass {payload}
         if (entityBoundOp) {
 
           // use original result for typed odata model
-          if (result.elementType && result.elementType.prototype instanceof BaseODataModel) {
+          if (this.serverType.variant == ServerType.typed) {
             scope = result.getOriginalResult();
           } else {
             scope = result.body;
@@ -1255,7 +1270,7 @@ export class ODataProcessor extends Transform {
             isAction = true;
             part.params = Object.assign(part.params || {}, this.body || {});
           }
-          await this.__applyParams(elementType, boundOpName, part.params, null, result);
+          ic = await this.__applyParams(elementType, boundOpName, part.params, null, result);
         } else if (ctrlBoundOp) {
           scope = this.instance;
           returnType = <Function>Edm.getReturnType(this.ctrl, boundOpName, this.serverType.container);
@@ -1268,14 +1283,22 @@ export class ODataProcessor extends Transform {
             isAction = true;
             part.params = Object.assign(part.params || {}, this.body || {});
           }
-          await this.__applyParams(this.ctrl, boundOpName, part.params, null, result);
+          ic = await this.__applyParams(this.ctrl, boundOpName, part.params, null, result);
         } else if (expOp) {
           scope = result;
           part.params['processor'] = this;
         }
 
         const boundOp = entityBoundOp || ctrlBoundOp || expOp;
-        let opResult = fnCaller(scope, boundOp, part.params);
+
+        let opResult;
+        if (ic) {
+          const predefineParams = fnCaller.getFnParam(boundOp, part.params);
+          opResult = await ic.injectExecute(scope, boundOp, ...predefineParams);
+        } else {
+          opResult = fnCaller(scope, boundOp, part.params);
+        }
+
 
         if (isIterator(boundOp)) {
           opResult = run(opResult, defaultHandlers);

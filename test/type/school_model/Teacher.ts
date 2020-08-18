@@ -1,5 +1,7 @@
+import { Connection } from 'typeorm';
 import { isUndefined } from 'util';
-import { BaseODataModel, Edm, odata, ODataAction, ODataColumn, ODataModel, ODataNavigation, ResourceNotFoundError, TransactionContext } from '../../../src';
+import { BaseODataModel, Edm, inject, InjectContainer, ODataAction, ODataColumn, ODataModel, ODataNavigation, ResourceNotFoundError, TypedODataServer } from '../../../src';
+import { InjectKey } from '../../../src/constants';
 import { Class } from './Class';
 import { Profile } from './Profile';
 
@@ -26,26 +28,32 @@ export class Teacher extends BaseODataModel {
   //  "classId": 1
   // }
   @ODataAction
-  async addClass(@Edm.Int32 classId: number, @odata.txContext ctx: TransactionContext) {
-    const classService = await this._getService(Class);
-    const c = await classService.findOne(classId, ctx);
+  async addClass(
+    @Edm.Int32 classId: number,
+    @inject(InjectKey.ServerType) serverType: typeof TypedODataServer,
+    @inject(InjectContainer) ic: InjectContainer
+  ) {
+    const classService = ic.wrap(await serverType.getService(Class));
+    const c = await classService.findOne(classId);
 
     if (isUndefined(c)) {
       throw new ResourceNotFoundError(`not found instance class[${classId}]`);
     }
     c.teacherOneId = this.tid;
 
-    await classService.save(c.cid, c, ctx); // save with hooks lifecycle, suggested
-    // await c.save() // save to DB directly
+    await classService.update(c.cid, c); // save with hooks lifecycle, suggested
   }
 
   // GET http://localhost:50000/Teachers(1)/Default.queryClass()
   @Edm.Function(Edm.Collection(Edm.String))
-  async queryClass(@odata.txContext ctx: TransactionContext) {
-    const qr = await this._getQueryRunner(ctx);
-    // run native SQL query
-    const items = await qr.query(`select name from class where teacherOneId = :id`, [this.tid]);
-    return items.map((item) => item.name);
+  async queryClass(@inject(InjectKey.GlobalConnection) conn: Connection) {
+    const classes = await conn.getRepository(Class).find({
+      where: {
+        teacherOneId: this.tid
+      }
+    });
+
+    return classes.map((item) => item.name);
   }
 
 }

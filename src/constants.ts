@@ -8,6 +8,9 @@ export enum InjectKey {
   Configuration = 'global:configuration',
 
   ProcessorOption = 'request:processor_option',
+
+  Request = 'request:request',
+  Response = 'request:response',
   RequestContext = 'request:request_context',
   RequestTxId = 'request:transaction:uuid',
   RequestTransaction = 'request:transaction',
