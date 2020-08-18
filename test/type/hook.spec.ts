@@ -266,7 +266,7 @@ describe('Hooks Test Suite', () => {
     @beforeCreate(Student2, 1)
     class h2 extends HookProcessor<Student2> {
 
-      async execute(@inject(InjectKey.HookContext) ctx: HookContext<Student2>): Promise<void> {
+      async execute(): Promise<void> {
         hookInvokeSeq.push('h2');
         throw new Error('something wrong!');
       }

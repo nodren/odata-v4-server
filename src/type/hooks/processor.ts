@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { getHookMetadata, HookContext } from './hooks';
+import { getHookMetadata } from './hooks';
 import { HookType } from './hook_type';
 
 /**
@@ -16,7 +16,7 @@ export abstract class BaseHookProcessor<T = any>  {
 
   abstract support(entityType?: any, hookType?: HookType): boolean
 
-  abstract async execute(hookContext: HookContext<any>): Promise<void>
+  abstract async execute(...args: any[]): Promise<void>
 
 }
 

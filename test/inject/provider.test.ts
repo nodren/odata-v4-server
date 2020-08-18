@@ -157,7 +157,7 @@ describe('Inject Provider Test Suite', () => {
 
     const i = await container.getInstance(I);
 
-    expect(i.ctx).toBe(container);
+    expect(i.ctx.getParent()).toBe(container);
 
   });
 

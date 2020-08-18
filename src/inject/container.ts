@@ -17,6 +17,8 @@ export class InjectContainer {
 
   private _store: Map<any, any>
 
+  protected _parent: InjectContainer;
+
   private _providers: Map<any, InstanceProvider>
 
   constructor() {
@@ -26,6 +28,10 @@ export class InjectContainer {
 
   public static New() {
     return new InjectContainer();
+  }
+
+  public getParent(): InjectContainer {
+    return this._parent;
   }
 
   public registerProvider(provider: InstanceProvider) {
@@ -38,7 +44,7 @@ export class InjectContainer {
 
   public async createSubContainer(): Promise<InjectContainer> {
     // @ts-ignore
-    return this.getInstance(SubLevelInjectContainer);
+    return new SubLevelInjectContainer(this);
   }
 
   async getInstance<T extends Class>(type: LazyRef<T>, ctx?: Map<any, any>): Promise<InstanceType<T>>;
@@ -54,8 +60,12 @@ export class InjectContainer {
       type = type.getRef();
     }
 
-    if (type == InjectContainer) {
-      return this;
+    // if target require inject the 'InjectContainer',
+    // just inject a sub container,
+    // and it will useful for many scenarios
+    // :)
+    if (type == InjectContainer || type == SubLevelInjectContainer) {
+      return await this.createSubContainer();
     }
 
     // if class has cycle dependency in constructor, throw error
@@ -349,8 +359,6 @@ export class InjectContainer {
 
 @transient
 export class SubLevelInjectContainer extends InjectContainer {
-
-  private _parent: InjectContainer;
 
   constructor(@inject(InjectContainer) globalContainer: InjectContainer) {
     super();

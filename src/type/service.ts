@@ -60,11 +60,9 @@ export class TypedService<T = any> extends ODataController {
     @odata.injectContainer ic: InjectContainer,
     @inject(InjectKey.ServerType) serverType: typeof TypedODataServer
   ): Promise<TypedService<InstanceType<E>>> {
-    const c = await ic.createSubContainer();
-    c.registerInstance(InjectKey.ODataTypeParameter, entityType, true);
+    ic.registerInstance(InjectKey.ODataTypeParameter, entityType, true);
     const service = await serverType.getService(entityType);
-    const wrappedService = c.wrap(service);
-    return wrappedService;
+    return ic.wrap(service);
   };
 
   private async executeHooks(
@@ -100,7 +98,7 @@ export class TypedService<T = any> extends ODataController {
       throw new ServerInternalError('Hook Type must be specify by controller');
     }
 
-    ctx.getService = async (st) => ctx.ic.wrap(await this._getService.bind(this)(st));
+    ctx.getService = this._getService.bind(this);
 
     const isEvent = HookEvents.includes(ctx.hookType);
 
