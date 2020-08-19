@@ -38,6 +38,7 @@
   ],
   "dependencies": {
     "@cypress/schema-tools": "^4.7.4",
+    "@newdash/inject": "^0.0.11",
     "@newdash/newdash": "^5.13.0",
     "@odata/metadata": "^0.1.14",
     "@odata/parser": "^0.1.43",
@@ -48,7 +49,6 @@
     "deepmerge": "^4.2.2",
     "express": "^4.17.1",
     "get-function-location": "^2.0.0",
-    "graphlib": "^2.1.8",
     "odata2openapi": "^1.3.2",
     "qs": "^6.9.4",
     "reflect-metadata": "^0.1.13",
@@ -63,7 +63,6 @@
     "@types/cors": "^2.8.6",
     "@types/debug": "^4.1.5",
     "@types/event-stream": "^3.3.34",
-    "@types/graphlib": "^2.1.6",
     "@types/jest": "^26.0.9",
     "@types/jsonstream": "^0.8.30",
     "@types/mongodb": "^3.1.1",

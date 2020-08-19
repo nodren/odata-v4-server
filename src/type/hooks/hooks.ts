@@ -1,6 +1,5 @@
 import sortBy from '@newdash/newdash/sortBy';
-import { InjectContainer } from '../../inject';
-import { InjectWrappedInstance } from '../../inject/utils';
+import { InjectContainer, InjectWrappedInstance } from '../../inject';
 import { TransactionContext } from '../../transaction';
 import { BaseODataModel } from '../entity';
 import { TypedODataServer } from '../server';

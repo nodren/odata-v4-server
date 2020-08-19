@@ -11,7 +11,7 @@ import { InjectKey, ServerType } from './constants';
 import { ODataController } from './controller';
 import { ContainerBase } from './edm';
 import { HttpRequestError } from './error';
-import { createInstanceProvider, InjectContainer, SubLevelInjectContainer } from './inject';
+import { InjectContainer, SubLevelInjectContainer } from './inject';
 import { createMetadataJSON } from './metadata';
 import { ensureODataHeaders, withODataBatchRequestHandler, withODataErrorHandler, withODataHeader, withODataRequestHandler, withODataVersionVerify, withSwaggerDocument } from './middlewares';
 import * as odata from './odata';
@@ -164,16 +164,27 @@ export class ODataServerBase extends Transform {
 
   static getInjectContainer() {
     if (this._injectContainer == undefined) {
-      this._injectContainer = new InjectContainer();
-      this._injectContainer.registerProvider(createInstanceProvider(InjectKey.ServerType, this));
+
+      this._injectContainer = InjectContainer.New();
+      this._injectContainer.registerInstance(InjectKey.ServerType, this);
+
+      this._injectContainer.doNotWrap(
+        InjectKey.ServerType,
+        InjectKey.TransactionQueryRunner,
+        InjectKey.TransactionConnection,
+        InjectKey.GlobalConnection,
+        InjectKey.ODataTypeParameter,
+        InjectKey.DatabaseHelper
+      );
+
     }
     return this._injectContainer;
   }
 
   static async createProcessor(context: any, options?: ODataProcessorOptions) {
     const requestContainer = await this.getInjectContainer().getInstance(SubLevelInjectContainer);
-    requestContainer.registerProvider(createInstanceProvider(InjectKey.RequestContext, context));
-    requestContainer.registerProvider(createInstanceProvider(InjectKey.ProcessorOption, options));
+    requestContainer.registerInstance(InjectKey.RequestContext, context);
+    requestContainer.registerInstance(InjectKey.ProcessorOption, options);
     return requestContainer.getInstance(ODataProcessor);
   }
 
