@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.29](https://github.com/Soontao/odata-v4-server/compare/v0.2.28...v0.2.29) (2020-08-20)
+
+
+### Features
+
+* [#29](https://github.com/Soontao/odata-v4-server/issues/29), function/action injection ([959c689](https://github.com/Soontao/odata-v4-server/commit/959c689f314c6abc8f6392f36d073f6a42be4b1a))
+* di update ([d8c4ba0](https://github.com/Soontao/odata-v4-server/commit/d8c4ba0643b4fbf6c5ad09aba6974eec40fef62f))
+* integrate the standalong inject module ([3239a68](https://github.com/Soontao/odata-v4-server/commit/3239a687fc3fd40d9f188e82aff2c48796cab759))
+* wrapper of injection ([305492d](https://github.com/Soontao/odata-v4-server/commit/305492d597b5c80d047cf14ba836088dbddd2589))
+
+
+### Bug Fixes
+
+* type issue ([078949e](https://github.com/Soontao/odata-v4-server/commit/078949e2e1fb3efef80a5eae0031f5d5c3ff3944))
+* type issue in [@inject](https://github.com/inject) ([132949a](https://github.com/Soontao/odata-v4-server/commit/132949a9500e424a3716c4f3902c3bf465809eaa))
+
 ### [0.2.28](https://github.com/Soontao/odata-v4-server/compare/v0.2.27...v0.2.28) (2020-08-16)
 
 
