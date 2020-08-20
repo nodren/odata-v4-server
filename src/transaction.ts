@@ -1,7 +1,7 @@
+import { inject, InstanceProvider, provider } from '@newdash/inject';
 import { Connection, QueryRunner } from 'typeorm';
 import { v4 } from 'uuid';
 import { InjectKey } from './constants';
-import { inject, InstanceProvider, provider } from './inject';
 import { createLogger } from './logger';
 
 const logger = createLogger('type:tx');

@@ -38,7 +38,7 @@
   ],
   "dependencies": {
     "@cypress/schema-tools": "^4.7.4",
-    "@newdash/inject": "^0.0.13",
+    "@newdash/inject": "^0.0.14",
     "@newdash/newdash": "^5.13.0",
     "@odata/metadata": "^0.1.14",
     "@odata/parser": "^0.1.43",

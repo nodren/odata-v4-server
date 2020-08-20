@@ -1,6 +1,7 @@
+import { inject, InjectContainer } from '@newdash/inject';
 import { Connection } from 'typeorm';
 import { isUndefined } from 'util';
-import { BaseODataModel, Edm, inject, InjectContainer, ODataAction, ODataColumn, ODataModel, ODataNavigation, ResourceNotFoundError, TypedODataServer } from '../../../src';
+import { BaseODataModel, Edm, ODataAction, ODataColumn, ODataModel, ODataNavigation, ResourceNotFoundError, TypedODataServer } from '../../../src';
 import { InjectKey } from '../../../src/constants';
 import { Class } from './Class';
 import { Profile } from './Profile';

@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { inject, InjectContainer } from '@newdash/inject';
 import { get } from '@newdash/newdash/get';
 import { isEmpty } from '@newdash/newdash/isEmpty';
 import { isUndefined } from '@newdash/newdash/isUndefined';
@@ -15,7 +16,6 @@ import { ODataController, ODataControllerBase } from '../controller';
 import * as Edm from '../edm';
 import { MethodNotAllowedError, NotImplementedError, ResourceNotFoundError, ServerInternalError } from '../error';
 import { IODataResult } from '../index';
-import { inject, InjectContainer } from '../inject';
 import * as odata from '../odata';
 import { ODataResult } from '../result';
 import { ODataHttpContext, ODataServer } from '../server';

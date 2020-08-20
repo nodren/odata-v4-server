@@ -1,6 +1,7 @@
+import { inject } from '@newdash/inject';
 import '@odata/client/lib/polyfill';
 import { isArray } from 'util';
-import { BaseHookProcessor, BaseODataModel, beforeCreate, findHooks, HookContext, HookProcessor, HookType, inject, ODataColumn, ODataModel, TypedODataServer, withEntitySetName, withHook } from '../../src';
+import { BaseHookProcessor, BaseODataModel, beforeCreate, findHooks, HookContext, HookProcessor, HookType, ODataColumn, ODataModel, TypedODataServer, withEntitySetName, withHook } from '../../src';
 import { InjectKey } from '../../src/constants';
 import { shutdown } from '../utils/server';
 import { createServerAndClient, createTmpConnection } from './utils';

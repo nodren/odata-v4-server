@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { inject, InjectContainer } from '@newdash/inject';
 import { forEach } from '@newdash/newdash/forEach';
 import { isArray } from '@newdash/newdash/isArray';
 import { isEmpty } from '@newdash/newdash/isEmpty';
@@ -11,7 +12,6 @@ import { InjectKey } from '../constants';
 import { ODataController } from '../controller';
 import * as Edm from '../edm';
 import { ResourceNotFoundError, ServerInternalError } from '../error';
-import { inject, InjectContainer } from '../inject';
 import { Literal } from '../literal';
 import { createLogger } from '../logger';
 import * as odata from '../odata';

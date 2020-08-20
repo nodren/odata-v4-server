@@ -7,7 +7,6 @@ export { QueryOptionsNode as ODataQuery } from '@odata/parser';
 export * from './controller';
 export * from './edm';
 export * from './error';
-export * from './inject';
 export * from './literal';
 export * from './metadata';
 export * from './odata';

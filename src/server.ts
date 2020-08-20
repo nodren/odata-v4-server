@@ -1,3 +1,4 @@
+import { InjectContainer, SubLevelInjectContainer } from '@newdash/inject';
 import { Edm as Metadata, ServiceDocument, ServiceMetadata } from '@odata/metadata';
 import * as ODataParser from '@odata/parser';
 import { Token } from '@odata/parser/lib/lexer';
@@ -11,7 +12,6 @@ import { InjectKey, ServerType } from './constants';
 import { ODataController } from './controller';
 import { ContainerBase } from './edm';
 import { HttpRequestError } from './error';
-import { InjectContainer, SubLevelInjectContainer } from './inject';
 import { createMetadataJSON } from './metadata';
 import { ensureODataHeaders, withODataBatchRequestHandler, withODataErrorHandler, withODataHeader, withODataRequestHandler, withODataVersionVerify, withSwaggerDocument } from './middlewares';
 import * as odata from './odata';

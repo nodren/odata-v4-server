@@ -1,10 +1,10 @@
+import { inject } from '@newdash/inject';
 import { Token } from '@odata/parser/lib/lexer';
 import { ErrorRequestHandler } from 'express';
 import 'reflect-metadata';
 import { InjectKey } from './constants';
 import { ODataController } from './controller';
 import { EntitySet, EntityType } from './edm';
-import { inject } from './inject';
 import { ODataServer } from './server';
 import { TypedService } from './type';
 import {

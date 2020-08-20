@@ -8,4 +8,5 @@ import { createConnection } from 'typeorm';
  */
 export const createDBConnection = createConnection;
 
-export { ConnectionOptions } from 'typeorm';
+export { Connection, ConnectionOptions, QueryRunner, Repository } from 'typeorm';
+

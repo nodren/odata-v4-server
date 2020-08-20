@@ -1,8 +1,8 @@
 // @ts-nocheck
+import { createInstanceProvider } from '@newdash/inject';
 import { Connection, ConnectionOptions, createConnection, getConnection } from 'typeorm';
 import { odata } from '..';
 import { InjectKey, ServerType } from '../constants';
-import { createInstanceProvider } from '../inject';
 import { createLogger } from '../logger';
 import { ODataServer } from '../server';
 import { createDBHelper } from './db_helper';

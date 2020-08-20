@@ -1,6 +1,7 @@
+import { inject } from '@newdash/inject';
 import { ODataFilter, ODataQueryParam } from '@odata/parser';
 import { v4 } from 'uuid';
-import { BaseODataModel, beforeCreate, HookContext, HookProcessor, inject, ODataColumn, ODataModel } from '../../src';
+import { BaseODataModel, beforeCreate, HookContext, HookProcessor, ODataColumn, ODataModel } from '../../src';
 import { InjectKey } from '../../src/constants';
 import { shutdown } from '../utils/server';
 import { createServerAndClient, createTmpConnection } from './utils';
