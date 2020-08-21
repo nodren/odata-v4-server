@@ -211,10 +211,10 @@ export class TypedService<T = any> extends ODataController {
     return (propName) => this._columnNameMappingStore.get(propName);
   }
 
-  async find(query: string, ctx?: TransactionContext): Promise<Array<T>>;
-  async find(query: ODataQuery, ctx?: TransactionContext): Promise<Array<T>>;
-  async find(query: any, ctx?: any): Promise<Array<T>>;
-  async find(query: ODataQueryParam, ctx?: TransactionContext): Promise<Array<T>>;
+  async find(query?: string): Promise<Array<T>>;
+  async find(query?: ODataQuery): Promise<Array<T>>;
+  async find(query?: any): Promise<Array<T>>;
+  async find(query?: ODataQueryParam): Promise<Array<T>>;
   @odata.GET
   async find(
     @odata.query query,

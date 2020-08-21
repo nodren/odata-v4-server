@@ -3,7 +3,7 @@ import { OData, ODataV4 } from '@odata/client';
 import '@odata/client/lib/polyfill';
 import { Server } from 'http';
 import { Connection, ConnectionOptions, createConnection } from 'typeorm';
-import { createTypedODataServer } from '../../src';
+import { createTypedODataServer, TypedODataServer } from '../../src';
 import { randomPort } from '../utils/randomPort';
 import { ready } from '../utils/server';
 
@@ -54,7 +54,7 @@ export const createTmpConnection = (opt?: Partial<ConnectionOptions>) => {
   return createConnection(Object.assign(defaultOpt, opt, { synchronize: true }));
 };
 
-interface R { server: Server, client: ODataV4 }
+interface R { server: Server, client: ODataV4, odata: typeof TypedODataServer }
 
 export async function createServerAndClient(conn: Partial<ConnectionOptions>, ...items: any[]): Promise<R>
 export async function createServerAndClient(conn: Connection, ...items: any[]): Promise<R>
@@ -70,6 +70,7 @@ export async function createServerAndClient(conn, ...items: any[]) {
   const client = OData.New4({ metadataUri: `http://127.0.0.1:${port}/$metadata`, processCsrfToken: false });
 
   return {
+    odata: s,
     server: httpServer,
     client
   };

@@ -1,11 +1,12 @@
 // @ts-nocheck
 import { OData } from '@odata/client';
 import '@odata/client/lib/polyfill';
-import { defaultParser } from '@odata/parser';
+import { defaultParser, ODataFilter, ODataQueryParam } from '@odata/parser';
 import 'reflect-metadata';
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 import { v4 } from 'uuid';
-import { BaseODataModel, Edm, FieldNameMapper, getODataNavigation, ODataColumn, ODataModel, ODataNavigation, transformFilterAst, transformQueryAst } from '../../src';
+import { BaseODataModel, commitTransaction, createTransactionContext, Edm, FieldNameMapper, getODataNavigation, IncKeyProperty, ODataColumn, ODataEntityType, ODataModel, ODataNavigation, Property, rollbackTransaction, TransactionConnectionProvider, TransactionQueryRunnerProvider, transformFilterAst, transformQueryAst } from '../../src';
+import { InjectKey } from '../../src/constants';
 import { shutdown } from '../utils/server';
 import { createServerAndClient, createTmpConnection } from './utils';
 
@@ -255,6 +256,60 @@ describe('Typeorm Test Suite', () => {
 
     } finally {
       await shutdown(server);
+    }
+
+  });
+
+  it('should support access services by API', async () => {
+
+    @ODataEntityType()
+    class People11 extends BaseODataModel {
+
+      @IncKeyProperty()
+      pid: number;
+
+      @Property()
+      name: string
+    }
+    const conn = await createTmpConnection({
+      name: 'default_service_api_unit_conn',
+      entityPrefix: 'odata_server_unit_index_04_',
+      entities: [People11]
+    });
+    const { odata, server } = await createServerAndClient(conn, People11);
+    const ctx = createTransactionContext();
+
+    try {
+
+      // some shortcut required here, TO DO
+      const ic = await odata.getInjectContainer().createSubContainer();
+      ic.registerInstance(InjectKey.ODataTxContextParameter, ctx);
+      ic.registerInstance(InjectKey.RequestEntityType, People11);
+      ic.registerProvider(TransactionConnectionProvider);
+      ic.registerProvider(TransactionQueryRunnerProvider);
+
+      const peopleService = ic.wrap(await odata.getService(People11));
+
+      const items = await peopleService.find();
+      expect(items).toHaveLength(0);
+
+      await peopleService.create({ name: 'theo' });
+      const results = await peopleService.find(
+        // TO DO, support provide partial object to filter,
+        // like `param.filter({'name':'theo'})`
+        ODataQueryParam.New().filter(ODataFilter.New().field('name').eqString('theo'))
+      );
+
+      expect(results).toHaveLength(1);
+      expect(results[0].pid).not.toBeUndefined();
+
+      await commitTransaction(ctx);
+
+    } finally {
+
+      await rollbackTransaction(ctx);
+      await shutdown(server);
+
     }
 
   });
