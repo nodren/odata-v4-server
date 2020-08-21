@@ -75,6 +75,13 @@ export function withODataBatchRequestHandler(server: typeof ODataServer) {
       const groups: Record<string, JsonBatchRequest[]> = groupBy(body.requests, (bRequest) => bRequest.atomicityGroup || 'default');
 
       const collectedResults = await Promise.all(map(groups, async (groupRequests, groupName) => {
+
+        logger(
+          'start processing group %s with %o items',
+          groupName,
+          groupRequests?.length
+        );
+
         // each atomicityGroup will run in SINGLE transaction
         const groupResults: JsonBatchResponse[] = [];
         const txContext = createTransactionContext();
@@ -111,7 +118,9 @@ export function withODataBatchRequestHandler(server: typeof ODataServer) {
               tx: txContext
             };
 
-            const processor = await server.createProcessor(ctx, { metadata: res['metadata'] });
+            const processor = await server.createProcessor(ctx, {
+              metadata: res['metadata']
+            });
 
             const result = await processor.execute(batchRequest.body);
 
