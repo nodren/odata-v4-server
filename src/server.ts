@@ -19,7 +19,7 @@ import * as odata from './odata';
 import { IODataConnector, ODataBase } from './odata';
 import { ODataMetadataType, ODataProcessor, ODataProcessorOptions } from './processor';
 import { ODataResult } from './result';
-import { commitTransaction, createTransactionContext, rollbackTransaction, TransactionContext } from './transaction';
+import { commitTransaction, createTransactionContext, rollbackTransaction, TransactionConnectionProvider, TransactionContext, TransactionQueryRunnerProvider } from './transaction';
 
 
 /** HTTP context interface when using the server HTTP request handler */
@@ -167,6 +167,9 @@ export class ODataServerBase extends Transform {
 
       this._injectContainer = InjectContainer.New();
       this._injectContainer.registerInstance(InjectKey.ServerType, this);
+
+      this._injectContainer.registerProvider(TransactionQueryRunnerProvider);
+      this._injectContainer.registerProvider(TransactionConnectionProvider);
 
       this._injectContainer.doNotWrap(
         InjectKey.ServerType,

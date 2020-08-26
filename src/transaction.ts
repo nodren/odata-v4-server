@@ -1,4 +1,4 @@
-import { inject, InstanceProvider, provider } from '@newdash/inject';
+import { inject, InstanceProvider, provider, transient } from '@newdash/inject';
 import { Connection, QueryRunner } from 'typeorm';
 import { v4 } from 'uuid';
 import { InjectKey } from './constants';
@@ -9,18 +9,29 @@ const logger = createLogger('type:tx');
 const transactionStorage = new Map<string, QueryRunner>();
 
 export interface TransactionContext {
-  uuid: string
+  uuid: string;
+  /**
+   * commit transaction
+   */
+  commit: () => Promise<void>;
+  /**
+   * rollback transaction
+   */
+  rollback: () => Promise<void>;
 }
 
 export class TransactionQueryRunnerProvider implements InstanceProvider {
+
+  @transient
   @provider(InjectKey.TransactionQueryRunner)
   async provide(@inject(InjectKey.GlobalConnection) conn: Connection, @inject(InjectKey.RequestTransaction) tx: TransactionContext) {
     return await getOrCreateTransaction(conn, tx);
   }
 }
 
-
 export class TransactionConnectionProvider implements InstanceProvider {
+
+  @transient
   @provider(InjectKey.TransactionConnection)
   async provide(@inject(InjectKey.TransactionQueryRunner) qr: QueryRunner) {
     return qr.manager.connection;
@@ -30,9 +41,14 @@ export class TransactionConnectionProvider implements InstanceProvider {
 /**
  * create transaction context
  */
-export const createTransactionContext = (): TransactionContext => ({
-  uuid: v4()
-});
+export const createTransactionContext = (): TransactionContext => {
+  const tx: TransactionContext = {
+    uuid: v4(),
+    commit: () => commitTransaction(tx),
+    rollback:() => rollbackTransaction(tx)
+  };
+  return tx;
+};
 
 /**
  * get/create transaction for context

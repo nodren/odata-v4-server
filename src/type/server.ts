@@ -1,10 +1,11 @@
 // @ts-nocheck
-import { createInstanceProvider } from '@newdash/inject';
+import { createInstanceProvider, InjectWrappedInstance } from '@newdash/inject';
 import { Connection, ConnectionOptions, createConnection, getConnection } from 'typeorm';
 import { odata } from '..';
 import { InjectKey, ServerType } from '../constants';
 import { createLogger } from '../logger';
 import { ODataServer } from '../server';
+import { createTransactionContext, TransactionContext } from '../transaction';
 import { createDBHelper } from './db_helper';
 import { getODataEntitySetName, withConnection, withDBHelper, withEntityType, withODataServerType } from './decorators';
 import { BaseODataModel, validateEntityType } from './entity';
@@ -23,10 +24,31 @@ export class TypedODataServer extends ODataServer {
   /**
    * get service instance for entity
    *
+   * @internal
    * @param entityType entity type of service
    */
   public static async getService<E extends typeof BaseODataModel>(entityType: E): Promise<TypedService<InstanceType<E>>> {
     return this.getControllerInstance(entityType);
+  };
+
+  /**
+   * get service instance with transaction context for specific entity
+   *
+   * @external
+   * @param entityType entity type of service
+   */
+  public static async getServiceWithNewContext<E extends typeof BaseODataModel>(entityType: E): Promise<{
+    tx: TransactionContext,
+    service: InjectWrappedInstance<TypedService<InstanceType<E>>>
+  }> {
+    const ic = await this.getInjectContainer().createSubContainer();
+    const tx = createTransactionContext();
+    ic.registerInstance(InjectKey.ODataTxContextParameter, tx);
+    ic.registerInstance(InjectKey.ODataTypeParameter, entityType);
+    return {
+      service: ic.wrap(await this.getControllerInstance(entityType)),
+      tx
+    };
   };
 
 }

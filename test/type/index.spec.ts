@@ -5,8 +5,7 @@ import { defaultParser, ODataFilter, ODataQueryParam } from '@odata/parser';
 import 'reflect-metadata';
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 import { v4 } from 'uuid';
-import { BaseODataModel, commitTransaction, createTransactionContext, Edm, FieldNameMapper, getODataNavigation, IncKeyProperty, ODataColumn, ODataEntityType, ODataModel, ODataNavigation, Property, rollbackTransaction, TransactionConnectionProvider, TransactionQueryRunnerProvider, transformFilterAst, transformQueryAst } from '../../src';
-import { InjectKey } from '../../src/constants';
+import { BaseODataModel, Edm, FieldNameMapper, getODataNavigation, IncKeyProperty, ODataColumn, ODataEntityType, ODataModel, ODataNavigation, Property, transformFilterAst, transformQueryAst } from '../../src';
 import { shutdown } from '../utils/server';
 import { createServerAndClient, createTmpConnection } from './utils';
 
@@ -277,24 +276,16 @@ describe('Typeorm Test Suite', () => {
       entities: [People11]
     });
     const { odata, server } = await createServerAndClient(conn, People11);
-    const ctx = createTransactionContext();
+
+    const { tx, service } = await odata.getServiceWithNewContext(People11);
 
     try {
 
-      // some shortcut required here, TO DO
-      const ic = await odata.getInjectContainer().createSubContainer();
-      ic.registerInstance(InjectKey.ODataTxContextParameter, ctx);
-      ic.registerInstance(InjectKey.RequestEntityType, People11);
-      ic.registerProvider(TransactionConnectionProvider);
-      ic.registerProvider(TransactionQueryRunnerProvider);
-
-      const peopleService = ic.wrap(await odata.getService(People11));
-
-      const items = await peopleService.find();
+      const items = await service.find();
       expect(items).toHaveLength(0);
 
-      await peopleService.create({ name: 'theo' });
-      const results = await peopleService.find(
+      await service.create({ name: 'theo' });
+      const results = await service.find(
         // TO DO, support provide partial object to filter,
         // like `param.filter({'name':'theo'})`
         ODataQueryParam.New().filter(ODataFilter.New().field('name').eqString('theo'))
@@ -303,11 +294,11 @@ describe('Typeorm Test Suite', () => {
       expect(results).toHaveLength(1);
       expect(results[0].pid).not.toBeUndefined();
 
-      await commitTransaction(ctx);
+      await tx.commit();
 
     } finally {
 
-      await rollbackTransaction(ctx);
+      await tx.rollback();
       await shutdown(server);
 
     }
