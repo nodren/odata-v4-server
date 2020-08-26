@@ -1,4 +1,4 @@
-import { filter as parseFilter, Token } from '@odata/parser';
+import { defaultParser, Token } from '@odata/parser';
 import { FilterVisitor } from './visitor';
 
 export interface ExpressionFunction {
@@ -27,7 +27,7 @@ const filterVisitor = new FilterVisitor();
 export function createFilter(filter: string);
 export function createFilter(filter: Token);
 export function createFilter(filter: string | Token): FilterFunction {
-  const ast: Token = <Token>(typeof filter == 'string' ? parseFilter(<string>filter) : filter);
+  const ast: Token = <Token>(typeof filter == 'string' ? defaultParser.filter(<string>filter) : filter);
   return filterVisitor.Visit(ast, {});
 }
 
@@ -47,6 +47,6 @@ export function createFilter(filter: string | Token): FilterFunction {
 export function compileExpression(expression: string);
 export function compileExpression(expression: Token);
 export function compileExpression(expression: string | Token): ExpressionFunction {
-  const ast: Token = <Token>(typeof expression == 'string' ? parseFilter(<string>expression) : expression);
+  const ast: Token = <Token>(typeof expression == 'string' ? defaultParser.filter(<string>expression) : expression);
   return filterVisitor.Visit(ast, {});
 }
