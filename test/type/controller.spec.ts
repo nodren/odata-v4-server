@@ -1,5 +1,5 @@
 import { inject } from '@newdash/inject';
-import { ODataFilter, ODataQueryParam } from '@odata/parser';
+import { ODataFilter, ODataParam } from '@odata/parser';
 import { v4 } from 'uuid';
 import { BaseODataModel, beforeCreate, HookContext, HookProcessor, ODataColumn, ODataModel } from '../../src';
 import { InjectKey } from '../../src/constants';
@@ -53,9 +53,8 @@ describe('Typed Controller Test Suite', () => {
       async execute(@inject(InjectKey.HookContext) hookCtx: HookContext<A1>): Promise<void> {
 
         const service = await hookCtx.getService(A2);
-
         const items = await service.find(
-          ODataQueryParam.New().filter(ODataFilter.New().field('name').eq(testUserName))
+          ODataParam.New().filter(ODataFilter.New().field('name').eq(testUserName))
         );
 
         if (items.length > 0) {

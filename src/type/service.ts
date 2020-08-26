@@ -3,7 +3,7 @@ import { inject, InjectContainer } from '@newdash/inject';
 import { forEach } from '@newdash/newdash/forEach';
 import { isArray } from '@newdash/newdash/isArray';
 import { isEmpty } from '@newdash/newdash/isEmpty';
-import { defaultParser, ODataQueryParam } from '@odata/parser';
+import { defaultParser, ODataFilter, ODataQueryParam, param } from '@odata/parser';
 import 'reflect-metadata';
 import { Connection, QueryRunner, Repository } from 'typeorm';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
@@ -211,10 +211,11 @@ export class TypedService<T = any> extends ODataController {
     return (propName) => this._columnNameMappingStore.get(propName);
   }
 
-  async find(query?: string): Promise<Array<T>>;
-  async find(query?: ODataQuery): Promise<Array<T>>;
-  async find(query?: any): Promise<Array<T>>;
-  async find(query?: ODataQueryParam): Promise<Array<T>>;
+  async find(queryString: string): Promise<Array<T>>;
+  async find(queryAst: ODataQuery): Promise<Array<T>>;
+  async find(queryObject: ODataQueryParam): Promise<Array<T>>;
+  async find(filter: ODataFilter): Promise<Array<T>>;
+  async find(filterOrQueryStringOrQueryAst?: any): Promise<Array<T>>;
   @odata.GET
   async find(
     @odata.query query,
@@ -234,6 +235,10 @@ export class TypedService<T = any> extends ODataController {
 
       if (query instanceof ODataQueryParam) {
         query = defaultParser.query(query.toString());
+      }
+
+      if (query instanceof ODataFilter) {
+        query = defaultParser.query(param().filter(query).toString());
       }
 
       // optimize here

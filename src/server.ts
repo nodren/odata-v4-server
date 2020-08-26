@@ -1,6 +1,6 @@
 import { InjectContainer } from '@newdash/inject';
 import { Edm as Metadata, ServiceDocument, ServiceMetadata } from '@odata/metadata';
-import * as ODataParser from '@odata/parser';
+import { defaultParser } from '@odata/parser';
 import { Token } from '@odata/parser/lib/lexer';
 import * as bodyParser from 'body-parser';
 import * as cors from 'cors';
@@ -45,7 +45,7 @@ export class ODataServerBase extends Transform {
   private static _metadataCache: any
   static namespace: string
   static container = new ContainerBase();
-  static parser = ODataParser;
+  static parser = defaultParser;
   static connector: IODataConnector
   static validator: (odataQuery: string | Token) => null;
   static errorHandler: express.ErrorRequestHandler = withODataErrorHandler;

@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { OData } from '@odata/client';
 import '@odata/client/lib/polyfill';
-import { defaultParser, ODataFilter, ODataQueryParam } from '@odata/parser';
+import { defaultParser, filter } from '@odata/parser';
 import 'reflect-metadata';
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 import { v4 } from 'uuid';
@@ -286,11 +286,7 @@ describe('Typeorm Test Suite', () => {
       expect(items).toHaveLength(0);
 
       await PeopleService.create({ name: 'theo' });
-      const results = await PeopleService.find(
-        // TO DO, support provide partial object to filter,
-        // like `param.filter({'name':'theo'})`
-        ODataQueryParam.New().filter(ODataFilter.New().field('name').eqString('theo'))
-      );
+      const results = await PeopleService.find(filter({ name: 'theo' }));
 
       expect(results).toHaveLength(1);
       expect(results[0].pid).not.toBeUndefined();
