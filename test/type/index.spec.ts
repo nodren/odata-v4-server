@@ -270,6 +270,7 @@ describe('Typeorm Test Suite', () => {
       @Property()
       name: string
     }
+
     const conn = await createTmpConnection({
       name: 'default_service_api_unit_conn',
       entityPrefix: 'odata_server_unit_index_04_',
@@ -277,15 +278,15 @@ describe('Typeorm Test Suite', () => {
     });
     const { odata, server } = await createServerAndClient(conn, People11);
 
-    const { tx, service } = await odata.getServiceWithNewContext(People11);
+    const { tx, services: [PeopleService] } = await odata.getServicesWithNewContext(People11);
 
     try {
 
-      const items = await service.find();
+      const items = await PeopleService.find();
       expect(items).toHaveLength(0);
 
-      await service.create({ name: 'theo' });
-      const results = await service.find(
+      await PeopleService.create({ name: 'theo' });
+      const results = await PeopleService.find(
         // TO DO, support provide partial object to filter,
         // like `param.filter({'name':'theo'})`
         ODataQueryParam.New().filter(ODataFilter.New().field('name').eqString('theo'))

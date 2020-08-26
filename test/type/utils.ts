@@ -45,7 +45,7 @@ export const createTmpConnection = (opt?: Partial<ConnectionOptions>) => {
       sslValidateCertificate: Boolean(process.env.HANA_CLOUD_VERIFY),
 
       // the hana instance for gh test is shared, add prefix to make parallel test correctly
-      entityPrefix: process.pid.toString(),
+      dropSchema: true,
 
       pool: {
         requestTimeout: 30 * 1000
@@ -57,7 +57,11 @@ export const createTmpConnection = (opt?: Partial<ConnectionOptions>) => {
     };
   }
 
-  return createConnection(Object.assign(defaultOpt, opt, { synchronize: true }));
+  return createConnection(Object.assign(
+    defaultOpt,
+    opt,
+    { synchronize: true, entityPrefix: `${process.pid}_${opt.entityPrefix || 'default'}` }
+  ));
 };
 
 interface R { server: Server, client: ODataV4, odata: typeof TypedODataServer }

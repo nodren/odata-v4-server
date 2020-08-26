@@ -35,20 +35,22 @@ export class TypedODataServer extends ODataServer {
    * get service instance with transaction context for specific entity
    *
    * @external
-   * @param entityType entity type of service
+   * @param entityTypes entity types
    */
-  public static async getServiceWithNewContext<E extends typeof BaseODataModel>(entityType: E): Promise<{
+  public static async getServicesWithNewContext<T = Array<any>>(...entityTypes: T): Promise<{
     tx: TransactionContext,
-    service: InjectWrappedInstance<TypedService<InstanceType<E>>>
+    services: { [K in keyof T]: InjectWrappedInstance<TypedService<InstanceType<T[K]>>> }
   }> {
     const ic = await this.getInjectContainer().createSubContainer();
     const tx = createTransactionContext();
     ic.registerInstance(InjectKey.ODataTxContextParameter, tx);
-    ic.registerInstance(InjectKey.ODataTypeParameter, entityType);
-    return {
-      service: ic.wrap(await this.getControllerInstance(entityType)),
-      tx
-    };
+
+    const services = await Promise.all(entityTypes.map(async (entityType) => {
+      const innerContainer = await ic.createSubContainer();
+      innerContainer.registerInstance(InjectKey.ODataTypeParameter, entityType);
+      return innerContainer.wrap(await this.getControllerInstance(entityType));
+    }));
+    return { services, tx };
   };
 
 }

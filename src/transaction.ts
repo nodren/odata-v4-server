@@ -9,6 +9,9 @@ const logger = createLogger('type:tx');
 const transactionStorage = new Map<string, QueryRunner>();
 
 export interface TransactionContext {
+  /**
+   * the uuid of this transaction
+   */
   uuid: string;
   /**
    * commit transaction
