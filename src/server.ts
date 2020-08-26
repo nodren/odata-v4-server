@@ -1,4 +1,4 @@
-import { InjectContainer, SubLevelInjectContainer } from '@newdash/inject';
+import { InjectContainer } from '@newdash/inject';
 import { Edm as Metadata, ServiceDocument, ServiceMetadata } from '@odata/metadata';
 import * as ODataParser from '@odata/parser';
 import { Token } from '@odata/parser/lib/lexer';
@@ -182,7 +182,7 @@ export class ODataServerBase extends Transform {
   }
 
   static async createProcessor(context: any, options?: ODataProcessorOptions) {
-    const requestContainer = await this.getInjectContainer().getInstance(SubLevelInjectContainer);
+    const requestContainer = await this.getInjectContainer().createSubContainer();
     requestContainer.registerInstance(InjectKey.RequestContext, context);
     requestContainer.registerInstance(InjectKey.ProcessorOption, options);
     return requestContainer.getInstance(ODataProcessor);
