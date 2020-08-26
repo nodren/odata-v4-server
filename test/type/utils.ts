@@ -31,16 +31,22 @@ export const createTmpConnection = (opt?: Partial<ConnectionOptions>) => {
       extra: { max: 10 }
     };
   } else if (process.env.HANA_USER) {
-    // sap must use the upper case username/schema name
     defaultOpt = {
       type: 'sap',
+
+      // sap must use the upper case username/schema name
       username: process.env.HANA_USER.toUpperCase(),
       password: process.env.HANA_PASSWORD,
       host: process.env.HANA_HOST || '127.0.0.1',
       schema: (process.env.HANA_DATABASE || process.env.HANA_USER).toUpperCase(),
+
       port: parseInt(process.env.HANA_PORT),
       encrypt: Boolean(process.env.HANA_CLOUD_VERIFY),
       sslValidateCertificate: Boolean(process.env.HANA_CLOUD_VERIFY),
+
+      // the hana instance for gh test is shared, add prefix to make parallel test correctly
+      entityPrefix: process.pid.toString(),
+
       pool: {
         requestTimeout: 30 * 1000
       }
