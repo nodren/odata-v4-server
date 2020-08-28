@@ -1099,7 +1099,7 @@ export class ODataProcessor extends Transform {
         break;
     }
 
-    if (ic) {
+    if (this.serverType.variant == ServerType.typed && ic !== undefined) {
       const preferParams = fnCaller.getFnParam(fn, params);
       currentResult = await ic.injectExecute(ctrlInstance, fn, ...preferParams);
     } else {
@@ -1299,7 +1299,7 @@ export class ODataProcessor extends Transform {
         const boundOp = entityBoundOp || ctrlBoundOp || expOp;
 
         let opResult;
-        if (ic) {
+        if (this.serverType.variant == ServerType.typed && ic !== undefined) {
           const predefineParams = fnCaller.getFnParam(boundOp, part.params);
           opResult = await ic.injectExecute(scope, boundOp, ...predefineParams);
         } else {

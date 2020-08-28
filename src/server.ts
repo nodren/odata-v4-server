@@ -175,6 +175,11 @@ export class ODataServerBase extends Transform {
         InjectKey.ServerType,
         InjectKey.TransactionQueryRunner,
         InjectKey.TransactionConnection,
+        InjectKey.ProcessorOption,
+        InjectKey.RequestContext,
+        InjectKey.Response,
+        InjectKey.ODataBodyParameter,
+        InjectKey.ODataQueryParameter,
         InjectKey.GlobalConnection,
         InjectKey.ODataTypeParameter,
         InjectKey.DatabaseHelper

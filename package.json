@@ -38,7 +38,7 @@
   ],
   "dependencies": {
     "@cypress/schema-tools": "^4.7.4",
-    "@newdash/inject": "^0.2.11",
+    "@newdash/inject": "^0.2.14",
     "@newdash/newdash": "^5.13.0",
     "@odata/metadata": "^0.1.14",
     "@odata/parser": "^0.2.1",
@@ -58,15 +58,15 @@
     "uuid": "^8.3.0"
   },
   "devDependencies": {
-    "@odata/client": "^2.10.0",
+    "@odata/client": "^2.10.1",
     "@types/body-parser": "1.19.0",
-    "@types/cors": "^2.8.6",
+    "@types/cors": "^2.8.7",
     "@types/debug": "^4.1.5",
     "@types/event-stream": "^3.3.34",
     "@types/jest": "^26.0.10",
     "@types/jsonstream": "^0.8.30",
-    "@types/mongodb": "^3.1.1",
-    "@types/node": "^14.6.0",
+    "@types/mongodb": "^3.5.26",
+    "@types/node": "^14.6.1",
     "@types/qs": "^6.9.4",
     "@types/request": "^2.48.5",
     "@types/request-promise": "^4.1.46",
