@@ -5,8 +5,7 @@ import { isArray } from '@newdash/newdash/isArray';
 import { isEmpty } from '@newdash/newdash/isEmpty';
 import { defaultParser, ODataFilter, ODataQueryParam, param } from '@odata/parser';
 import 'reflect-metadata';
-import { Connection, QueryRunner, Repository } from 'typeorm';
-import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
+import { Connection, DeepPartial, QueryRunner, Repository } from 'typeorm';
 import { getKeyProperties, ODataQuery } from '..';
 import { InjectKey } from '../constants';
 import { ODataController } from '../controller';
@@ -370,7 +369,7 @@ export class TypedService<T = any> extends ODataController {
   }
 
   @odata.POST
-  async create(@odata.body body: QueryDeepPartialEntity<T>) {
+  async create(@odata.body body: DeepPartial<T>): Promise<T> {
     const repo = await this._getRepository();
     await this._transformInboundPayload(body);
 
@@ -394,7 +393,7 @@ export class TypedService<T = any> extends ODataController {
 
   // create or update
   @odata.PUT
-  async save(@odata.key key, @odata.body body: QueryDeepPartialEntity<T>) {
+  async save(@odata.key key, @odata.body body: DeepPartial<T>) {
     const repo = await this._getRepository();
     if (key) {
       const item = await repo.findOne(key);
@@ -408,7 +407,7 @@ export class TypedService<T = any> extends ODataController {
 
   // odata patch will not response any content
   @odata.PATCH
-  async update(@odata.key key: any, @odata.body body: QueryDeepPartialEntity<T>) {
+  async update(@odata.key key: any, @odata.body body: DeepPartial<T>) {
     await this._transformInboundPayload(body);
     const repo = await this._getRepository();
     const instance = body;

@@ -31,6 +31,20 @@ export class TypedODataServer extends ODataServer {
     return this.getControllerInstance(entityType);
   };
 
+  public static async getServicesWithContext<T = Array<any>>(tx: TransactionContext, ...entityTypes: T): Promise<{
+    [K in keyof T]: InjectWrappedInstance<TypedService<InstanceType<T[K]>>>
+  }> {
+    const ic = await this.getInjectContainer().createSubContainer();
+    ic.registerInstance(InjectKey.ODataTxContextParameter, tx);
+    const services = await Promise.all(entityTypes.map(async (entityType) => {
+      const innerContainer = await ic.createSubContainer();
+      innerContainer.registerInstance(InjectKey.ODataTypeParameter, entityType);
+      return innerContainer.wrap(await this.getControllerInstance(entityType));
+    }));
+    return services;
+  };
+
+
   /**
    * get service instance with transaction context for specific entity
    *
@@ -41,15 +55,8 @@ export class TypedODataServer extends ODataServer {
     tx: TransactionContext,
     services: { [K in keyof T]: InjectWrappedInstance<TypedService<InstanceType<T[K]>>> }
   }> {
-    const ic = await this.getInjectContainer().createSubContainer();
     const tx = createTransactionContext();
-    ic.registerInstance(InjectKey.ODataTxContextParameter, tx);
-
-    const services = await Promise.all(entityTypes.map(async (entityType) => {
-      const innerContainer = await ic.createSubContainer();
-      innerContainer.registerInstance(InjectKey.ODataTypeParameter, entityType);
-      return innerContainer.wrap(await this.getControllerInstance(entityType));
-    }));
+    const services = await this.getServicesWithContext(tx, ...entityTypes);
     return { services, tx };
   };
 

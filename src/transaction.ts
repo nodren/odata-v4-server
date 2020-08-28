@@ -14,11 +14,11 @@ export interface TransactionContext {
    */
   uuid: string;
   /**
-   * commit transaction
+   * commit transaction if existed
    */
   commit: () => Promise<void>;
   /**
-   * rollback transaction
+   * rollback transaction if existed
    */
   rollback: () => Promise<void>;
 }
@@ -48,7 +48,7 @@ export const createTransactionContext = (): TransactionContext => {
   const tx: TransactionContext = {
     uuid: v4(),
     commit: () => commitTransaction(tx),
-    rollback:() => rollbackTransaction(tx)
+    rollback: () => rollbackTransaction(tx)
   };
   return tx;
 };

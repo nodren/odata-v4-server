@@ -300,7 +300,6 @@ export class ODataServerBase extends Transform {
       throw new TypeError(`${controllerOrEntityType?.name} is not a controller or entity type.`);
     }
 
-
     return this.getInjectContainer().getInstance(serviceType as ODataController);
   }
 
