@@ -127,7 +127,7 @@ export const transformQueryAst = (node: ODataQuery, nameMapper: FieldNameMapper 
     sqlQuery += ` WHERE ${where}`;
   }
   if (offset || limit) {
-    sqlQuery += ` LIMIT ${offset}, ${limit}`;
+    sqlQuery += ` LIMIT ${limit} OFFSET ${offset}`;
   }
   if (orderBy.length > 0) {
     sqlQuery += ` ORDERBY ${orderBy.join(', ')}`;

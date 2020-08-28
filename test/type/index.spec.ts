@@ -16,7 +16,7 @@ describe('Typeorm Test Suite', () => {
     const ast = defaultParser.query('$format=json&$select=A,B,C&$top=10&$skip=30&$filter=A eq 1&$orderby=A desc,V asc');
     const { selectedFields, sqlQuery } = transformQueryAst(ast);
 
-    expect(sqlQuery.trim()).toEqual('WHERE A = 1 LIMIT 30, 10 ORDERBY A DESC, V ASC');
+    expect(sqlQuery.trim()).toEqual('WHERE A = 1 LIMIT 10 OFFSET 30 ORDERBY A DESC, V ASC');
     expect(selectedFields).toEqual(['A', 'B', 'C']);
 
   });
@@ -33,7 +33,7 @@ describe('Typeorm Test Suite', () => {
     const nameMapper: FieldNameMapper = (fieldName) => `table.${fieldName}`;
     const { selectedFields, sqlQuery } = transformQueryAst(ast, nameMapper);
 
-    expect(sqlQuery.trim()).toEqual('WHERE table.A = 1 LIMIT 30, 10 ORDERBY table.A DESC, table.V ASC');
+    expect(sqlQuery.trim()).toEqual('WHERE table.A = 1 LIMIT 10 OFFSET 30 ORDERBY table.A DESC, table.V ASC');
     expect(selectedFields).toEqual(['table.A', 'table.B', 'table.C']);
 
   });
