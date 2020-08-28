@@ -56,3 +56,5 @@ jobs:
         MYSQL_PASSWORD: odata_test
         MYSQL_DATABASE: odata_test
         MYSQL_PORT: ${{ job.services.mysql.ports[3306] }}
+        TEST_DB_LOG: true
+

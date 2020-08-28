@@ -58,3 +58,4 @@ jobs:
         PG_PORT: ${{ job.services.postgres.ports[5432] }}
         PG_USER: odataserver
         PG_PASSWORD: odataserver
+        TEST_DB_LOG: true

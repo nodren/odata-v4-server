@@ -19,6 +19,7 @@ export const createTmpConnection = (opt?: Partial<ConnectionOptions>) => {
       database: process.env.MYSQL_DATABASE || process.env.MYSQL_USER,
       port: parseInt(process.env.MYSQL_PORT),
       charset: 'utf8mb4_unicode_ci'
+
     };
   } else if (process.env.PG_USER) {
     defaultOpt = {
@@ -60,7 +61,11 @@ export const createTmpConnection = (opt?: Partial<ConnectionOptions>) => {
   return createConnection(Object.assign(
     defaultOpt,
     opt,
-    { synchronize: true, entityPrefix: `${process.pid}_${opt.entityPrefix || 'default'}` }
+    {
+      synchronize: true,
+      entityPrefix: `${process.pid}_${opt.entityPrefix || 'default'}`,
+      logging: Boolean(process.env.TEST_DB_LOG)
+    }
   ));
 };
 
