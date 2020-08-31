@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.31](https://github.com/Soontao/odata-v4-server/compare/v0.2.30...v0.2.31) (2020-08-31)
+
+
+### Features
+
+* add new api to typed-server ([ed28944](https://github.com/Soontao/odata-v4-server/commit/ed289447b8e8862e4ea2080ab7b3ff6646cb546f))
+
+
+### Bug Fixes
+
+* hana again ([7a16d2f](https://github.com/Soontao/odata-v4-server/commit/7a16d2f64708d6bb298796339dfd63cb8999365c))
+* limit offset keyword ([ca2a145](https://github.com/Soontao/odata-v4-server/commit/ca2a1454bfe815446793e73da2d37345d1cf1df7))
+* type issue ([adcb38c](https://github.com/Soontao/odata-v4-server/commit/adcb38c15192d64b398f15b7c309315fbc65d3f1))
+* unit test for hana ([fe5ec56](https://github.com/Soontao/odata-v4-server/commit/fe5ec566a12b6cf04815847953348780fd8cbe57))
+
 ### [0.2.30](https://github.com/Soontao/odata-v4-server/compare/v0.2.29...v0.2.30) (2020-08-20)
 
 
