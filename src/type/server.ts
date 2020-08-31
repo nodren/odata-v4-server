@@ -14,6 +14,9 @@ import { TypedService } from './service';
 
 const logger = createLogger('type:server');
 
+type InstanceType<T> = T extends new (...args: any) => infer R ? R : any;
+type TypedODataItems = typeof BaseODataModel | typeof BaseHookProcessor
+
 /**
  * typed odata server
  */
@@ -31,7 +34,7 @@ export class TypedODataServer extends ODataServer {
     return this.getControllerInstance(entityType);
   };
 
-  public static async getServicesWithContext<T = Array<any>>(tx: TransactionContext, ...entityTypes: T): Promise<{
+  public static async getServicesWithContext<T extends Array<any> = any[]>(tx: TransactionContext, ...entityTypes: T): Promise<{
     [K in keyof T]: InjectWrappedInstance<TypedService<InstanceType<T[K]>>>
   }> {
     const ic = await this.getInjectContainer().createSubContainer();
@@ -51,7 +54,7 @@ export class TypedODataServer extends ODataServer {
    * @external
    * @param entityTypes entity types
    */
-  public static async getServicesWithNewContext<T = Array<any>>(...entityTypes: T): Promise<{
+  public static async getServicesWithNewContext<T extends Array<new (...args: any[]) => any> = any[]>(...entityTypes: T): Promise<{
     tx: TransactionContext,
     services: { [K in keyof T]: InjectWrappedInstance<TypedService<InstanceType<T[K]>>> }
   }> {
@@ -62,7 +65,6 @@ export class TypedODataServer extends ODataServer {
 
 }
 
-type TypedODataItems = typeof BaseODataModel | typeof BaseHookProcessor
 
 export async function createTypedODataServer(connectionOpt: Connection, ...configurations: Array<TypedODataItems>): Promise<typeof TypedODataServer>;
 export async function createTypedODataServer(connectionOpt: ConnectionOptions, ...configurations: Array<TypedODataItems>): Promise<typeof TypedODataServer>;
