@@ -112,10 +112,10 @@ export class MySqlDBHelper extends BaseDBHelper {
 
     const { sqlQuery, count, where, selectedFields } = transformQueryAst(
       query,
-      (col) => buildName(schema, tableName, colNameMapper(col))
+      (col) => buildName(`\`${schema}\``, `\`${tableName}\``, `\`${colNameMapper(col)}\``)
     );
 
-    const sSelects = isEmpty(selectedFields) ? '*' : selectedFields.map((f) => `\`${f}\``).join(', ');
+    const sSelects = isEmpty(selectedFields) ? '*' : selectedFields.join(', ');
 
     const queryStatement = `select ${sSelects} from ${fullTableName} ${sqlQuery};`;
 
