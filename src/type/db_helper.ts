@@ -67,14 +67,16 @@ export class BaseDBHelper implements DBHelper {
       colNameMapper = (v) => v;
     }
 
-    const fullTableName = buildNameWithQuote(schema, tableName);
+    const fullTableName = buildNameWithQuote(`\`${schema}\``, `\`${tableName}\``);
 
     const { sqlQuery, count, where, selectedFields } = transformQueryAst(
       query,
-      (col) => buildNameWithQuote(schema, tableName, colNameMapper(col))
+      (col) => buildNameWithQuote(`\`${schema}\``, `\`${tableName}\``, colNameMapper(col))
     );
 
-    const queryStatement = `SELECT ${isEmpty(selectedFields) ? '*' : selectedFields.join(', ')} FROM ${fullTableName} ${sqlQuery};`;
+    const sSelects = isEmpty(selectedFields) ? '*' : selectedFields.map((f) => `\`${f}\``).join(', ');
+
+    const queryStatement = `SELECT ${sSelects} FROM ${fullTableName} ${sqlQuery};`;
     let countStatement = undefined;
 
     if (count) {
