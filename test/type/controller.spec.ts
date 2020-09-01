@@ -43,7 +43,7 @@ describe('Typed Controller Test Suite', () => {
 
     const conn = await createTmpConnection({
       name: 'controller_call_test_conn',
-      entityPrefix: 'odata_server_unit_controller_01_',
+      entityPrefix: 'unit_controller_01_',
       entities
     });
 
