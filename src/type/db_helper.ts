@@ -67,16 +67,14 @@ export class BaseDBHelper implements DBHelper {
       colNameMapper = (v) => v;
     }
 
-    const fullTableName = buildNameWithQuote(`\`${schema}\``, `\`${tableName}\``);
+    const fullTableName = buildNameWithQuote(schema, tableName);
 
     const { sqlQuery, count, where, selectedFields } = transformQueryAst(
       query,
-      (col) => buildNameWithQuote(`\`${schema}\``, `\`${tableName}\``, colNameMapper(col))
+      (col) => buildNameWithQuote(schema, tableName, colNameMapper(col))
     );
 
-    const sSelects = isEmpty(selectedFields) ? '*' : selectedFields.map((f) => `\`${f}\``).join(', ');
-
-    const queryStatement = `SELECT ${sSelects} FROM ${fullTableName} ${sqlQuery};`;
+    const queryStatement = `SELECT ${isEmpty(selectedFields) ? '*' : selectedFields.join(', ')} FROM ${fullTableName} ${sqlQuery};`;
     let countStatement = undefined;
 
     if (count) {
@@ -110,14 +108,16 @@ export class MySqlDBHelper extends BaseDBHelper {
       colNameMapper = (v) => v;
     }
 
-    const fullTableName = buildName(schema, tableName);
+    const fullTableName = buildName(`\`${schema}\``, `\`${tableName}\``);
 
     const { sqlQuery, count, where, selectedFields } = transformQueryAst(
       query,
       (col) => buildName(schema, tableName, colNameMapper(col))
     );
 
-    const queryStatement = `select ${isEmpty(selectedFields) ? '*' : selectedFields.join(', ')} from ${fullTableName} ${sqlQuery};`;
+    const sSelects = isEmpty(selectedFields) ? '*' : selectedFields.map((f) => `\`${f}\``).join(', ');
+
+    const queryStatement = `select ${sSelects} from ${fullTableName} ${sqlQuery};`;
 
     let countStatement = undefined;
 
