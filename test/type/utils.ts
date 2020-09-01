@@ -3,11 +3,14 @@ import { OData, ODataV4 } from '@odata/client';
 import '@odata/client/lib/polyfill';
 import { Server } from 'http';
 import { Connection, ConnectionOptions, createConnection } from 'typeorm';
+import { v4 } from 'uuid';
 import { createTypedODataServer, TypedODataServer } from '../../src';
 import { randomPort } from '../utils/randomPort';
 import { ready } from '../utils/server';
 
 export const createTmpConnection = (opt?: Partial<ConnectionOptions>) => {
+  const randomPrefix = v4().split('-').pop();
+
   let defaultOpt: ConnectionOptions;
 
   if (process.env.MYSQL_USER) {
@@ -63,7 +66,7 @@ export const createTmpConnection = (opt?: Partial<ConnectionOptions>) => {
     opt,
     {
       synchronize: true,
-      entityPrefix: `${process.pid}_${opt.entityPrefix || 'default'}`,
+      entityPrefix: `${randomPrefix}_${opt.entityPrefix || 'default'}`,
       logging: Boolean(process.env.TEST_DB_LOG)
     }
   ));
