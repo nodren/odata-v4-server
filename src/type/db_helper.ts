@@ -55,6 +55,8 @@ const buildName = (...names: string[]): string => names.filter(Boolean).join('.'
 
 const buildNameWithQuote = (...names: string[]): string => names.filter(Boolean).map((name) => `"${name}"`).join('.');
 
+const buildNameWithBackQuote = (...names: string[]): string => names.filter(Boolean).map((name) => `\`${name}\``).join('.');
+
 export class BaseDBHelper implements DBHelper {
 
   getDatabaseType(): EDatabaseType {
@@ -108,11 +110,11 @@ export class MySqlDBHelper extends BaseDBHelper {
       colNameMapper = (v) => v;
     }
 
-    const fullTableName = buildName(`\`${schema}\``, `\`${tableName}\``);
+    const fullTableName = buildNameWithBackQuote(schema, tableName);
 
     const { sqlQuery, count, where, selectedFields } = transformQueryAst(
       query,
-      (col) => buildName(`\`${schema}\``, `\`${tableName}\``, `\`${colNameMapper(col)}\``)
+      (col) => buildNameWithBackQuote(schema, tableName, colNameMapper(col))
     );
 
     const sSelects = isEmpty(selectedFields) ? '*' : selectedFields.join(', ');

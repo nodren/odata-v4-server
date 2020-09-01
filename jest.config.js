@@ -6,7 +6,7 @@ module.exports = {
   'testMatch': [
     '**/test/**/?(*.)+(spec|test).[jt]s?(x)'
   ],
-  'testTimeout': 120 * 1000,
+  'testTimeout': 10 * 60 * 1000, // 10 minutes
   'collectCoverageFrom': [
     'src/**/*',
     '!**/node_modules/**'
