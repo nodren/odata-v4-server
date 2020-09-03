@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.33](https://github.com/Soontao/odata-v4-server/compare/v0.2.32...v0.2.33) (2020-09-03)
+
+
+### Features
+
+* update mysql db helper ([c43f7b3](https://github.com/Soontao/odata-v4-server/commit/c43f7b3e3d49e3a5aa4344a44fec4091d198673f))
+
+
+### Bug Fixes
+
+* db helper for mysql ([056bc94](https://github.com/Soontao/odata-v4-server/commit/056bc9440e9ea3353e6b379294f790d784500ea0))
+* db_helper ([184ffd7](https://github.com/Soontao/odata-v4-server/commit/184ffd7978118ff18211c0b0c24d48d02285fdb3))
+* mysql builder & timeout ([a1794a9](https://github.com/Soontao/odata-v4-server/commit/a1794a9835e64f4a08e2a06d829fc52de6b65a9d))
+* unit test table length for mysql ([17a1760](https://github.com/Soontao/odata-v4-server/commit/17a176062f5cec02b5e32d7cae04acf836e1227c))
+* **ci:** hana table prefix ([0e8f23a](https://github.com/Soontao/odata-v4-server/commit/0e8f23a70d39f50642068bddc3694d5c21ec53a6))
+
 ### [0.2.32](https://github.com/Soontao/odata-v4-server/compare/v0.2.31...v0.2.32) (2020-09-01)
 
 ### [0.2.31](https://github.com/Soontao/odata-v4-server/compare/v0.2.30...v0.2.31) (2020-08-31)
