@@ -1,3 +1,4 @@
+import { isClass } from '@newdash/inject/lib/utils';
 import { has } from '@newdash/newdash/has';
 import { isEmpty } from '@newdash/newdash/isEmpty';
 import toInteger from '@newdash/newdash/toInteger';
@@ -13,6 +14,7 @@ import { TypedService } from './service';
 
 const KEY_CONN_NAME = 'odata:controller:connection';
 const KEY_ODATA_ENTITY_PROP = 'odata.entity:entity_prop';
+const KEY_ODATA_ENTITY_PROPS = 'odata.entity:entity_props';
 const KEY_ODATA_ENTITY_SET = 'odata.entity:entity_set_name';
 const KEY_ODATA_PROP_NAVIGATION = 'odata.entity:entity_prop_navigation';
 const KEY_ODATA_ENTITY_NAVIGATIONS = 'odata.entity:entity_navigations';
@@ -125,6 +127,15 @@ export function ODataModel(options: EntityOptions = {}, entitySetName?: string) 
  */
 export const ODataEntityType = ODataModel;
 
+export const getODataColumns = (classOrInstance): Array<ColumnOptions> => {
+  if (isClass(classOrInstance)) {
+    return Reflect.getOwnMetadata(KEY_ODATA_ENTITY_PROPS, classOrInstance.prototype) || [];
+  }
+  return Reflect.getMetadata(KEY_ODATA_ENTITY_PROPS, classOrInstance) || [];
+};
+
+export const isODataEntityType = (classOrInstance): boolean => (getODataColumns(classOrInstance).length > 0);
+
 /**
  * ODataColumn
  *
@@ -134,8 +145,10 @@ export const ODataEntityType = ODataModel;
  */
 export function ODataColumn(options: ColumnOptions = {}) {
   return function (object: any, propertyName: string): void {
-    const { primary, length, precision, nullable } = options;
 
+    const entityColumns = getODataColumns(object);
+
+    const { primary, length, precision, nullable } = options;
 
     if (primary) {
       Edm.Key(object, propertyName);
@@ -189,6 +202,8 @@ export function ODataColumn(options: ColumnOptions = {}) {
         throw new NotImplementedError(`Not support the type of field '${propertyName}'.`);
     }
 
+    entityColumns.push(options);
+    Reflect.defineMetadata(KEY_ODATA_ENTITY_PROPS, entityColumns, object);
     Reflect.defineMetadata(KEY_ODATA_ENTITY_PROP, options, object, propertyName);
     Column(options)(object, propertyName);
 
@@ -214,9 +229,9 @@ export function getPropertyOptions(target: typeof BaseODataModel, propsName: str
  * @param defaultOption
  */
 export function createPropertyDecorator(defaultOption: ColumnOptions) {
-  return function (options?: ColumnOptions) {
+  return function (options?: ColumnOptions): PropertyDecorator {
     return function (target, propName) {
-      return ODataColumn({ ...defaultOption, ...options })(target, propName);
+      return ODataColumn({ ...defaultOption, ...options })(target, propName as string);
     };
   };
 }

@@ -1,4 +1,4 @@
-import { BaseODataModel, createPropertyDecorator, getPropertyOptions, KeyProperty, ODataEntityType, OptionalProperty, Property, UUIDKeyProperty } from '../../src';
+import { BaseODataModel, createPropertyDecorator, getODataColumns, getPropertyOptions, isODataEntityType, KeyProperty, ODataEntityType, OptionalProperty, Property, UUIDKeyProperty } from '../../src';
 import { shutdown } from '../utils/server';
 import { createServerAndClient } from './utils';
 
@@ -56,6 +56,30 @@ describe('Decorator Test Suite', () => {
     } finally {
       await shutdown(server);
     }
+
+
+  });
+
+  it('should support get odata columns for entities', () => {
+
+    class A {
+
+      @Property({}) a: number;
+
+      @Property({}) b: string;
+
+    }
+    const entityProps = getODataColumns(A);
+
+    expect(entityProps).toHaveLength(2);
+    expect(entityProps[0].type).toBe(Number);
+    expect(entityProps[1].type).toBe(String);
+
+    expect(getODataColumns(new A)).toHaveLength(2);
+
+    expect(isODataEntityType(class C { })).toBeFalsy();
+    expect(isODataEntityType(A)).toBeTruthy();
+    expect(isODataEntityType(new A)).toBeTruthy();
 
 
   });

@@ -3,9 +3,9 @@ import { OData } from '@odata/client';
 import '@odata/client/lib/polyfill';
 import { defaultParser, filter } from '@odata/parser';
 import 'reflect-metadata';
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Entity } from 'typeorm';
 import { v4 } from 'uuid';
-import { BaseODataModel, Edm, FieldNameMapper, getODataNavigation, IncKeyProperty, ODataColumn, ODataEntityType, ODataModel, ODataNavigation, Property, transformFilterAst, transformQueryAst } from '../../src';
+import { BaseODataModel, FieldNameMapper, getODataNavigation, IncKeyProperty, ODataColumn, ODataEntityType, ODataModel, ODataNavigation, Property, transformFilterAst, transformQueryAst } from '../../src';
 import { shutdown } from '../utils/server';
 import { createServerAndClient, createTmpConnection } from './utils';
 
@@ -54,17 +54,13 @@ describe('Typeorm Test Suite', () => {
     @Entity()
     class Student extends BaseODataModel {
 
-      @Edm.Key
-      @Edm.Int32
-      @PrimaryGeneratedColumn()
+      @IncKeyProperty()
       id: number;
 
-      @Edm.String
-      @Column()
+      @Property()
       name: string;
 
-      @Edm.Int32
-      @Column()
+      @Property()
       age: number;
 
     }
@@ -72,17 +68,13 @@ describe('Typeorm Test Suite', () => {
     @Entity()
     class Class extends BaseODataModel {
 
-      @Edm.Key
-      @Edm.Int32
-      @PrimaryGeneratedColumn()
+      @IncKeyProperty()
       id: number;
 
-      @Edm.String
-      @Column()
+      @Property()
       name: string;
 
-      @Edm.String
-      @Column()
+      @Property()
       desc: string;
 
     }

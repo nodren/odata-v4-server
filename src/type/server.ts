@@ -7,7 +7,7 @@ import { createLogger } from '../logger';
 import { ODataServer } from '../server';
 import { createTransactionContext, TransactionContext } from '../transaction';
 import { createDBHelper } from './db_helper';
-import { getODataEntitySetName, withConnection, withDBHelper, withEntityType, withODataServerType } from './decorators';
+import { getODataEntitySetName, isODataEntityType, withConnection, withDBHelper, withEntityType, withODataServerType } from './decorators';
 import { BaseODataModel, validateEntityType } from './entity';
 import { BaseHookProcessor, withHook } from './hooks';
 import { TypedService } from './service';
@@ -123,7 +123,13 @@ export async function createTypedODataServer(connection: any, ...configurations:
           withODataServerType(serverType)(configuration);
           withConnection(connName)(configuration);
 
-          if (configuration.prototype instanceof BaseODataModel) {
+          if (configuration.prototype instanceof BaseHookProcessor || configuration instanceof BaseHookProcessor) {
+
+            logger(`load hook %s`, configuration?.name || 'Unknown hook');
+
+            withHook(configuration)(serverType);
+
+          } else if (isODataEntityType(configuration)) {
 
             const entityType = configuration;
 
@@ -152,13 +158,8 @@ export async function createTypedODataServer(connection: any, ...configurations:
             // default public controller
             odata.withController(controllerType, entitySetName, configuration)(serverType);
 
-          } else if (configuration.prototype instanceof BaseHookProcessor || configuration instanceof BaseHookProcessor) {
-
-            logger(`load hook %s`, configuration?.name || 'Unknown hook');
-
-            withHook(configuration)(serverType);
-
           }
+
 
         });
 
