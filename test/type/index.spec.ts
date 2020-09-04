@@ -81,7 +81,7 @@ describe('Typeorm Test Suite', () => {
 
     const conn = await createTmpConnection({
       name: 'shortcut_test_conn',
-      entityPrefix: 'unit_index_01_',
+      entityPrefix: 'u_idx_01_',
       entities: [Student, Class]
     });
 
@@ -183,7 +183,7 @@ describe('Typeorm Test Suite', () => {
 
     const conn = await createTmpConnection({
       name: 'datetime_query_conn',
-      entityPrefix: 'unit_index_02_',
+      entityPrefix: 'u_idx_02_',
       entities: [TimeSheet]
     });
 
@@ -233,7 +233,7 @@ describe('Typeorm Test Suite', () => {
 
     const conn = await createTmpConnection({
       name: 'default_value_unit_conn',
-      entityPrefix: 'unit_index_03_',
+      entityPrefix: 'u_idx_03_',
       entities: [T3]
     });
 
@@ -265,7 +265,7 @@ describe('Typeorm Test Suite', () => {
 
     const conn = await createTmpConnection({
       name: 'default_service_api_unit_conn',
-      entityPrefix: 'unit_index_04_',
+      entityPrefix: 'u_idx_04_',
       entities: [People11]
     });
     const { odata, server } = await createServerAndClient(conn, People11);

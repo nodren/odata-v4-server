@@ -66,7 +66,7 @@ export const createTmpConnection = (opt?: Partial<ConnectionOptions>) => {
     opt,
     {
       synchronize: true,
-      entityPrefix: `${randomPrefix}_${opt.entityPrefix || 'default'}`,
+      entityPrefix: `t_${randomPrefix.slice(0, 5)}_${opt.entityPrefix || 'default'}`,
       logging: Boolean(process.env.TEST_DB_LOG)
     }
   ));

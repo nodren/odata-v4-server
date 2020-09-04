@@ -9,7 +9,6 @@ import { createServerAndClient, createTmpConnection } from './utils';
 
 describe('Hooks Test Suite', () => {
 
-
   it('should register hooks', () => {
 
     const s1 = class extends TypedODataServer { };
@@ -139,7 +138,7 @@ describe('Hooks Test Suite', () => {
 
     const conn = await createTmpConnection({
       name: 'hook_test_conn',
-      entityPrefix: 'unit_hook_01_',
+      entityPrefix: 'u_hook_01_',
       entities
     });
 
@@ -193,7 +192,7 @@ describe('Hooks Test Suite', () => {
 
     const conn = await createTmpConnection({
       name: 'hook_class_test_conn',
-      entityPrefix: 'unit_hook_02_',
+      entityPrefix: 'u_hook_02_',
       entities
     });
 
@@ -276,7 +275,7 @@ describe('Hooks Test Suite', () => {
 
     const conn = await createTmpConnection({
       name: 'hook_class_tx_conn',
-      entityPrefix: 'unit_hook_03_',
+      entityPrefix: 'u_hook_03_',
       entities
     });
 
