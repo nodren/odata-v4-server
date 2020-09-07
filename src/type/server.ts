@@ -11,6 +11,7 @@ import { getODataEntitySetName, isODataEntityType, withConnection, withDBHelper,
 import { BaseODataModel, validateEntityType } from './entity';
 import { BaseHookProcessor, withHook } from './hooks';
 import { TypedService } from './service';
+import { Class } from './types';
 
 const logger = createLogger('type:server');
 
@@ -30,7 +31,7 @@ export class TypedODataServer extends ODataServer {
    * @internal
    * @param entityType entity type of service
    */
-  public static async getService<E extends typeof BaseODataModel>(entityType: E): Promise<TypedService<InstanceType<E>>> {
+  public static async getService<E extends Class>(entityType: E): Promise<TypedService<InstanceType<E>>> {
     return this.getControllerInstance(entityType);
   };
 

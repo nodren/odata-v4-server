@@ -11,6 +11,7 @@ import { DateTimeTransformer, DBHelper } from './db_helper';
 import { BaseODataModel } from './entity';
 import { TypedODataServer } from './server';
 import { TypedService } from './service';
+import { Class } from './types';
 
 const KEY_CONN_NAME = 'odata:controller:connection';
 const KEY_ODATA_ENTITY_PROP = 'odata.entity:entity_prop';
@@ -54,11 +55,7 @@ export function withEntitySetName(entitySetName: string) {
  */
 export function withEntityType(entity: any) {
   return function (target: any) {
-    if (entity.prototype instanceof BaseODataModel) {
-      Reflect.defineMetadata(KEY_ODATA_ENTITY_TYPE, entity, target);
-    } else {
-      throw new TypeError('Must provide sub-class of BaseODataModel');
-    }
+    Reflect.defineMetadata(KEY_ODATA_ENTITY_TYPE, entity, target);
   };
 }
 
@@ -264,19 +261,19 @@ export const Property = createPropertyDecorator({});
  */
 export const OptionalProperty = createPropertyDecorator({ nullable: true });
 
-interface BaseNavigation<T extends typeof BaseODataModel = any> {
+interface BaseNavigation<T extends Class = any> {
   /**
    * nav target entity
    */
   entity: (type?: any) => T,
 }
 
-interface OneToManyNavigationOption<T extends typeof BaseODataModel = any> extends BaseNavigation<T> {
+interface OneToManyNavigationOption<T extends Class = any> extends BaseNavigation<T> {
   type: 'OneToMany';
   targetForeignKey: keyof InstanceType<T>;
 }
 
-interface ManyToOneNavigationOption<T extends typeof BaseODataModel = any> extends BaseNavigation<T> {
+interface ManyToOneNavigationOption<T extends Class = any> extends BaseNavigation<T> {
   type: 'ManyToOne';
   /**
   * (ref) foreignKey,
@@ -286,7 +283,7 @@ interface ManyToOneNavigationOption<T extends typeof BaseODataModel = any> exten
   foreignKey: string;
 }
 
-interface OneToOneNavigationOption<T extends typeof BaseODataModel = any> extends BaseNavigation<T> {
+interface OneToOneNavigationOption<T extends Class = any> extends BaseNavigation<T> {
   type: 'OneToOne';
   /**
   * (ref) foreignKey,
@@ -300,7 +297,7 @@ interface OneToOneNavigationOption<T extends typeof BaseODataModel = any> extend
   targetForeignKey?: keyof InstanceType<T>;
 }
 
-export type NavigationOptions<T extends typeof BaseODataModel = any> = OneToManyNavigationOption<T> | ManyToOneNavigationOption<T> | OneToOneNavigationOption<T>;
+export type NavigationOptions<T extends Class = any> = OneToManyNavigationOption<T> | ManyToOneNavigationOption<T> | OneToOneNavigationOption<T>;
 /**
  * ODataNavigation decorator
  *
@@ -308,7 +305,7 @@ export type NavigationOptions<T extends typeof BaseODataModel = any> = OneToMany
  *
  * @param options
  */
-export function ODataNavigation<T extends typeof BaseODataModel>(options: NavigationOptions<T>) {
+export function ODataNavigation<T extends Class>(options: NavigationOptions<T>) {
   return function (target: any, propertyName: string): void {
 
     const entityName = target?.constructor?.name;

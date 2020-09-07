@@ -1,8 +1,8 @@
 import { Teacher } from '.';
-import { BaseODataModel, ODataColumn, ODataModel, ODataNavigation } from '../../../src';
+import { ODataColumn, ODataModel, ODataNavigation } from '../../../src';
 
 @ODataModel()
-export class Profile extends BaseODataModel {
+export class Profile  {
 
   @ODataColumn({ primary: true, generated: 'increment' })
   id: number;

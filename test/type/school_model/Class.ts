@@ -1,11 +1,11 @@
-import { BaseODataModel, ODataColumn, ODataModel, ODataNavigation, withEntitySetName } from '../../../src';
+import { ODataColumn, ODataModel, ODataNavigation, withEntitySetName } from '../../../src';
 import { RelStudentClassAssignment } from './Rel';
 import { Teacher } from './Teacher';
 
 // indicate the entity set name for entity
 @withEntitySetName('Classes')
 @ODataModel()
-export class Class extends BaseODataModel {
+export class Class {
 
   @ODataColumn({ primary: true, generated: 'increment' })
   cid: number;

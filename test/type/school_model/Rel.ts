@@ -1,9 +1,9 @@
-import { BaseODataModel, ODataColumn, ODataModel, ODataNavigation } from '../../../src';
+import { ODataColumn, ODataModel, ODataNavigation } from '../../../src';
 import { Class } from './Class';
 import { Student } from './Student';
 
 @ODataModel()
-export class RelStudentClassAssignment extends BaseODataModel {
+export class RelStudentClassAssignment {
 
   @ODataColumn({ primary: true, generated: 'increment' })
   uuid: number;
