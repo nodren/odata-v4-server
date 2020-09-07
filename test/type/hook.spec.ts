@@ -1,7 +1,7 @@
-import { inject } from '@newdash/inject';
+import { inject, InjectWrappedInstance } from '@newdash/inject';
 import '@odata/client/lib/polyfill';
 import { isArray } from 'util';
-import { BaseHookProcessor, BaseODataModel, beforeCreate, findHooks, HookContext, HookProcessor, HookType, ODataColumn, ODataModel, TypedODataServer, withEntitySetName, withHook } from '../../src';
+import { BaseHookProcessor, BaseODataModel, beforeCreate, findHooks, HookContext, HookProcessor, HookType, injectService, ODataColumn, ODataModel, OptionalProperty, TypedODataServer, TypedService, withEntitySetName, withHook } from '../../src';
 import { InjectKey } from '../../src/constants';
 import { shutdown } from '../utils/server';
 import { createServerAndClient, createTmpConnection } from './utils';
@@ -213,21 +213,13 @@ describe('Hooks Test Suite', () => {
 
   it('should integrated with transaction', async () => {
 
-
     @ODataModel()
     @withEntitySetName('Students2')
     class Student2 extends BaseODataModel {
-
       // generated id
-      @ODataColumn({ primary: true, generated: 'increment' })
-      id2: number;
-
-      @ODataColumn({ nullable: true })
-      name2: string;
-
-      @ODataColumn({ nullable: true })
-      age2: number;
-
+      @ODataColumn({ primary: true, generated: 'increment' }) id2: number;
+      @OptionalProperty() name2: string;
+      @OptionalProperty() age2: number;
     }
 
     @ODataModel()
@@ -235,14 +227,9 @@ describe('Hooks Test Suite', () => {
     class Student3 extends BaseODataModel {
 
       // generated id
-      @ODataColumn({ primary: true, generated: 'increment' })
-      id2: number;
-
-      @ODataColumn({ nullable: true })
-      name2: string;
-
-      @ODataColumn({ nullable: true })
-      age2: number;
+      @ODataColumn({ primary: true, generated: 'increment' }) id2: number;
+      @OptionalProperty() name2: string;
+      @OptionalProperty() age2: number;
 
     }
 
@@ -253,10 +240,8 @@ describe('Hooks Test Suite', () => {
     @beforeCreate(Student2, 0)
     class h1 extends HookProcessor<Student2> {
 
-      async execute(@inject(InjectKey.HookContext) ctx: HookContext<Student2>): Promise<void> {
+      async execute(@injectService(Student3) student3s: InjectWrappedInstance<TypedService<Student3>>): Promise<void> {
         hookInvokeSeq.push('h1');
-        const student3s = await ctx.getService(Student3);
-
         await student3s.create({ name2: 'first' });
       }
 

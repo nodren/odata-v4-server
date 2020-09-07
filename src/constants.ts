@@ -46,6 +46,10 @@ export enum InjectKey {
   ODataTxContextParameter = 'odata:tx_contextparameter',
   ODataInjectContainer = 'odata:inject_container',
   ODataTypedService = 'odata:service',
+
+
+  InjectODataService = 'odata:service_instance',
+
 }
 
 

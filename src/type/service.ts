@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { inject, InjectContainer } from '@newdash/inject';
+import { getUnProxyTarget, inject, InjectContainer, required, transient, withType } from '@newdash/inject';
 import { forEach } from '@newdash/newdash/forEach';
 import { isArray } from '@newdash/newdash/isArray';
 import { isEmpty } from '@newdash/newdash/isEmpty';
@@ -423,6 +423,24 @@ export class TypedService<T = any> extends ODataController {
     await this.executeHooks(HookType.beforeDelete, undefined, key);
     await repo.delete(key);
     await this.executeHooks(HookType.afterDelete, undefined, key);
+  }
+
+}
+
+/**
+ * provide odata service instance by entity
+ */
+export class ODataServiceProvider {
+
+  @transient
+  @withType(InjectKey.InjectODataService)
+  async provide(
+    @required @inject(InjectKey.ODataTypedService) entityType,
+    @required @inject(InjectKey.ServerType) server: typeof TypedODataServer,
+    @required @inject(InjectKey.ODataTxContextParameter) tx: TransactionContext
+  ) {
+    const [service] = await server.getServicesWithContext(tx, getUnProxyTarget(entityType));
+    return service;
   }
 
 }

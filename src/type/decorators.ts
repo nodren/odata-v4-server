@@ -1,3 +1,4 @@
+import { inject } from '@newdash/inject';
 import { isClass } from '@newdash/inject/lib/utils';
 import { has } from '@newdash/newdash/has';
 import { isEmpty } from '@newdash/newdash/isEmpty';
@@ -5,6 +6,7 @@ import toInteger from '@newdash/newdash/toInteger';
 import 'reflect-metadata';
 import { Column, ColumnOptions, Entity, EntityOptions } from 'typeorm';
 import { ODataServer } from '..';
+import { InjectKey } from '../constants';
 import * as Edm from '../edm';
 import { NotImplementedError, ServerInternalError } from '../error';
 import { DateTimeTransformer, DBHelper } from './db_helper';
@@ -401,3 +403,15 @@ export function getConnectionName(target: typeof TypedService | typeof BaseOData
   return Reflect.getMetadata(KEY_CONN_NAME, target);
 }
 
+
+/**
+ * inject odata service of entity type
+ *
+ * @param entityType
+ */
+export function injectService(entityType: any): ParameterDecorator {
+  return function (target, targetKey, parameterIndex) {
+    inject.param(InjectKey.ODataTypedService, entityType)(target, targetKey, parameterIndex);
+    inject(InjectKey.InjectODataService)(target, targetKey, parameterIndex);
+  };
+}

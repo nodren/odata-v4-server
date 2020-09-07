@@ -60,6 +60,7 @@ export interface HookContext<T = any> {
 
 
 const createHookDecorator = <E extends typeof BaseODataModel>(hookType: HookType) => (entityType?: E, order: number = 0) => (target: any) => {
+  // TO DO, attach hook to entity
   Reflect.defineMetadata(KEY_HOOK_META, { hookType, entityType, order }, target);
 };
 
