@@ -48,9 +48,6 @@ export const createTmpConnection = (opt?: Partial<ConnectionOptions>) => {
       encrypt: Boolean(process.env.HANA_CLOUD_VERIFY),
       sslValidateCertificate: Boolean(process.env.HANA_CLOUD_VERIFY),
 
-      // the hana instance for gh test is shared, add prefix to make parallel test correctly
-      dropSchema: true,
-
       pool: {
         requestTimeout: 30 * 1000
       }
