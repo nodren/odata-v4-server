@@ -22,9 +22,7 @@ jobs:
       run: npm ci
 
     - name: npm install driver
-      run: |
-        npm install -D @sap/hana-client
-        npm install -D hdb-pool
+      run: npm install -S hdb-pool @sap/hana-client
       
     - name: npm build
       run: npm run build
