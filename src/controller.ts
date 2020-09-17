@@ -1,3 +1,4 @@
+import { noWrap } from '@newdash/inject';
 import { Token } from '@odata/parser/lib/lexer';
 import * as odata from './odata';
 import { getFunctionParameters } from './utils';
@@ -8,6 +9,7 @@ export class ODataControllerBase {
 
   entitySetName: string
 
+  @noWrap
   elementType: any
 
   static containerName: string

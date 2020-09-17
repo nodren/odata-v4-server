@@ -42,7 +42,7 @@ export class TypedODataServer extends ODataServer {
     ic.registerInstance(InjectKey.ODataTxContextParameter, tx);
     const services = await Promise.all(entityTypes.map(async (entityType) => {
       const innerContainer = await ic.createSubContainer();
-      innerContainer.registerInstance(InjectKey.ODataTypeParameter, entityType);
+      innerContainer.registerInstance(InjectKey.ODataTypeParameter, entityType, true);
       return innerContainer.wrap(await this.getControllerInstance(entityType));
     }));
     return services;

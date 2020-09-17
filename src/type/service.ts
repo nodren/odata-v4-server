@@ -10,7 +10,7 @@ import { getKeyProperties, ODataQuery } from '..';
 import { InjectKey } from '../constants';
 import { ODataController } from '../controller';
 import * as Edm from '../edm';
-import { ResourceNotFoundError, ServerInternalError } from '../error';
+import { BadRequestError, ResourceNotFoundError, ServerInternalError } from '../error';
 import { Literal } from '../literal';
 import { createLogger } from '../logger';
 import * as odata from '../odata';
@@ -29,9 +29,7 @@ const logger = createLogger('type:service');
  */
 export class TypedService<T = any> extends ODataController {
 
-  constructor() {
-    super();
-  }
+  constructor() { super(); }
 
   /**
    * get main connection (without transaction)
@@ -50,8 +48,8 @@ export class TypedService<T = any> extends ODataController {
     return qr.manager;
   }
 
-  protected async _getRepository(@inject(InjectKey.ODataTypeParameter) entityType: any): Promise<Repository<T>> {
-    return (await this._getEntityManager()).getRepository(entityType);
+  protected async _getRepository(entityType?: any): Promise<Repository<T>> {
+    return (await this._getEntityManager()).getRepository(entityType ?? await this._getEntityType());
   }
 
   protected async _getService<E extends typeof BaseODataModel = any>(
@@ -63,6 +61,10 @@ export class TypedService<T = any> extends ODataController {
     const service = await serverType.getService(entityType);
     return ic.wrap(service);
   };
+
+  private async _getEntityType(): any {
+    return getUnProxyTarget(this.elementType);
+  }
 
   private async executeHooks(
     hookType: HookType,
@@ -130,12 +132,11 @@ export class TypedService<T = any> extends ODataController {
    *
    * please AVOID run this method for single body multi times
    */
-  private async _transformInboundPayload(body: any, @inject(InjectKey.ODataTypeParameter) entityType) {
+  private async _transformInboundPayload(body: any) {
+    const entityType = await this._getEntityType();
     forEach(body, (value: any, key: string) => {
       const type = Edm.getType(entityType, key);
-      if (type) {
-        body[key] = Literal.convert(type, value);
-      }
+      if (type) { body[key] = Literal.convert(type, value); }
     });
   }
 
@@ -150,8 +151,9 @@ export class TypedService<T = any> extends ODataController {
    *
    * @param body
    */
-  private async _applyTransforms(body: any, @inject(InjectKey.ODataTypeParameter) entityType) {
+  private async _applyTransforms(body: any) {
 
+    const entityType = await this._getEntityType();
     const conn = await this._getConnection();
     const meta = conn.getMetadata(entityType);
     const columns = meta.columns;
@@ -177,7 +179,8 @@ export class TypedService<T = any> extends ODataController {
   }
 
   @odata.GET
-  async findOne(@odata.key key: any, @inject(InjectKey.ODataTypeParameter) entityType): Promise<T> {
+  async findOne(@odata.key key: any): Promise<T> {
+    const entityType = await this._getEntityType();
     if (key != undefined && key != null) {
       // with key
       const repo = await this._getRepository();
@@ -218,9 +221,10 @@ export class TypedService<T = any> extends ODataController {
   @odata.GET
   async find(
     @odata.query query,
-    @inject(InjectKey.DatabaseHelper) helper: DBHelper,
-    @inject(InjectKey.ODataTypeParameter) entityType
+    @inject(InjectKey.DatabaseHelper) helper: DBHelper
   ) {
+
+    const entityType = await this._getEntityType();
     const conn = await this._getConnection();
     const repo = await this._getRepository();
 
@@ -299,12 +303,19 @@ export class TypedService<T = any> extends ODataController {
    *
    * @returns require the parent object re-save again
    */
-  async _deepInsert(parentBody: any, @inject(InjectKey.ODataTypeParameter) entityType): Promise<boolean> {
-    let reSaveRequired = false;
+  async _deepInsert(parentBody: any): Promise<T> {
+    const entityType = await this._getEntityType();
+    const repo = await this._getRepository(entityType);
+
+    const instance = repo.create(parentBody);
+    // creation (INSERT only)
+    await repo.insert(instance);
 
     const navigations = getODataEntityNavigations(entityType.prototype);
 
     const [parentObjectKeyName] = getKeyProperties(entityType);
+
+    const key = instance[parentObjectKeyName];
 
     for (const navigationName in navigations) {
       if (Object.prototype.hasOwnProperty.call(navigations, navigationName)) {
@@ -339,9 +350,8 @@ export class TypedService<T = any> extends ODataController {
               }
               break;
             case 'ManyToOne':
-              reSaveRequired = true;
               parentBody[navigationName] = await service.create(navigationData);
-              parentBody[parentObjectFKName] = parentBody[navigationName][navTargetKeyName];
+              await repo.update(key, { [parentObjectFKName]: parentBody[navigationName][navTargetKeyName] });
               break;
             default:
 
@@ -353,8 +363,7 @@ export class TypedService<T = any> extends ODataController {
 
               if (parentObjectFKName) {
                 // save the fk to parent table
-                reSaveRequired = true;
-                parentBody[parentObjectFKName] = parentBody[navigationName][navTargetKeyName];
+                await repo.update(key, { [parentObjectFKName]: parentBody[navigationName][navTargetKeyName] });
               }
 
               break;
@@ -364,30 +373,38 @@ export class TypedService<T = any> extends ODataController {
       }
     }
 
-    return reSaveRequired;
+    return instance;
 
+  }
+
+  /**
+   * deep merge
+   * @param parentBody
+   * @param entityType
+   */
+  async _deepMerge(parentBody: any): Promise<boolean> {
+    const entityType = await this._getEntityType();
+    const navigations = getODataEntityNavigations(entityType.prototype);
+    for (const navigationName in navigations) {
+      if (Object.prototype.hasOwnProperty.call(navigations, navigationName)) {
+        if (Object.prototype.hasOwnProperty.call(parentBody, navigationName)) {
+          throw new BadRequestError(`update navigation '${navigationName}' failed, deep merge is not supported.`);
+        }
+      }
+    }
   }
 
   @odata.POST
   async create(@odata.body body: DeepPartial<T>): Promise<T> {
-    const repo = await this._getRepository();
     await this._transformInboundPayload(body);
 
-    const instance = body;
-    await this.executeHooks(HookType.beforeCreate, instance);
+    await this.executeHooks(HookType.beforeCreate, body);
 
-    // creation (INSERT only)
-    await repo.insert(instance);
-
-    // deep insert
-    const reSaveRequired = await this._deepInsert(instance);
-
-    // merge deep insert fk
-    if (reSaveRequired) {
-      await repo.save(instance);
-    }
+    // deep insert, re-save on-demand
+    const instance = await this._deepInsert(body);
 
     await this.executeHooks(HookType.afterCreate, instance);
+
     return instance;
   }
 
@@ -411,6 +428,7 @@ export class TypedService<T = any> extends ODataController {
     await this._transformInboundPayload(body);
     const repo = await this._getRepository();
     const instance = body;
+    await this._deepMerge(instance);
     await this.executeHooks(HookType.beforeUpdate, instance, key);
     await repo.update(key, instance);
     await this.executeHooks(HookType.afterUpdate, instance, key);

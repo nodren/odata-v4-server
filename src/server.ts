@@ -292,14 +292,19 @@ export class ODataServerBase extends Transform {
 
   protected static async getControllerInstance(controllerOrEntityType: any): Promise<ODataController> {
 
+    const ic = await this._injectContainer.createSubContainer();
+
     if (controllerOrEntityType == undefined) {
       throw new Error('must provide the controller type');
     }
 
     let serviceType: any = undefined;
     if (controllerOrEntityType.prototype instanceof ODataController) {
+      // if controller
       serviceType = controllerOrEntityType;
     } else {
+      // if entity
+      ic.registerInstance(InjectKey.ODataTypeParameter, controllerOrEntityType);
       serviceType = this.getController(controllerOrEntityType);
     }
 
@@ -307,7 +312,7 @@ export class ODataServerBase extends Transform {
       throw new TypeError(`${controllerOrEntityType?.name} is not a controller or entity type.`);
     }
 
-    return this.getInjectContainer().getInstance(serviceType as ODataController);
+    return ic.getInstance(serviceType as ODataController);
   }
 
 }

@@ -39,7 +39,7 @@ describe('Typed Controller Test Suite', () => {
 
     const entities = [A1, A2];
 
-    const testUserName = `theo_${v4()}`;
+    const testUserName = `theo_${v4().split('-').pop()}`;
 
     const conn = await createTmpConnection({
       name: 'controller_call_test_conn',
