@@ -2,16 +2,16 @@
 import { OData, ODataV4 } from '@odata/client';
 import '@odata/client/lib/polyfill';
 import { Server } from 'http';
+import * as os from 'os';
+import * as path from 'path';
 import { Connection, ConnectionOptions, createConnection } from 'typeorm';
 import { v4 } from 'uuid';
 import { createTypedODataServer, TypedODataServer } from '../../src';
 import { randomPort } from '../utils/randomPort';
-import { ready } from '../utils/server';
+import { ready, shutdown } from '../utils/server';
 
-export const createTmpConnection = (opt?: Partial<ConnectionOptions>) => {
-  const randomPrefix = v4().split('-').pop();
-
-  let defaultOpt: ConnectionOptions;
+const createTmpDefaultOption = () => {
+  let defaultOpt = undefined;
 
   if (process.env.MYSQL_USER) {
     defaultOpt = {
@@ -48,28 +48,79 @@ export const createTmpConnection = (opt?: Partial<ConnectionOptions>) => {
       encrypt: Boolean(process.env.HANA_CLOUD_VERIFY),
       sslValidateCertificate: Boolean(process.env.HANA_CLOUD_VERIFY),
 
-      pool: {
-        requestTimeout: 30 * 1000
-      }
-    };
-  } else {
-    defaultOpt = {
-      type: 'sqljs'
+      pool: { requestTimeout: 30 * 1000 }
     };
   }
 
-  return createConnection(Object.assign(
+  return defaultOpt;
+};
+
+export const createTmpMigrateConnOpt = (opt?: Partial<ConnectionOptions>) => {
+
+  const randomPrefix = v4().split('-').pop();
+
+  let defaultOpt: ConnectionOptions = createTmpDefaultOption();
+
+  if (defaultOpt == undefined) {
+    defaultOpt = {
+      type : 'sqlite',
+      database : tmpdir(`${v4()}.db`)
+    };
+  }
+
+  const combinedOpt = Object.assign(
+    defaultOpt,
+    opt,
+    {
+      entityPrefix: `t_${randomPrefix.slice(0, 5)}_${opt.entityPrefix || 'def'}`,
+      logging: Boolean(process.env.TEST_DB_LOG)
+    }
+  );
+
+  return combinedOpt;
+};
+
+
+export const createTmpConnOpt = (opt?: Partial<ConnectionOptions>) => {
+
+  const randomPrefix = v4().split('-').pop();
+
+  let defaultOpt: ConnectionOptions = createTmpDefaultOption();
+
+  if (defaultOpt == undefined) {
+    defaultOpt = { type: 'sqljs' };
+  }
+
+  const combinedOpt = Object.assign(
     defaultOpt,
     opt,
     {
       synchronize: true,
-      entityPrefix: `t_${randomPrefix.slice(0, 5)}_${opt.entityPrefix || 'default'}`,
+      entityPrefix: `t_${randomPrefix.slice(0, 5)}_${opt.entityPrefix || 'def'}`,
       logging: Boolean(process.env.TEST_DB_LOG)
     }
-  ));
+  );
+
+  return combinedOpt;
 };
 
-interface R { server: Server, client: ODataV4, odata: typeof TypedODataServer }
+export const createTmpConnection = async (opt?: Partial<ConnectionOptions>) => {
+
+  const combinedOpt = createTmpConnOpt(opt);
+
+  return createConnection(combinedOpt);
+
+};
+
+interface R {
+  server: Server,
+  client: ODataV4,
+  odata: typeof TypedODataServer,
+  /**
+   * shut down server & close db connection
+   */
+  shutdownServer: () => Promise<void>
+}
 
 export async function createServerAndClient(conn: Partial<ConnectionOptions>, ...items: any[]): Promise<R>
 export async function createServerAndClient(conn: Connection, ...items: any[]): Promise<R>
@@ -87,7 +138,15 @@ export async function createServerAndClient(conn, ...items: any[]) {
   return {
     odata: s,
     server: httpServer,
-    client
+    client,
+    shutdownServer: async () => {
+      await shutdown(httpServer);
+      await s.getConnection().close();
+    }
   };
 
 };
+
+export function tmpdir(...parts: Array<string>) {
+  return path.join(os.tmpdir(), ...parts);
+}

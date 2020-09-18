@@ -21,8 +21,6 @@ describe('RelationShip Test Suite', () => {
     const conn = await createTmpConnection({
       name: 'relationship_test',
       entityPrefix: 'unit_rel_01_',
-      synchronize: true,
-      // logging: true,
       entities: [Node]
     });
 

@@ -13,3 +13,5 @@ node_modules
 .antlr
 /.nyc_output
 .env*
+*.db
+*.db-journal

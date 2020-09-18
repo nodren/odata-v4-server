@@ -16,7 +16,7 @@ import { Class } from './types';
 const logger = createLogger('type:server');
 
 type InstanceType<T> = T extends new (...args: any) => infer R ? R : any;
-type TypedODataItems = typeof BaseODataModel | typeof BaseHookProcessor
+type TypedODataItems = typeof BaseODataModel | typeof BaseHookProcessor | any
 
 /**
  * typed odata server
@@ -64,6 +64,11 @@ export class TypedODataServer extends ODataServer {
     return { services, tx };
   };
 
+  /**
+   * get server owned connection
+   */
+  static abstract getConnection(): Connection;
+
 }
 
 
@@ -110,7 +115,9 @@ export async function createTypedODataServer(connection: any, ...configurations:
 
         logger(`create typed odata server with connection name: %s`, connName);
 
-        const serverType = class extends TypedODataServer { };
+        const serverType = class extends TypedODataServer {
+          static getConnection() { return connObj; }
+        };
 
         const iContainer = serverType.getInjectContainer();
 

@@ -1,4 +1,3 @@
-import { shutdown } from '../utils/server';
 import { Class, RelStudentClassAssignment, SchoolEntities, Student, Teacher } from './school_model';
 import { createServerAndClient, createTmpConnection } from './utils';
 
@@ -9,12 +8,10 @@ describe('Typed OData Server Integration Test Suite', () => {
     const conn = await createTmpConnection({
       name: 'typed_service_int_test',
       entityPrefix: 'unit_int_',
-      synchronize: true,
-      // logging: true,
       entities: SchoolEntities
     });
 
-    const { server, client } = await createServerAndClient(conn, ...SchoolEntities);
+    const { server, client, shutdownServer } = await createServerAndClient(conn, ...SchoolEntities);
 
     try {
       const students = client.getEntitySet<Student>('Students');
@@ -108,7 +105,9 @@ describe('Typed OData Server Integration Test Suite', () => {
       });
 
     } finally {
-      await shutdown(server);
+
+      await shutdownServer();
+
     }
 
 
