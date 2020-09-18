@@ -80,6 +80,7 @@
     "event-stream": "^4.0.1",
     "jest": "^26.4.2",
     "mongodb": "^3.6.2",
+    "pg": "^8.3.3",
     "request": "^2.88.2",
     "request-promise": "^4.2.6",
     "rimraf": "^3.0.2",

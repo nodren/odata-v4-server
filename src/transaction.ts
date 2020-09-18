@@ -90,8 +90,10 @@ export async function rollbackTransaction(ctx: TransactionContext): Promise<void
   if (transactionStorage.has(ctx.uuid)) {
     logger(`rollback transaction: %s`, ctx.uuid);
     const tx = transactionStorage.get(ctx.uuid);
-    await tx.rollbackTransaction();
-    await releaseTransaction(tx);
+    if (!tx.isReleased) {
+      await tx.rollbackTransaction();
+      await releaseTransaction(tx);
+    }
     transactionStorage.delete(ctx.uuid);
   }
 }
@@ -105,8 +107,10 @@ export async function commitTransaction(ctx: TransactionContext): Promise<void> 
   if (transactionStorage.has(ctx.uuid)) {
     logger(`commit transaction: %s`, ctx.uuid);
     const tx = transactionStorage.get(ctx.uuid);
-    await tx.commitTransaction();
-    await releaseTransaction(tx);
+    if (!tx.isReleased) {
+      await tx.commitTransaction();
+      await releaseTransaction(tx);
+    }
     transactionStorage.delete(ctx.uuid);
   }
 }
