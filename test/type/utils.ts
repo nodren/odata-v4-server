@@ -55,9 +55,9 @@ const createTmpDefaultOption = () => {
   return defaultOpt;
 };
 
-export const createTmpMigrateConnOpt = (opt?: Partial<ConnectionOptions>) => {
+const createEntityPrefix = (entityPrefix = 'def') => `t_${v4().slice(0, 5)}_${entityPrefix}_`;
 
-  const randomPrefix = v4().split('-').pop();
+export const createTmpMigrateConnOpt = (opt?: Partial<ConnectionOptions>) => {
 
   let defaultOpt: ConnectionOptions = createTmpDefaultOption();
 
@@ -69,10 +69,9 @@ export const createTmpMigrateConnOpt = (opt?: Partial<ConnectionOptions>) => {
   }
 
   const combinedOpt = Object.assign(
-    defaultOpt,
-    opt,
+    defaultOpt, opt,
     {
-      entityPrefix: `t_${randomPrefix.slice(0, 5)}_${opt.entityPrefix || 'def'}`,
+      entityPrefix: createEntityPrefix(opt.entityPrefix),
       logging: Boolean(process.env.TEST_DB_LOG)
     }
   );
@@ -83,8 +82,6 @@ export const createTmpMigrateConnOpt = (opt?: Partial<ConnectionOptions>) => {
 
 export const createTmpConnOpt = (opt?: Partial<ConnectionOptions>) => {
 
-  const randomPrefix = v4().split('-').pop();
-
   let defaultOpt: ConnectionOptions = createTmpDefaultOption();
 
   if (defaultOpt == undefined) {
@@ -92,11 +89,10 @@ export const createTmpConnOpt = (opt?: Partial<ConnectionOptions>) => {
   }
 
   const combinedOpt = Object.assign(
-    defaultOpt,
-    opt,
+    defaultOpt, opt,
     {
       synchronize: true,
-      entityPrefix: `t_${randomPrefix.slice(0, 5)}_${opt.entityPrefix || 'def'}`,
+      entityPrefix: createEntityPrefix(opt.entityPrefix),
       logging: Boolean(process.env.TEST_DB_LOG)
     }
   );

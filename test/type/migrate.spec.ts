@@ -22,12 +22,12 @@ describe('Server Test Suite', () => {
 
     const { services: [v1Service] } = await server.getServicesWithNewContext(V1);
 
-    await expect(() => v1Service.create({})).rejects.toThrow(QueryFailedError); // table not found
+    await expect(() => v1Service.create({ id: 1 })).rejects.toThrow(QueryFailedError); // table not found
 
   });
 
 
-  it('should works file with migration', async () => {
+  it('should works fine with migration', async () => {
 
     @ODataModel()
     class V1 { @IncKeyProperty() id: number; }
@@ -46,7 +46,7 @@ describe('Server Test Suite', () => {
 
     const { services: [v1Service] } = await server.getServicesWithNewContext(V1);
 
-    const obj = await v1Service.create({});
+    const obj = await v1Service.create({ id: 1 });
 
     expect(obj.id).not.toBeUndefined();
 
