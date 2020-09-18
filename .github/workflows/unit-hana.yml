@@ -37,4 +37,4 @@ jobs:
         HANA_PORT: ${{ secrets.CLOUD_HANA_PORT }}
         HANA_CLOUD_VERIFY: true
         TEST_DB_LOG: true
-        DEBUG: @odata/server*
+        DEBUG: '@odata/server*'
