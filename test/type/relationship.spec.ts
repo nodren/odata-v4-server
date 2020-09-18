@@ -1,5 +1,4 @@
 import { IncKeyProperty, ODataModel, ODataNavigation, OptionalProperty } from '../../src';
-import { shutdown } from '../utils/server';
 import { createServerAndClient, createTmpConnection } from './utils';
 
 
@@ -24,7 +23,7 @@ describe('RelationShip Test Suite', () => {
       entities: [Node]
     });
 
-    const { server, client } = await createServerAndClient(conn, Node);
+    const { server, client, shutdownServer } = await createServerAndClient(conn, Node);
 
     try {
 
@@ -42,7 +41,7 @@ describe('RelationShip Test Suite', () => {
       await expect(() => nodes.update(node2.id, { nextNode: node2 })).rejects.toThrow();
 
     } finally {
-      await shutdown(server);
+      await shutdownServer();
     }
 
 

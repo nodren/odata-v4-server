@@ -3,7 +3,6 @@ import { ODataFilter, ODataParam } from '@odata/parser';
 import { v4 } from 'uuid';
 import { BaseODataModel, beforeCreate, HookContext, HookProcessor, ODataColumn, ODataModel } from '../../src';
 import { InjectKey } from '../../src/constants';
-import { shutdown } from '../utils/server';
 import { createServerAndClient, createTmpConnection } from './utils';
 
 
@@ -67,7 +66,7 @@ describe('Typed Controller Test Suite', () => {
 
     const expectedDescription = v4();
 
-    const { server, client } = await createServerAndClient(conn, BeforeA1CreationHook, ...entities);
+    const { server, client, shutdownServer } = await createServerAndClient(conn, BeforeA1CreationHook, ...entities);
 
     const esA1 = client.getEntitySet<A1>('A1s');
     const esA2 = client.getEntitySet<A2>('A2s');
@@ -84,7 +83,7 @@ describe('Typed Controller Test Suite', () => {
     await esA1.delete(instanceA1.id);
     await esA2.delete(instanceA2.id);
 
-    await shutdown(server);
+    await shutdownServer();
 
   });
 

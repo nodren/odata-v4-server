@@ -1,5 +1,4 @@
 import { BaseODataModel, createPropertyDecorator, getODataColumns, getPropertyOptions, isODataEntityType, KeyProperty, ODataEntityType, OptionalProperty, Property, UUIDKeyProperty } from '../../src';
-import { shutdown } from '../utils/server';
 import { createServerAndClient } from './utils';
 
 
@@ -43,7 +42,7 @@ describe('Decorator Test Suite', () => {
 
     }
 
-    const { server, client } = await createServerAndClient({
+    const { server, client, shutdownServer } = await createServerAndClient({
       name: 'decorator_test_conn_',
       entityPrefix: 'decorator_test_02_',
       entities: [D2]
@@ -54,7 +53,7 @@ describe('Decorator Test Suite', () => {
       await es.create({ c1: 123 });
       await es.query(client.newParam().select('c1')); // please no error here
     } finally {
-      await shutdown(server);
+      await shutdownServer();
     }
 
 

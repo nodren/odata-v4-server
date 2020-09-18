@@ -9,18 +9,19 @@ describe('Server Test Suite', () => {
   it('should throw error when model is not sync', async () => {
 
     @ODataModel()
-    class V1 { @IncKeyProperty() id: number; @OptionalProperty() value: string; }
+    class MigrateTable1 { @IncKeyProperty() id: number; @OptionalProperty() value: string; }
 
     const opt: ConnectionOptions = createTmpMigrateConnOpt({
       name: 'server_creation_test_00',
-      entities: [V1]
+      entityPrefix: 'migrate',
+      entities: [MigrateTable1]
     });
 
     expect(opt.synchronize).toBeUndefined();
 
-    const server = await createTypedODataServer(opt, V1);
+    const server = await createTypedODataServer(opt, MigrateTable1);
 
-    const { services: [v1Service] } = await server.getServicesWithNewContext(V1);
+    const { services: [v1Service] } = await server.getServicesWithNewContext(MigrateTable1);
 
     await expect(() => v1Service.create({ value: 'test' })).rejects.toThrow(QueryFailedError); // table not found
 
@@ -30,11 +31,11 @@ describe('Server Test Suite', () => {
   it('should works fine with migration', async () => {
 
     @ODataModel()
-    class V1 { @IncKeyProperty() id: number; @OptionalProperty() value: string; }
+    class MigrateTable2 { @IncKeyProperty() id: number; @OptionalProperty() value: string; }
 
     const opt: ConnectionOptions = createTmpMigrateConnOpt({
       name: 'server_creation_test_01',
-      entities: [V1]
+      entities: [MigrateTable2]
     });
 
     expect(opt.synchronize).toBeUndefined();
@@ -42,9 +43,9 @@ describe('Server Test Suite', () => {
     expect(await migrate(opt, 1)).toBe(true);
     expect(await migrate(opt, 1)).toBe(false); // no migration on version no change
 
-    const server = await createTypedODataServer(opt, V1);
+    const server = await createTypedODataServer(opt, MigrateTable2);
 
-    const { services: [v1Service] } = await server.getServicesWithNewContext(V1);
+    const { services: [v1Service] } = await server.getServicesWithNewContext(MigrateTable2);
 
     const obj = await v1Service.create({ value: 'test' });
 

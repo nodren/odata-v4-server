@@ -11,7 +11,7 @@ import { randomPort } from '../utils/randomPort';
 import { ready, shutdown } from '../utils/server';
 
 const createTmpDefaultOption = () => {
-  let defaultOpt = undefined;
+  let defaultOpt: ConnectionOptions = undefined;
 
   if (process.env.MYSQL_USER) {
     defaultOpt = {
@@ -48,14 +48,20 @@ const createTmpDefaultOption = () => {
       encrypt: Boolean(process.env.HANA_CLOUD_VERIFY),
       sslValidateCertificate: Boolean(process.env.HANA_CLOUD_VERIFY),
 
-      pool: { requestTimeout: 30 * 1000 }
+      pool: { requestTimeout: 3 * 60 * 1000, max: 3 }
     };
   }
 
   return defaultOpt;
 };
 
-const createEntityPrefix = (entityPrefix = 'def') => `t_${v4().slice(0, 5)}_${entityPrefix}_`;
+const createEntityPrefix = (entityPrefix = 'def') => {
+  let rt = `t_${v4().slice(0, 5)}_${entityPrefix}`;
+  if (!rt.endsWith('-')) {
+    rt += '_';
+  }
+  return rt;
+};
 
 export const createTmpMigrateConnOpt = (opt?: Partial<ConnectionOptions>) => {
 
@@ -63,8 +69,8 @@ export const createTmpMigrateConnOpt = (opt?: Partial<ConnectionOptions>) => {
 
   if (defaultOpt == undefined) {
     defaultOpt = {
-      type : 'sqlite',
-      database : tmpdir(`${v4()}.db`)
+      type: 'sqlite',
+      database: tmpdir(`${v4()}.db`)
     };
   }
 

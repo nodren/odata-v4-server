@@ -47,7 +47,7 @@ describe('Validate Test Suite', () => {
 
     const conn = await createTmpConnection({
       name: 'validate_test_conn_2',
-      entityPrefix: 'validate_unit_test_02',
+      entityPrefix: 'validate_02',
       entities: [V2]
     });
 

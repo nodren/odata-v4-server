@@ -3,7 +3,6 @@ import '@odata/client/lib/polyfill';
 import { isArray } from 'util';
 import { BaseHookProcessor, BaseODataModel, beforeCreate, findHooks, HookContext, HookProcessor, HookType, injectService, ODataColumn, ODataModel, OptionalProperty, TypedODataServer, TypedService, withEntitySetName, withHook } from '../../src';
 import { InjectKey } from '../../src/constants';
-import { shutdown } from '../utils/server';
 import { createServerAndClient, createTmpConnection } from './utils';
 
 
@@ -142,7 +141,7 @@ describe('Hooks Test Suite', () => {
       entities
     });
 
-    const { server, client } = await createServerAndClient(conn, Hook1, ...entities);
+    const { server, client, shutdownServer } = await createServerAndClient(conn, Hook1, ...entities);
 
     const es = client.getEntitySet<Student>('Students');
 
@@ -155,7 +154,7 @@ describe('Hooks Test Suite', () => {
     expect(u1.name).toEqual(TEST_USERNAME);
     expect(u1.age).toEqual(DEFAULT_AGE);
 
-    await shutdown(server);
+    await shutdownServer();
 
   });
 
@@ -196,7 +195,7 @@ describe('Hooks Test Suite', () => {
       entities
     });
 
-    const { server, client } = await createServerAndClient(conn, BeforeStudentCreationHook, ...entities);
+    const { server, client, shutdownServer } = await createServerAndClient(conn, BeforeStudentCreationHook, ...entities);
 
     const es = client.getEntitySet<Student>('Students');
 
@@ -207,7 +206,7 @@ describe('Hooks Test Suite', () => {
     expect(u1.name).toEqual(TEST_USERNAME);
     expect(u1.age).toEqual(DEFAULT_AGE);
 
-    await shutdown(server);
+    await shutdownServer();
 
   });
 
@@ -264,7 +263,7 @@ describe('Hooks Test Suite', () => {
       entities
     });
 
-    const { server, client } = await createServerAndClient(conn, h1, h2, ...entities);
+    const { server, client, shutdownServer } = await createServerAndClient(conn, h1, h2, ...entities);
 
     const es = client.getEntitySet<Student2>('Students2');
 
@@ -278,7 +277,7 @@ describe('Hooks Test Suite', () => {
     // assert running order of hooks
     expect(hookInvokeSeq).toStrictEqual(['h1', 'h2']);
 
-    await shutdown(server);
+    await shutdownServer();
 
   });
 

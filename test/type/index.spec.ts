@@ -6,7 +6,6 @@ import 'reflect-metadata';
 import { Entity } from 'typeorm';
 import { v4 } from 'uuid';
 import { BaseODataModel, FieldNameMapper, getODataNavigation, IncKeyProperty, ODataColumn, ODataEntityType, ODataModel, ODataNavigation, Property, transformFilterAst, transformQueryAst } from '../../src';
-import { shutdown } from '../utils/server';
 import { createServerAndClient, createTmpConnection } from './utils';
 
 describe('Typeorm Test Suite', () => {
@@ -85,7 +84,7 @@ describe('Typeorm Test Suite', () => {
       entities: [Student, Class]
     });
 
-    const { server, client } = await createServerAndClient(conn, Student, Class);
+    const { server, client, shutdownServer } = await createServerAndClient(conn, Student, Class);
 
     try {
 
@@ -114,7 +113,7 @@ describe('Typeorm Test Suite', () => {
 
     } finally {
 
-      await shutdown(server);
+      await shutdownServer();
 
     }
 
@@ -187,7 +186,7 @@ describe('Typeorm Test Suite', () => {
       entities: [TimeSheet]
     });
 
-    const { server, client } = await createServerAndClient(conn, TimeSheet);
+    const { server, client, shutdownServer } = await createServerAndClient(conn, TimeSheet);
 
     try {
 
@@ -211,7 +210,7 @@ describe('Typeorm Test Suite', () => {
 
     } finally {
 
-      await shutdown(server);
+      await shutdownServer();
 
     }
 
@@ -237,7 +236,7 @@ describe('Typeorm Test Suite', () => {
       entities: [T3]
     });
 
-    const { server, client } = await createServerAndClient(conn, T3);
+    const { server, client, shutdownServer } = await createServerAndClient(conn, T3);
 
     try {
 
@@ -246,7 +245,7 @@ describe('Typeorm Test Suite', () => {
       expect(body.name).toBe('unknown');
 
     } finally {
-      await shutdown(server);
+      await shutdownServer();
     }
 
   });
@@ -268,7 +267,7 @@ describe('Typeorm Test Suite', () => {
       entityPrefix: 'u_idx_04_',
       entities: [People11]
     });
-    const { odata, server } = await createServerAndClient(conn, People11);
+    const { odata, server, shutdownServer } = await createServerAndClient(conn, People11);
 
     const { tx, services: [PeopleService] } = await odata.getServicesWithNewContext(People11);
 
@@ -288,7 +287,7 @@ describe('Typeorm Test Suite', () => {
     } finally {
 
       await tx.rollback();
-      await shutdown(server);
+      await shutdownServer();
 
     }
 

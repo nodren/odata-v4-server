@@ -1,7 +1,6 @@
 import { v4 } from 'uuid';
 import { BaseODataModel, KeyProperty, ODataEntityType, OptionalProperty } from '../../src';
 import { ERROR_BATCH_REQUEST_FAST_FAIL } from '../../src/messages';
-import { shutdown } from '../utils/server';
 import { createServerAndClient, createTmpConnection } from './utils';
 
 
@@ -29,7 +28,7 @@ describe('Batch Test Suite', () => {
       entities: [B1]
     });
 
-    const { server, client } = await createServerAndClient(conn, B1);
+    const { server, client, shutdownServer } = await createServerAndClient(conn, B1);
 
     try {
 
@@ -40,7 +39,7 @@ describe('Batch Test Suite', () => {
       await expect(async () => { await client.execBatchRequestsJson(requests); }).rejects.toThrow();
 
     } finally {
-      await shutdown(server);
+      await shutdownServer();
     }
 
 
@@ -70,7 +69,7 @@ describe('Batch Test Suite', () => {
       entities: [B2]
     });
 
-    const { server, client } = await createServerAndClient(conn, B2);
+    const { server, client, shutdownServer } = await createServerAndClient(conn, B2);
 
     try {
 
@@ -97,7 +96,7 @@ describe('Batch Test Suite', () => {
       expect(items).toHaveLength(0);
 
     } finally {
-      await shutdown(server);
+      await shutdownServer();
     }
 
   });
@@ -128,7 +127,7 @@ describe('Batch Test Suite', () => {
       entities: [B3]
     });
 
-    const { server, client } = await createServerAndClient(conn, B3);
+    const { server, client, shutdownServer } = await createServerAndClient(conn, B3);
 
     try {
 
@@ -166,7 +165,7 @@ describe('Batch Test Suite', () => {
       expect(items).toHaveLength(0);
 
     } finally {
-      await shutdown(server);
+      await shutdownServer();
     }
 
   });
