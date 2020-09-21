@@ -9,7 +9,9 @@ import { getConnectionName, getODataEntityNavigations, getODataServerType } from
 import { TypedODataServer } from './server';
 import { TypedService } from './service';
 
-
+/**
+ * @deprecated DO not use this, it will be removed
+ */
 export class BaseODataModel {
 
   private _getServerType(): typeof TypedODataServer {
