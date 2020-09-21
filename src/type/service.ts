@@ -155,13 +155,14 @@ export class TypedService<T = any> extends ODataController {
 
     const entityType = await this._getEntityType();
     const conn = await this._getConnection();
+    const driver = conn.driver;
     const meta = conn.getMetadata(entityType);
     const columns = meta.columns;
 
     function applyTransformForItem(item) {
-      columns.forEach(({ propertyName, transformer }) => {
+      columns.forEach((colMeta) => {
         if (transformer && Object.prototype.hasOwnProperty.call(item, propertyName)) {
-          item[propertyName] = transformer.from(item[propertyName]);
+          item[propertyName] = driver.prepareHydratedValue(item[propertyName], colMeta);
         }
       });
     }
