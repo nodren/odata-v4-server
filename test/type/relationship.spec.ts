@@ -23,7 +23,7 @@ describe('RelationShip Test Suite', () => {
       entities: [Node]
     });
 
-    const { server, client, shutdownServer } = await createServerAndClient(conn, Node);
+    const { client, shutdownServer } = await createServerAndClient(conn, Node);
 
     try {
 
@@ -55,23 +55,39 @@ describe('RelationShip Test Suite', () => {
       @OptionalProperty() name: string;
     }
 
+    @ODataModel()
+    class UUIDObject2 {
+      @UUIDKeyProperty() id: string;
+      @OptionalProperty() name: string;
+      @OptionalProperty() obj1Id: string;
+      @ODataNavigation({ type: 'ManyToOne', entity: () => UUIDObject, foreignKey: 'obj1Id' }) obj1: UUIDObject
+    }
+
     const conn = await createTmpConnection({
-      name: 'relationship_test',
-      entityPrefix: 'unit_rel_01_',
-      entities: [UUIDObject]
+      name: 'relationship_uuid_expand_test',
+      entityPrefix: 'unit_rel_02_',
+      entities: [UUIDObject, UUIDObject2]
     });
 
-    const { client, shutdownServer } = await createServerAndClient(conn, UUIDObject);
+    const { client, shutdownServer } = await createServerAndClient(conn, UUIDObject, UUIDObject2);
 
     try {
 
       const objects = client.getEntitySet<UUIDObject>('UUIDObjects');
+      const object2s = client.getEntitySet<UUIDObject2>('UUIDObject2s');
 
-      const { id } = await objects.create({ name: 'name1' });
-      expect(id).not.toBeUndefined();
+      const anObject1 = await objects.create({ name: 'name1' });
+      expect(anObject1.id).not.toBeUndefined();
 
-      const items = await objects.find({ id });
+      const items = await objects.find({ id: anObject1.id });
       expect(items).toHaveLength(1);
+
+      const anObject2 = await object2s.create({ name: 'name2', obj1Id: anObject1.id });
+      expect(anObject2).not.toBeUndefined();
+
+      const items2 = await object2s.query(client.newParam().expand('obj1'));
+      expect(items2).toHaveLength(1);
+      expect(items2[0].obj1.name).toBe(anObject1.name);
 
     } finally {
       await shutdownServer();

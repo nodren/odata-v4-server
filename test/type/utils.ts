@@ -106,6 +106,11 @@ export const createTmpConnOpt = (opt?: Partial<ConnectionOptions>) => {
   return combinedOpt;
 };
 
+/**
+ * create db connection for test
+ *
+ * @param opt
+ */
 export const createTmpConnection = async (opt?: Partial<ConnectionOptions>) => {
 
   const combinedOpt = createTmpConnOpt(opt);
@@ -124,6 +129,11 @@ interface R {
   shutdownServer: () => Promise<void>
 }
 
+/**
+ * create test server & client
+ * @param conn
+ * @param items
+ */
 export async function createServerAndClient(conn: Partial<ConnectionOptions>, ...items: any[]): Promise<R>
 export async function createServerAndClient(conn: Connection, ...items: any[]): Promise<R>
 export async function createServerAndClient(conn, ...items: any[]) {

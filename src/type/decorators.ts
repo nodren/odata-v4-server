@@ -271,27 +271,37 @@ interface BaseNavigation<T extends Class = any> {
 }
 
 interface OneToManyNavigationOption<T extends Class = any> extends BaseNavigation<T> {
+  /**
+   * one to many navigation
+   *
+   * so target entity fk will store current model key value
+   */
   type: 'OneToMany';
+  /**
+   * fk on targe entity
+   *
+   */
   targetForeignKey: keyof InstanceType<T>;
 }
 
 interface ManyToOneNavigationOption<T extends Class = any> extends BaseNavigation<T> {
+  /**
+   * many to one navigation
+   *
+   * so the fk is stored the key value of target model
+   */
   type: 'ManyToOne';
   /**
-  * (ref) foreignKey,
-  *
-  * which field record the relation ship between `this` & `that` table
-  */
+   * fk on current entity,
+   */
   foreignKey: string;
 }
 
 interface OneToOneNavigationOption<T extends Class = any> extends BaseNavigation<T> {
   type: 'OneToOne';
   /**
-  * (ref) foreignKey,
-  *
-  * which field record the relation ship between `this` table
-  */
+   * fk on current entity,
+   */
   foreignKey?: string;
   /**
    * fk on targe entity
