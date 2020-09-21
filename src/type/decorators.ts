@@ -1,5 +1,6 @@
 import { inject } from '@newdash/inject';
 import { isClass } from '@newdash/inject/lib/utils';
+import { isArray } from '@newdash/newdash';
 import { has } from '@newdash/newdash/has';
 import { isEmpty } from '@newdash/newdash/isEmpty';
 import toInteger from '@newdash/newdash/toInteger';
@@ -9,7 +10,7 @@ import { ODataServer } from '..';
 import { InjectKey } from '../constants';
 import * as Edm from '../edm';
 import { NotImplementedError, ServerInternalError } from '../error';
-import { DateTimeTransformer, DBHelper } from './db_helper';
+import { DateTimeTransformer, DBHelper, DecimalTransformer } from './db_helper';
 import { BaseODataModel } from './entity';
 import { TypedODataServer } from './server';
 import { TypedService } from './service';
@@ -169,6 +170,15 @@ export function ODataColumn(options: ColumnOptions = {}) {
       Edm.Nullable(object, propertyName);
     }
 
+    // make options transform as array
+    if (options.transformer === undefined) {
+      options.transformer = [];
+    } else if (isArray(options.transformer)) {
+
+    } else {
+      options.transformer = [options.transformer];
+    }
+
     if (has(options, 'default')) {
       Edm.DefaultValue(options.default)(object, propertyName);
     }
@@ -177,7 +187,16 @@ export function ODataColumn(options: ColumnOptions = {}) {
 
     switch (reflectType) {
       case String:
-        Edm.String(object, propertyName);
+
+        switch (options.type) {
+          case 'decimal': case 'dec': case 'float': case 'float4': case 'float8':
+            Edm.Decimal(object, propertyName);
+            options.transformer.push(DecimalTransformer);
+            break;
+          default:
+            Edm.String(object, propertyName);
+            break;
+        }
         break;
       case Number:
         switch (options.type) {
@@ -189,6 +208,8 @@ export function ODataColumn(options: ColumnOptions = {}) {
             break;
           case 'decimal': case 'dec': case 'float': case 'float4': case 'float8':
             Edm.Decimal(object, propertyName);
+            options.transformer.push(DecimalTransformer);
+            // report message here
             break;
           default:
             // unknown or not have type
@@ -202,7 +223,7 @@ export function ODataColumn(options: ColumnOptions = {}) {
       case Date:
         Edm.DateTimeOffset(object, propertyName);
         options.type = 'bigint';
-        options.transformer = DateTimeTransformer;
+        options.transformer.push(DateTimeTransformer);
         break;
       default:
         throw new NotImplementedError(`Not support the type of field '${propertyName}'.`);

@@ -139,7 +139,14 @@ export class TypedService<T = any> extends ODataController {
     const entityType = await this._getEntityType();
     forEach(body, (value: any, key: string) => {
       const type = Edm.getType(entityType, key);
-      if (type) { body[key] = Literal.convert(type, value); }
+
+      if (type) {
+        if (type === 'Edm.Decimal') {
+          body[key] = String(value);
+        } else {
+          body[key] = Literal.convert(type, value);
+        }
+      }
     });
   }
 
@@ -164,8 +171,17 @@ export class TypedService<T = any> extends ODataController {
 
     function applyTransformForItem(item) {
       columns.forEach((colMeta) => {
-        const { propertyName } = colMeta;
-        item[propertyName] = driver.prepareHydratedValue(item[propertyName], colMeta);
+        const { propertyName, type } = colMeta;
+        let value = item[propertyName];
+        if (value != undefined) {
+          value = driver.prepareHydratedValue(value, colMeta);
+          if (type == 'decimal' && typeof value == 'number') {
+            // make all decimal value as string
+            value = String(value);
+          }
+          item[propertyName] = value;
+        }
+
       });
     }
 

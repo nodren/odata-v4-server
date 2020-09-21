@@ -14,7 +14,7 @@ describe('Entity Type Test Suite', () => {
       @Property()
       voltageLevel: string;
       @Property({ type: 'decimal', precision: 12, scale: 2 })
-      energyFee: number;
+      energyFee: string;
       @Property()
       funds: boolean;
       @Property({ type: 'date' })
@@ -36,7 +36,7 @@ describe('Entity Type Test Suite', () => {
       const testObject: Partial<TestProposal1> = {
         endDate: '2020-09-03',
         funds: true,
-        energyFee: 33.99,
+        energyFee: '33.99',
         voltageLevel: 'test2'
       };
 
