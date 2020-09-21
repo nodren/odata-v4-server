@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.35](https://github.com/Soontao/odata-v4-server/compare/v0.2.34...v0.2.35) (2020-09-21)
+
+
+### Features
+
+* [#42](https://github.com/Soontao/odata-v4-server/issues/42) refactor ([3563e6d](https://github.com/Soontao/odata-v4-server/commit/3563e6d1251475f3ae31a4c5970b8176a66f4db1))
+* [#65](https://github.com/Soontao/odata-v4-server/issues/65) migration init support ([27c5a4a](https://github.com/Soontao/odata-v4-server/commit/27c5a4a8b84528db20ee29ac4ea7d28a1ec83c33))
+* support [@inject](https://github.com/inject)Service ([7b552d0](https://github.com/Soontao/odata-v4-server/commit/7b552d0f3401e990c0a697998e4ee2ee4402ce12))
+
+
+### Bug Fixes
+
+* [#72](https://github.com/Soontao/odata-v4-server/issues/72) error ([7e7accd](https://github.com/Soontao/odata-v4-server/commit/7e7accdc42cd921296ea9af54f98b4daccbc91c3))
+* [#74](https://github.com/Soontao/odata-v4-server/issues/74), apply typeorm transformers in entityset query ([9735c7d](https://github.com/Soontao/odata-v4-server/commit/9735c7d3a8e21a57af675ea2ea567a63357c5ee4))
+* ci profile ([c9f9836](https://github.com/Soontao/odata-v4-server/commit/c9f9836ae49c8849771255ebf4b27ffd002d5eb3))
+* connection released error ([921e759](https://github.com/Soontao/odata-v4-server/commit/921e75900e294e69b94afb3ec48c324d1d537a8f))
+* hana test case ([70e5151](https://github.com/Soontao/odata-v4-server/commit/70e515155a7186e93ef64c62cf0b24ad0ede4fbb))
+* hook-afterLoad ([7f89796](https://github.com/Soontao/odata-v4-server/commit/7f897967b203ff723b189540d06226ecbff9dc60))
+* migration test wrong ([1b8fa94](https://github.com/Soontao/odata-v4-server/commit/1b8fa94eab456bcb0b4db90d4f47f214871e9b37))
+* type issue in update ([3046518](https://github.com/Soontao/odata-v4-server/commit/3046518aaad70347971d2e9018268662d4bda336))
+
 ### [0.2.34](https://github.com/Soontao/odata-v4-server/compare/v0.2.33...v0.2.34) (2020-09-07)
 
 ### [0.2.33](https://github.com/Soontao/odata-v4-server/compare/v0.2.32...v0.2.33) (2020-09-03)
