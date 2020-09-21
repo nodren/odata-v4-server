@@ -11,7 +11,7 @@ describe('Typed OData Server Integration Test Suite', () => {
       entities: SchoolEntities
     });
 
-    const { server, client, shutdownServer } = await createServerAndClient(conn, ...SchoolEntities);
+    const { client, shutdownServer } = await createServerAndClient(conn, ...SchoolEntities);
 
     try {
       const students = client.getEntitySet<Student>('Students');

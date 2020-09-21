@@ -147,7 +147,7 @@ export function ODataColumn(options: ColumnOptions = {}) {
 
     const entityColumns = getODataColumns(object);
 
-    const { primary, length, precision, nullable } = options;
+    const { primary, length, precision, nullable, scale } = options;
 
     if (primary) {
       Edm.Key(object, propertyName);
@@ -159,6 +159,10 @@ export function ODataColumn(options: ColumnOptions = {}) {
 
     if (precision) {
       Edm.Precision(toInteger(precision))(object, propertyName);
+    }
+
+    if (scale) {
+      Edm.Scale(toInteger(scale))(object, propertyName);
     }
 
     if (nullable) {
@@ -182,6 +186,9 @@ export function ODataColumn(options: ColumnOptions = {}) {
             break;
           case 'int64':
             Edm.Int64(object, propertyName);
+            break;
+          case 'decimal': case 'dec': case 'float': case 'float4': case 'float8':
+            Edm.Decimal(object, propertyName);
             break;
           default:
             // unknown or not have type

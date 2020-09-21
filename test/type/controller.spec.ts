@@ -66,7 +66,7 @@ describe('Typed Controller Test Suite', () => {
 
     const expectedDescription = v4();
 
-    const { server, client, shutdownServer } = await createServerAndClient(conn, BeforeA1CreationHook, ...entities);
+    const { client, shutdownServer } = await createServerAndClient(conn, BeforeA1CreationHook, ...entities);
 
     const esA1 = client.getEntitySet<A1>('A1s');
     const esA2 = client.getEntitySet<A2>('A2s');

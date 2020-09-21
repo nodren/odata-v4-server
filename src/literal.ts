@@ -11,7 +11,10 @@ function integer(value: string): number {
   return toInteger(value);
 }
 
-function float(value: string): number {
+function float(value: string | number): number {
+  if (typeof value == 'number') {
+    return value;
+  }
   switch (value) {
     case 'INF': return Infinity;
     case '-INF': return -Infinity;
