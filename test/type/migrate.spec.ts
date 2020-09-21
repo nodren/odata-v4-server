@@ -23,7 +23,21 @@ describe('Server Test Suite', () => {
 
     const { services: [v1Service] } = await server.getServicesWithNewContext(MigrateTable1);
 
-    await expect(() => v1Service.create({ value: 'test' })).rejects.toThrow(QueryFailedError); // table not found
+    switch (opt.type) {
+      case 'sap':
+        try {
+          await v1Service.create({ value: 'test' });
+          expect(true).toBeFalsy(); // must throw error
+        } catch (error) {
+          expect(error).not.toBeUndefined();
+        }
+        break;
+      default:
+        await expect(() => v1Service.create({ value: 'test' })).rejects.toThrow(QueryFailedError);
+        break;
+    }
+
+    await server.getConnection().close();
 
   });
 
