@@ -49,6 +49,9 @@ export class TypedService<T = any> extends ODataController {
   }
 
   protected async _getRepository(entityType?: any): Promise<Repository<T>> {
+    if (entityType instanceof Promise) {
+      throw ServerInternalError('get repository for Promise object, please check server implementation.');
+    }
     return (await this._getEntityManager()).getRepository(entityType ?? await this._getEntityType());
   }
 
@@ -71,9 +74,9 @@ export class TypedService<T = any> extends ODataController {
     data?: any,
     key?: any,
     @inject(InjectContainer) ic?: InjectContainer,
-    @inject(InjectKey.RequestTransaction) tx?: TransactionContext,
-    @inject(InjectKey.ODataTypeParameter) entityType
+    @inject(InjectKey.RequestTransaction) tx?: TransactionContext
   ) {
+    const entityType = await this._getEntityType();
 
     ic = await ic.createSubContainer();
 
@@ -284,7 +287,7 @@ export class TypedService<T = any> extends ODataController {
 
 
     if (data.length > 0) {
-      this.executeHooks(HookType.afterLoad, data);
+      await this.executeHooks(HookType.afterLoad, data);
     }
 
     return data;
