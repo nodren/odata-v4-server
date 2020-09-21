@@ -1,4 +1,4 @@
-import { IncKeyProperty, ODataModel, ODataNavigation, OptionalProperty } from '../../src';
+import { IncKeyProperty, ODataModel, ODataNavigation, OptionalProperty, UUIDKeyProperty } from '../../src';
 import { createServerAndClient, createTmpConnection } from './utils';
 
 
@@ -44,6 +44,38 @@ describe('RelationShip Test Suite', () => {
       await shutdownServer();
     }
 
+
+  });
+
+  it('should support uuid filter', async () => {
+
+    @ODataModel()
+    class UUIDObject {
+      @UUIDKeyProperty() id: string;
+      @OptionalProperty() name: string;
+    }
+
+    const conn = await createTmpConnection({
+      name: 'relationship_test',
+      entityPrefix: 'unit_rel_01_',
+      entities: [UUIDObject]
+    });
+
+    const { client, shutdownServer } = await createServerAndClient(conn, UUIDObject);
+
+    try {
+
+      const objects = client.getEntitySet<UUIDObject>('UUIDObjects');
+
+      const { id } = await objects.create({ name: 'name1' });
+      expect(id).not.toBeUndefined();
+
+      const items = await objects.find({ id });
+      expect(items).toHaveLength(1);
+
+    } finally {
+      await shutdownServer();
+    }
 
   });
 
