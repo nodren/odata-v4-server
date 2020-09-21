@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { getUnProxyTarget, inject, InjectContainer, required, transient, withType } from '@newdash/inject';
+import { getUnProxyTarget, inject, InjectContainer, noWrap, required, transient, withType } from '@newdash/inject';
 import { forEach } from '@newdash/newdash/forEach';
 import { isArray } from '@newdash/newdash/isArray';
 import { isEmpty } from '@newdash/newdash/isEmpty';
@@ -195,11 +195,11 @@ export class TypedService<T = any> extends ODataController {
     return {};
   }
 
+  @noWrap
   private _columnNameMappingStore: Map<string, string>;
 
-  private async createColumnMapper(
-    @inject(InjectKey.ODataTypeParameter) entityType
-  ) {
+  private async createColumnMapper() {
+    const entityType = await this._getEntityType();
     if (this._columnNameMappingStore == undefined) {
       this._columnNameMappingStore = new Map();
       const conn = await this._getConnection();
@@ -210,7 +210,7 @@ export class TypedService<T = any> extends ODataController {
         this._columnNameMappingStore.set(column.propertyName, column.databaseName);
       }
     }
-    return (propName) => this._columnNameMappingStore.get(propName);
+    return (propName: string) => this._columnNameMappingStore.get(propName);
   }
 
   async find(queryString: string): Promise<Array<T>>;
@@ -249,14 +249,13 @@ export class TypedService<T = any> extends ODataController {
       const schema = meta.schema;
       const tableName = meta.tableName;
 
-      const columnMapper = await this.createColumnMapper();
+      const colNameMapper = await this.createColumnMapper();
 
       const { queryStatement, countStatement } = helper.buildSQL({
         tableName,
         schema,
         query,
-        countKey: 'TOTAL',
-        colNameMapper: columnMapper
+        colNameMapper
       });
 
       // query all ids firstly
@@ -268,7 +267,7 @@ export class TypedService<T = any> extends ODataController {
       // get counts if necessary
       if (countStatement) {
         const countResult = await repo.query(countStatement);
-        let [{ TOTAL }] = countResult;
+        let [{ TOTAL }] = countResult; // default count column name is 'TOTAL'
         // for mysql, maybe other db driver also will response string
         if (typeof TOTAL == 'string') {
           TOTAL = parseInt(TOTAL);

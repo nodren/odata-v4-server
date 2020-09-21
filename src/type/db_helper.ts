@@ -32,7 +32,7 @@ export interface BuildSQLOption {
   schema?: string;
   tableName: string;
   query: ODataQuery;
-  countKey: string;
+  countKey?: string;
   colNameMapper?: (columnName: string) => string
 }
 
@@ -57,32 +57,30 @@ const buildNameWithQuote = (...names: string[]): string => names.filter(Boolean)
 
 const buildNameWithBackQuote = (...names: string[]): string => names.filter(Boolean).map((name) => `\`${name}\``).join('.');
 
-export class BaseDBHelper implements DBHelper {
+const DEFAULT_COUNT_TOTAL_KEY = 'TOTAL';
+
+export abstract class BaseDBHelper implements DBHelper {
 
   getDatabaseType(): EDatabaseType {
     return 'default';
   }
 
-  buildSQL({ schema, tableName, query, countKey, colNameMapper }) {
+  buildSQL({ schema, tableName, query, countKey = DEFAULT_COUNT_TOTAL_KEY, colNameMapper = (v: string) => v }) {
 
-    if (colNameMapper == undefined) {
-      colNameMapper = (v) => v;
-    }
+    const fullTableName = this.buildFullTableName(tableName, schema);
 
-    const fullTableName = buildNameWithQuote(schema, tableName);
+    const nameMapper = this.createIdentifierBuilder(colNameMapper, tableName, schema);
 
-    const { sqlQuery, count, where, selectedFields } = transformQueryAst(
-      query,
-      (col) => buildNameWithQuote(schema, tableName, colNameMapper(col))
-    );
+    const astResult = transformQueryAst(query, nameMapper);
 
-    const queryStatement = `SELECT ${isEmpty(selectedFields) ? '*' : selectedFields.join(', ')} FROM ${fullTableName} ${sqlQuery};`;
+    const { sqlQuery, count, where, selectedFields } = astResult;
+
+    const queryStatement = this.buildQueryStatement(selectedFields, fullTableName, sqlQuery);
+
     let countStatement = undefined;
 
     if (count) {
-      // use the uppercase 'total' field for hana database
-      countStatement = `SELECT count(1) as "${countKey}" FROM ${fullTableName}`;
-      if (where) { countStatement += ` where ${where}`; }
+      countStatement = this.buildCountStatement(countKey, fullTableName, where);
     }
 
     return {
@@ -91,10 +89,37 @@ export class BaseDBHelper implements DBHelper {
     };
   }
 
+  abstract createIdentifierBuilder(colNameMapper: Function, tableName?: string, schema?: string): (columnName: string) => string;
+
+  abstract buildFullTableName(tableName: string, schema?: string): string;
+
+  abstract buildQueryStatement(selectedFields: any[], fullTableName: string, sqlQuery: string): string;
+
+  abstract buildCountStatement(countKey: string, fullTableName: string, whereExpr: string): string;
+
 
 }
 
 export class DefaultDBHelper extends BaseDBHelper {
+
+  createIdentifierBuilder(colNameMapper: Function, tableName?: string, schema?: string): (columnName: string) => string {
+    return (columnName: string) => buildNameWithQuote(schema, tableName, colNameMapper(columnName));
+  }
+
+  buildFullTableName(tableName: string, schema?: string): string {
+    return buildNameWithQuote(schema, tableName);
+  }
+
+  buildQueryStatement(selectedFields: any[], fullTableName: string, sqlQuery: string): string {
+    const sSelects = isEmpty(selectedFields) ? '*' : selectedFields.join(', ');
+    return `SELECT ${sSelects} FROM ${fullTableName} ${sqlQuery};`;
+  }
+
+  buildCountStatement(countKey: string, fullTableName: string, whereExpr: string): string {
+    let countStatement = `SELECT count(1) AS "${countKey}" FROM ${fullTableName}`;
+    if (whereExpr) { countStatement += ` WHERE ${whereExpr}`; }
+    return countStatement;
+  }
 
 }
 
@@ -104,36 +129,25 @@ export class MySqlDBHelper extends BaseDBHelper {
     return 'mysql';
   }
 
-  buildSQL({ schema, tableName, query, countKey, colNameMapper }) {
-
-    if (colNameMapper == undefined) {
-      colNameMapper = (v) => v;
-    }
-
-    const fullTableName = buildNameWithBackQuote(schema, tableName);
-
-    const { sqlQuery, count, where, selectedFields } = transformQueryAst(
-      query,
-      (col) => buildNameWithBackQuote(schema, tableName, colNameMapper(col))
-    );
-
-    const sSelects = isEmpty(selectedFields) ? '*' : selectedFields.join(', ');
-
-    const queryStatement = `select ${sSelects} from ${fullTableName} ${sqlQuery};`;
-
-    let countStatement = undefined;
-
-    if (count) {
-      countStatement = `select count(1) as ${countKey} from ${fullTableName}`;
-      if (where) { countStatement += ` where ${where}`; }
-    }
-
-    return {
-      queryStatement,
-      countStatement
-    };
-
+  createIdentifierBuilder(colNameMapper: Function, tableName?: string, schema?: string): (columnName: string) => string {
+    return (columnName: string) => buildNameWithBackQuote(schema, tableName, colNameMapper(columnName));
   }
+
+  buildFullTableName(tableName: string, schema?: string): string {
+    return buildNameWithBackQuote(schema, tableName);
+  }
+
+  buildQueryStatement(selectedFields: any[], fullTableName: string, sqlQuery: string): string {
+    const sSelects = isEmpty(selectedFields) ? '*' : selectedFields.join(', ');
+    return `select ${sSelects} from ${fullTableName} ${sqlQuery};`;
+  }
+
+  buildCountStatement(countKey: string, fullTableName: string, whereExpr: string): string {
+    let countStatement = `select count(1) as ${countKey} from ${fullTableName}`;
+    if (whereExpr) { countStatement += ` where ${whereExpr}`; }
+    return countStatement;
+  }
+
 }
 
 export const createDBHelper = (options: ConnectionOptions): DBHelper => {
