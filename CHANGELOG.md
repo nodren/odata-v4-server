@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.38](https://github.com/Soontao/odata-v4-server/compare/v0.2.37...v0.2.38) (2020-09-22)
+
+
+### Bug Fixes
+
+* getConnection of typed service ([9a3509d](https://github.com/Soontao/odata-v4-server/commit/9a3509d791219bc85761e6bc3cb30b63e5caa0a9))
+
 ### [0.2.37](https://github.com/Soontao/odata-v4-server/compare/v0.2.36...v0.2.37) (2020-09-22)
 
 
