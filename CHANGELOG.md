@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.36](https://github.com/Soontao/odata-v4-server/compare/v0.2.35...v0.2.36) (2020-09-22)
+
+
+### Features
+
+* mapping guid when query ([9cda2e7](https://github.com/Soontao/odata-v4-server/commit/9cda2e7ca06f30c3afd6e7017b029f9ceab2a0a7))
+
+
+### Bug Fixes
+
+* quote for mysql ([a803510](https://github.com/Soontao/odata-v4-server/commit/a803510cc3ce64e4013ce88712db5f393e13dfc3))
+
 ### [0.2.35](https://github.com/Soontao/odata-v4-server/compare/v0.2.34...v0.2.35) (2020-09-21)
 
 
