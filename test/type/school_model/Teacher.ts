@@ -36,7 +36,7 @@ export class Teacher {
   // }
   @ODataAction
   async addClass(
-    @Edm.ReturnType(Edm.Int32) classId: number,
+    @Edm.ParameterType(Edm.Int32) classId: number,
     @oInject.service(lazyRef(() => Class)) classService: InjectedTypedService<Class>
   ) {
     const c = await classService.findOne(classId);
@@ -44,9 +44,8 @@ export class Teacher {
     if (c === undefined) {
       throw new ResourceNotFoundError(`not found instance class[${classId}]`);
     }
-    c.teacherOneId = this.tid;
 
-    await classService.update(c.cid, c); // save with hooks lifecycle, suggested
+    await classService.update(c.cid, { teacherOneId: this.tid }); // save with hooks lifecycle, suggested
   }
 
   // GET http://localhost:50000/Teachers(1)/Default.queryClass()

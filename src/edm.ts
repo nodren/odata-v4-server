@@ -232,8 +232,8 @@ export const GeometryCollection = (function GeometryCollection() {
  *
  * @param returnType
  */
-export function ReturnType<T>(returnType: T): T {
-  return returnType;
+export function ReturnType(returnType: unknown): PropertyDecorator {
+  return returnType as PropertyDecorator;
 }
 
 /**
@@ -241,8 +241,8 @@ export function ReturnType<T>(returnType: T): T {
  *
  * @param returnType
  */
-export function ParameterType<T>(parameterType: T): T {
-  return parameterType;
+export function ParameterType(parameterType: unknown): ParameterDecorator {
+  return parameterType as ParameterDecorator;
 }
 
 /** Edm.Collection decorator for describing properties as collections */
