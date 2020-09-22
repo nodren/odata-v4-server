@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.37](https://github.com/Soontao/odata-v4-server/compare/v0.2.36...v0.2.37) (2020-09-22)
+
+
+### Bug Fixes
+
+* avoid update un-necessary field for hana ([dc583cc](https://github.com/Soontao/odata-v4-server/commit/dc583cc7f718ee0e17ec6985dc5d547aa65eb016))
+
 ### [0.2.36](https://github.com/Soontao/odata-v4-server/compare/v0.2.35...v0.2.36) (2020-09-22)
 
 
