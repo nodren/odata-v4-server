@@ -188,7 +188,8 @@ export class MySqlDBHelper extends BaseDBHelper {
     switch (type) {
       case EdmType.DateTimeOffset:
         return new Date(raw).getTime();
-      case EdmType.Guid: case EdmType.String:
+      case EdmType.Guid:
+        // single quote for mysql
         return `'${raw}'`;
       default:
         return raw;
