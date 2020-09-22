@@ -5,6 +5,7 @@ import { uniq } from '@newdash/newdash/uniq';
 import { Connection, ConnectionOptions, createConnection, getConnection } from 'typeorm';
 import { odata } from '..';
 import { InjectKey, ServerType } from '../constants';
+import { ServerInternalError } from '../error';
 import { createLogger } from '../logger';
 import { ODataServer } from '../server';
 import { createTransactionContext, TransactionContext } from '../transaction';
@@ -23,7 +24,7 @@ type TypedODataItems = typeof BaseODataModel | typeof BaseHookProcessor | any
 /**
  * typed odata server
  */
-export abstract class TypedODataServer extends ODataServer {
+export class TypedODataServer extends ODataServer {
 
   public static variant = ServerType.typed
 
@@ -69,7 +70,9 @@ export abstract class TypedODataServer extends ODataServer {
   /**
    * get server owned connection
    */
-  static abstract getConnection(): Connection;
+  static getConnection(): Connection {
+    throw new ServerInternalError('Not implemented');
+  }
 
 }
 
