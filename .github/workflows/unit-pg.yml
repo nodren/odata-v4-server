@@ -42,10 +42,6 @@ jobs:
 
     - name: npm install
       run: npm ci
-  
-    - name: npm install driver
-      run: |
-        npm install -D pg@8.3.0
     
     - name: npm build
       run: npm run build
@@ -58,4 +54,4 @@ jobs:
         PG_PORT: ${{ job.services.postgres.ports[5432] }}
         PG_USER: odataserver
         PG_PASSWORD: odataserver
-        TEST_DB_LOG: true
+        DEBUG: '@odata*'
