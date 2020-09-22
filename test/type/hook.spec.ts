@@ -1,7 +1,7 @@
-import { inject, InjectWrappedInstance } from '@newdash/inject';
+import { inject, InjectWrappedInstance, lazyRef } from '@newdash/inject';
 import '@odata/client/lib/polyfill';
 import { isArray } from 'util';
-import { BaseHookProcessor, BaseODataModel, beforeCreate, findHooks, HookContext, HookProcessor, HookType, injectService, ODataColumn, ODataModel, OptionalProperty, TypedODataServer, TypedService, withEntitySetName, withHook } from '../../src';
+import { BaseHookProcessor, BaseODataModel, beforeCreate, findHooks, HookContext, HookProcessor, HookType, ODataColumn, ODataModel, oInject, OptionalProperty, TypedODataServer, TypedService, withEntitySetName, withHook } from '../../src';
 import { InjectKey } from '../../src/constants';
 import { createServerAndClient, createTmpConnection } from './utils';
 
@@ -239,7 +239,7 @@ describe('Hooks Test Suite', () => {
     @beforeCreate(Student2, 0)
     class h1 extends HookProcessor<Student2> {
 
-      async execute(@injectService(Student3) student3s: InjectWrappedInstance<TypedService<Student3>>): Promise<void> {
+      async execute(@oInject.service(lazyRef(() => Student3)) student3s: InjectWrappedInstance<TypedService<Student3>>): Promise<void> {
         hookInvokeSeq.push('h1');
         await student3s.create({ name2: 'first' });
       }

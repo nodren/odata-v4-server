@@ -1,22 +1,27 @@
-import { inject, InjectContainer } from '@newdash/inject';
+import { lazyRef } from '@newdash/inject';
 import { Connection } from 'typeorm';
-import { isUndefined } from 'util';
-import { Edm, ODataAction, ODataColumn, ODataModel, ODataNavigation, ResourceNotFoundError, TypedODataServer } from '../../../src';
-import { InjectKey } from '../../../src/constants';
+import { Edm, IncKeyProperty, InjectedTypedService, ODataAction, ODataFunction, ODataModel, ODataNavigation, oInject, OptionalProperty, Property, ResourceNotFoundError } from '../../../src';
 import { Class } from './Class';
 import { Profile } from './Profile';
+
+class Response {
+  @Edm.Decimal
+  outNumber: number;
+  @Edm.String
+  outString: string;
+}
 
 
 @ODataModel()
 export class Teacher {
 
-  @ODataColumn({ primary: true, generated: 'increment' })
+  @IncKeyProperty()
   tid: number;
 
-  @ODataColumn()
+  @Property()
   name: string;
 
-  @ODataColumn({ nullable: true })
+  @OptionalProperty()
   profileId: number;
 
   @ODataNavigation({ type: 'OneToOne', entity: () => Profile, foreignKey: 'profileId' })
@@ -31,14 +36,12 @@ export class Teacher {
   // }
   @ODataAction
   async addClass(
-    @Edm.Int32 classId: number,
-    @inject(InjectKey.ServerType) serverType: typeof TypedODataServer,
-    @inject(InjectContainer) ic: InjectContainer
+    @Edm.ReturnType(Edm.Int32) classId: number,
+    @oInject.service(lazyRef(() => Class)) classService: InjectedTypedService<Class>
   ) {
-    const classService = ic.wrap(await serverType.getService(Class));
     const c = await classService.findOne(classId);
 
-    if (isUndefined(c)) {
+    if (c === undefined) {
       throw new ResourceNotFoundError(`not found instance class[${classId}]`);
     }
     c.teacherOneId = this.tid;
@@ -47,8 +50,9 @@ export class Teacher {
   }
 
   // GET http://localhost:50000/Teachers(1)/Default.queryClass()
-  @Edm.Function(Edm.Collection(Edm.String))
-  async queryClass(@inject(InjectKey.GlobalConnection) conn: Connection) {
+  @ODataFunction
+  @Edm.ReturnType(Edm.Collection(Edm.String))
+  async queryClass(@oInject.txConnection conn: Connection) {
     const classes = await conn.getRepository(Class).find({
       where: {
         teacherOneId: this.tid
@@ -56,6 +60,15 @@ export class Teacher {
     });
 
     return classes.map((item) => item.name);
+  }
+
+  @ODataFunction
+  @Edm.ReturnType(Edm.ComplexType(Response))
+  async echo(inNumber: number, inString: string): Promise<any> {
+    return {
+      outNumber: inNumber,
+      outString: inString
+    };
   }
 
 }

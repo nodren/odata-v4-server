@@ -1,17 +1,17 @@
-import { ODataColumn, ODataModel, ODataNavigation } from '../../../src';
+import { IncKeyProperty, ODataModel, ODataNavigation, Property } from '../../../src';
 import { Class } from './Class';
 import { Student } from './Student';
 
 @ODataModel()
 export class RelStudentClassAssignment {
 
-  @ODataColumn({ primary: true, generated: 'increment' })
+  @IncKeyProperty()
   uuid: number;
 
-  @ODataColumn()
+  @Property()
   studentId: number;
 
-  @ODataColumn()
+  @Property()
   classId: number;
 
   @ODataNavigation({ entity: () => Student, foreignKey: 'studentId', type: 'ManyToOne' })

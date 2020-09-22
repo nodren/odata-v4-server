@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { getUnProxyTarget, inject, InjectContainer, noWrap, required, transient, withType } from '@newdash/inject';
+import { getUnProxyTarget, inject, InjectContainer, InjectWrappedInstance, LazyRef, noWrap, required, transient, withType } from '@newdash/inject';
 import { forEach } from '@newdash/newdash/forEach';
 import { isArray } from '@newdash/newdash/isArray';
 import { isEmpty } from '@newdash/newdash/isEmpty';
@@ -471,12 +471,17 @@ export class ODataServiceProvider {
   @transient
   @withType(InjectKey.InjectODataService)
   async provide(
-    @required @inject(InjectKey.ODataTypedService) entityType,
+    @noWrap @required @inject(InjectKey.ODataTypedService) entityType,
     @required @inject(InjectKey.ServerType) server: typeof TypedODataServer,
-    @required @inject(InjectKey.ODataTxContextParameter) tx: TransactionContext
+    @noWrap @required @inject(InjectKey.ODataTxContextParameter) tx: TransactionContext
   ) {
-    const [service] = await server.getServicesWithContext(tx, getUnProxyTarget(entityType));
+    if (entityType instanceof LazyRef) {
+      entityType = entityType.getRef();
+    }
+    const [service] = await server.getServicesWithContext(tx, entityType);
     return service;
   }
 
 }
+
+export type InjectedTypedService<T = any> = InjectWrappedInstance<TypedService<T>>

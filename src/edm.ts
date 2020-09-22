@@ -227,6 +227,23 @@ export const GeometryCollection = (function GeometryCollection() {
   return typeDecoratorFactory('Edm.GeometryCollection');
 })();
 
+/**
+ * decorator wrapper, indicate user inner decorator means return type
+ *
+ * @param returnType
+ */
+export function ReturnType<T>(returnType: T): T {
+  return returnType;
+}
+
+/**
+ * decorator wrapper, indicate user inner decorator means parameter type
+ *
+ * @param returnType
+ */
+export function ParameterType<T>(parameterType: T): T {
+  return parameterType;
+}
 
 /** Edm.Collection decorator for describing properties as collections */
 export function Collection(elementType: Function): Decorator {

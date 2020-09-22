@@ -1,4 +1,6 @@
-import { ODataModel, Property, UUIDKeyProperty } from '../../src';
+import { lazyRef } from '@newdash/inject';
+import { ODataFilter } from '@odata/parser';
+import { Edm, InjectedTypedService, KeyProperty, ODataAction, ODataFunction, ODataModel, oInject, Property, UUIDKeyProperty, withEntitySetName } from '../../src';
 import { createServerAndClient, createTmpConnection } from './utils';
 
 
@@ -49,6 +51,74 @@ describe('Entity Type Test Suite', () => {
       const retrieved1 = await set.retrieve(created.id);
       expect(retrieved1).toMatchObject(testObject);
 
+
+    } finally {
+      await shutdownServer();
+    }
+
+
+  });
+
+  it('should support inject service into action/function', async () => {
+
+    @withEntitySetName('As')
+    @ODataModel()
+    class ActionRefObject {
+      @KeyProperty() id: string;
+      @Property() value: string;
+    }
+
+    @withEntitySetName('Zs')
+    @ODataModel()
+    class ActionFunctionEntity {
+      @UUIDKeyProperty() id: string;
+
+      @ODataAction
+      @Edm.ReturnType(Edm.ComplexType(Edm.ForwardRef(() => ActionRefObject)))
+      async doSomething(
+        @oInject.body body,
+        @oInject.service(lazyRef(() => ActionRefObject)) aService: InjectedTypedService<ActionRefObject>
+      ) {
+        return await aService.create({ id: this.id, value: body.value });
+      }
+
+      @ODataFunction
+      @Edm.ReturnType(Edm.Collection(Edm.ComplexType(Edm.ForwardRef(() => ActionRefObject))))
+      async querySomething(
+        @Edm.ParameterType(Edm.String) id,
+        @oInject.service(lazyRef(() => ActionRefObject)) aService: InjectedTypedService<ActionRefObject>
+      ) {
+        const items = await aService.find(ODataFilter.New({ id }));
+        return items;
+      }
+
+    }
+
+    const conn = await createTmpConnection({
+      name: 'entity_test_conn_02',
+      entityPrefix: 'entity_test_02',
+      entities: [ActionRefObject, ActionFunctionEntity]
+    });
+
+    const { client, shutdownServer } = await createServerAndClient(conn);
+
+    try {
+      const actions = client.getEntitySet<ActionFunctionEntity>('Zs');
+      const refs = client.getEntitySet<ActionRefObject>('As');
+      const testValue = 'test value';
+      const z1 = await actions.create({});
+      expect(z1).not.toBeUndefined();
+
+      const actionResult = await actions.action('Default.doSomething', z1.id, { value: testValue });
+      expect(actionResult).not.toBeUndefined();
+      expect(actionResult.value).toBe(testValue);
+
+      const refItems = await refs.query();
+      expect(refItems).toHaveLength(1);
+
+      const funcResult = await actions.function('Default.querySomething', z1.id, { id: z1.id });
+      expect(funcResult.value).toHaveLength(1);
+      expect(funcResult.value[0].value).toBe(testValue);
 
     } finally {
       await shutdownServer();

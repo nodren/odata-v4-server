@@ -47,7 +47,7 @@ describe('RelationShip Test Suite', () => {
 
   });
 
-  it('should support uuid filter', async () => {
+  it('should support uuid expand', async () => {
 
     @ODataModel()
     class UUIDObject {

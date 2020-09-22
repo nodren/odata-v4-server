@@ -1,5 +1,7 @@
 // @ts-nocheck
 import { createInstanceProvider, InjectWrappedInstance } from '@newdash/inject';
+import { concat } from '@newdash/newdash';
+import { uniq } from '@newdash/newdash/uniq';
 import { Connection, ConnectionOptions, createConnection, getConnection } from 'typeorm';
 import { odata } from '..';
 import { InjectKey, ServerType } from '../constants';
@@ -110,6 +112,8 @@ export async function createTypedODataServer(connection: any, ...configurations:
 
         connName = connObj.name;
         connOpt = connObj.driver.options;
+
+        configurations = uniq(concat(configurations, connOpt.entities));
 
         const dbHelper = createDBHelper(connOpt);
 

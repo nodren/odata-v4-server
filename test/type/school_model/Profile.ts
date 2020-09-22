@@ -1,13 +1,13 @@
 import { Teacher } from '.';
-import { ODataColumn, ODataModel, ODataNavigation } from '../../../src';
+import { IncKeyProperty, ODataModel, ODataNavigation, Property } from '../../../src';
 
 @ODataModel()
 export class Profile  {
 
-  @ODataColumn({ primary: true, generated: 'increment' })
+  @IncKeyProperty()
   id: number;
 
-  @ODataColumn()
+  @Property()
   title: string;
 
   @ODataNavigation({ type: 'OneToOne', entity: () => Teacher, targetForeignKey: 'profileId' })

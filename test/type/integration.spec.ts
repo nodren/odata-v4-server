@@ -1,3 +1,4 @@
+import { v4 } from 'uuid';
 import { Class, RelStudentClassAssignment, SchoolEntities, Student, Teacher } from './school_model';
 import { createServerAndClient, createTmpConnection } from './utils';
 
@@ -110,6 +111,52 @@ describe('Typed OData Server Integration Test Suite', () => {
 
     }
 
+
+  });
+
+  it('should support action/function', async () => {
+    const conn = await createTmpConnection({
+      name: 'typed_service_int_test_2',
+      entityPrefix: 'unit_int_2',
+      entities: SchoolEntities
+    });
+
+    const { client, shutdownServer } = await createServerAndClient(conn);
+
+    try {
+      const testString = v4();
+      const testNumber = Math.ceil(Math.random() * 1000);
+      const teachers = client.getEntitySet<Teacher>('Teachers');
+      const classes = client.getEntitySet<Class>('Classes');
+
+      const createdTeacher = await teachers.create({ name: 'Theo Sun' });
+      let createdClass = await classes.create({ name: 'CS', desc: 'Computer Science' });
+
+      // >> odata bounded function
+      const echoResponse = await teachers.function('Default.echo', createdTeacher.tid, {
+        inNumber: testNumber,
+        inString: testString
+      });
+      expect(echoResponse['outNumber']).toBe(testNumber);
+      expect(echoResponse['outString']).toBe(testString);
+
+
+      // >> odata bounded action
+      await teachers.action('Default.addClass', createdTeacher.tid, { classId: createdClass.cid });
+      createdClass = await classes.retrieve(createdClass.cid); // refresh
+      expect(createdClass.teacherOneId).toBe(createdTeacher.tid);
+
+      const t1Classes = await teachers.function('Default.queryClass', createdTeacher.tid, {});
+      expect(t1Classes.value).toHaveLength(1);
+      expect(t1Classes.value[0]).toBe(createdClass.name);
+
+      // >> clean
+      await classes.delete(createdClass.cid); // delete ref item firstly
+      await teachers.delete(createdTeacher.tid);
+
+    } finally {
+      await shutdownServer();
+    }
 
   });
 

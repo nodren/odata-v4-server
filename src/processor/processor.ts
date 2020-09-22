@@ -16,6 +16,7 @@ import { ODataController, ODataControllerBase } from '../controller';
 import * as Edm from '../edm';
 import { MethodNotAllowedError, NotImplementedError, ResourceNotFoundError, ServerInternalError } from '../error';
 import { IODataResult } from '../index';
+import { createLogger } from '../logger';
 import * as odata from '../odata';
 import { ODataResult } from '../result';
 import { ODataHttpContext, ODataServer } from '../server';
@@ -24,6 +25,9 @@ import { isIterator, isPromise, isStream } from '../utils';
 import { NavigationPart, ODATA_TYPE, ResourcePathVisitor } from '../visitor';
 import { fnCaller } from './fnCaller';
 import { getODataRoot } from './getODataRoot';
+
+
+const logger = createLogger('processor');
 
 
 const createODataContext = function (context: ODataHttpContext, entitySets, server: typeof ODataServer, resourcePath, processor) {
@@ -525,9 +529,16 @@ export class ODataProcessor extends Transform {
     context.url = decodeURIComponent(context.url);
     this.url = url.parse(context.url);
     this.query = qs.parse(this.url.query);
-    const ast = this.serverType.parser.odataUri(context.url, {
-      metadata: this.serverType.$metadata().edmx
-    });
+    let ast;
+    try {
+      ast = this.serverType.parser.odataUri(context.url, {
+        metadata: this.serverType.$metadata().edmx
+      });
+    } catch (error) {
+      logger(`parsing uri: %s failed.`, context.url);
+      throw error;
+    }
+
     if (this.serverType.validator) {
       this.serverType.validator(ast);
     }
@@ -1446,16 +1457,15 @@ export class ODataProcessor extends Transform {
             ));
         } else {
           id = (await Promise.all(keys.map(async (it) =>
-            `${it}=${
-              await Edm.escape(
-                body[it],
-                Edm.getTypeName(elementType, it, this.serverType.container),
-                Edm.getURLSerializer(
-                  elementType,
-                  it,
-                  Edm.getType(elementType, it, this.serverType.container),
-                  this.serverType.container
-                ))}`))).join(',');
+            `${it}=${await Edm.escape(
+              body[it],
+              Edm.getTypeName(elementType, it, this.serverType.container),
+              Edm.getURLSerializer(
+                elementType,
+                it,
+                Edm.getType(elementType, it, this.serverType.container),
+                this.serverType.container
+              ))}`))).join(',');
         }
       } catch (err) { }
     }
