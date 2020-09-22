@@ -23,7 +23,7 @@ type TypedODataItems = typeof BaseODataModel | typeof BaseHookProcessor | any
 /**
  * typed odata server
  */
-export class TypedODataServer extends ODataServer {
+export abstract class TypedODataServer extends ODataServer {
 
   public static variant = ServerType.typed
 
