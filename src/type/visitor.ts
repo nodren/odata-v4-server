@@ -2,44 +2,40 @@ import { identity } from '@newdash/newdash/.internal/identity';
 import { Token, traverseAst, traverseAstDeepFirst, Traverser } from '@odata/parser';
 import { ODataQuery } from '..';
 import { NotImplementedError } from '../error';
+import { EdmType } from '../literal';
 
-export const mapValue = (node: Token) => {
-  switch (node.value) {
-    case 'Edm.DateTimeOffset':
-      return new Date(node.raw).getTime();
-    default:
-      return node.raw;
-  }
-};
+interface ValueMapper {
+  (type: EdmType, raw: string): any
+}
 
 /**
  * transformFilterAst to where sql
  *
  * @param node
  */
-export const transformFilterAst = (node: Token, nameMapper: FieldNameMapper = identity): string => {
+export const transformFilterAst = (node: Token, nameMapper: FieldNameMapper = identity, valueMapper: ValueMapper): string => {
 
   // maybe the hidden 'sql' property will pollute the object,
   // but deep copy object will consume too much resource
 
   const traverser: Traverser = {
     EqualsExpression: (node) => {
-      node['sql'] = `${nameMapper(node.value.left.raw)} = ${mapValue(node.value.right)}`;
+      node['sql'] = `${nameMapper(node.value.left.raw)} = ${valueMapper(node.value.right.value, node.value.right.raw)}`;
     },
     NotEqualsExpression: (node) => {
-      node['sql'] = `${nameMapper(node.value.left.raw)} != ${mapValue(node.value.right)}`;
+      node['sql'] = `${nameMapper(node.value.left.raw)} != ${valueMapper(node.value.right.value, node.value.right.raw)}`;
     },
     GreaterOrEqualsExpression: (node) => {
-      node['sql'] = `${nameMapper(node.value.left.raw)} >= ${mapValue(node.value.right)}`;
+      node['sql'] = `${nameMapper(node.value.left.raw)} >= ${valueMapper(node.value.right.value, node.value.right.raw)}`;
     },
     GreaterThanExpression: (node) => {
-      node['sql'] = `${nameMapper(node.value.left.raw)} > ${mapValue(node.value.right)}`;
+      node['sql'] = `${nameMapper(node.value.left.raw)} > ${valueMapper(node.value.right.value, node.value.right.raw)}`;
     },
     LesserOrEqualsExpression: (node) => {
-      node['sql'] = `${nameMapper(node.value.left.raw)} <= ${mapValue(node.value.right)}`;
+      node['sql'] = `${nameMapper(node.value.left.raw)} <= ${valueMapper(node.value.right.value, node.value.right.raw)}`;
     },
     LesserThanExpression: (node) => {
-      node['sql'] = `${nameMapper(node.value.left.raw)} < ${mapValue(node.value.right)}`;
+      node['sql'] = `${nameMapper(node.value.left.raw)} < ${valueMapper(node.value.right.value, node.value.right.raw)}`;
     },
     OrExpression: (node) => {
       const { value: { left, right } } = node;
@@ -71,7 +67,7 @@ export interface FieldNameMapper {
   (field: string): string
 }
 
-export const transformQueryAst = (node: ODataQuery, nameMapper: FieldNameMapper = identity) => {
+export const transformQueryAst = (node: ODataQuery, nameMapper: FieldNameMapper = identity, valueMapper: ValueMapper) => {
 
   let sqlQuery = '';
   let offset = 0;
@@ -112,7 +108,7 @@ export const transformQueryAst = (node: ODataQuery, nameMapper: FieldNameMapper 
       throw new NotImplementedError('Not implement $search.');
     },
     Filter: (node) => {
-      where = transformFilterAst(node, nameMapper);
+      where = transformFilterAst(node, nameMapper, valueMapper);
     }
   };
 

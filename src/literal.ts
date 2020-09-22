@@ -4,7 +4,22 @@ import { trimPrefix } from '@newdash/newdash/trimPrefix';
 import { trimSuffix } from '@newdash/newdash/trimSuffix';
 
 export enum EdmType {
-
+  String = 'Edm.String',
+  Byte = 'Edm.Byte',
+  SByte = 'Edm.SByte',
+  Int16 = 'Edm.Int64',
+  Int32 = 'Edm.Int32',
+  Int64 = 'Edm.Int64',
+  Decimal = 'Edm.Decimal',
+  Double = 'Edm.Double',
+  Single = 'Edm.Single',
+  Date = 'Edm.Date',
+  DateTimeOffset = 'Edm.DateTimeOffset',
+  Boolean = 'Edm.Boolean',
+  Guid = 'Edm.Guid',
+  null = 'null',
+  TimeOfDay = 'Edm.TimeOfDay',
+  Duration = 'Edm.Duration',
 }
 
 function integer(value: string): number {
@@ -21,6 +36,7 @@ function float(value: string | number): number {
     default: return toNumber(value);
   }
 }
+
 
 export class Literal {
   constructor(type: string, value: string) {

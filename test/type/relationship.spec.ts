@@ -53,6 +53,7 @@ describe('RelationShip Test Suite', () => {
     class UUIDObject {
       @UUIDKeyProperty() id: string;
       @OptionalProperty() name: string;
+      @ODataNavigation({ type: 'OneToMany', entity: () => UUIDObject2, targetForeignKey: 'obj1Id' }) obj2s: Array<UUIDObject2>
     }
 
     @ODataModel()
@@ -73,13 +74,13 @@ describe('RelationShip Test Suite', () => {
 
     try {
 
-      const objects = client.getEntitySet<UUIDObject>('UUIDObjects');
+      const object1s = client.getEntitySet<UUIDObject>('UUIDObjects');
       const object2s = client.getEntitySet<UUIDObject2>('UUIDObject2s');
 
-      const anObject1 = await objects.create({ name: 'name1' });
+      const anObject1 = await object1s.create({ name: 'name1' });
       expect(anObject1.id).not.toBeUndefined();
 
-      const items = await objects.find({ id: anObject1.id });
+      const items = await object1s.find({ id: anObject1.id });
       expect(items).toHaveLength(1);
 
       const anObject2 = await object2s.create({ name: 'name2', obj1Id: anObject1.id });
@@ -88,6 +89,11 @@ describe('RelationShip Test Suite', () => {
       const items2 = await object2s.query(client.newParam().expand('obj1'));
       expect(items2).toHaveLength(1);
       expect(items2[0].obj1.name).toBe(anObject1.name);
+
+      const items1 = await object1s.query(client.newParam().expand('obj2s'));
+      expect(items1).toHaveLength(1);
+      expect(items1[0].obj2s).toHaveLength(1);
+      expect(items1[0].obj2s[0].id).toBe(anObject2.id);
 
     } finally {
       await shutdownServer();

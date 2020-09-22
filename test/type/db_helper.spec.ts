@@ -1,0 +1,52 @@
+import identity from '@newdash/newdash/.internal/identity';
+import { defaultParser } from '@odata/parser';
+import { FieldNameMapper, transformFilterAst, transformQueryAst } from '../../src';
+import { createDBHelper } from '../../src/type/db_helper';
+
+
+describe('DB Helper Test Suite', () => {
+  it('should support converting data query to sql', () => {
+
+    const helper = createDBHelper({ type: 'sqljs' });
+
+    const ast = defaultParser.filter('(A eq 3) and (B eq 4 or B eq 5) and (C ge 3 and D lt 5)');
+    const sql = transformFilterAst(ast, identity, helper.mapQueryValue);
+
+    expect(sql).toEqual('(A = 3) AND (B = 4 OR B = 5) AND (C >= 3 AND D < 5)');
+
+  });
+
+  it('should support converting odata query to sql', () => {
+
+    const helper = createDBHelper({ type: 'sqljs' });
+
+    const ast = defaultParser.query('$format=json&$select=A,B,C&$top=10&$skip=30&$filter=A eq 1&$orderby=A desc,V asc');
+    const { selectedFields, sqlQuery } = transformQueryAst(ast, undefined, helper.mapQueryValue);
+
+    expect(sqlQuery.trim()).toEqual('WHERE A = 1 LIMIT 10 OFFSET 30 ORDERBY A DESC, V ASC');
+    expect(selectedFields).toEqual(['A', 'B', 'C']);
+
+  });
+
+  it('should visit $count', () => {
+    const helper = createDBHelper({ type: 'sqljs' });
+
+    const ast = defaultParser.query('$count=true');
+    const { count } = transformQueryAst(ast, undefined, helper.mapQueryValue);
+    expect(count).toBeTruthy();
+  });
+
+  it('should support converting odata query to sql with name mapper', () => {
+    const helper = createDBHelper({ type: 'sqljs' });
+
+    const ast = defaultParser.query('$format=json&$select=A,B,C&$top=10&$skip=30&$filter=A eq 1&$orderby=A desc,V asc');
+    const nameMapper: FieldNameMapper = (fieldName) => `table.${fieldName}`;
+    const { selectedFields, sqlQuery } = transformQueryAst(ast, nameMapper, helper.mapQueryValue);
+
+    expect(sqlQuery.trim()).toEqual('WHERE table.A = 1 LIMIT 10 OFFSET 30 ORDERBY table.A DESC, table.V ASC');
+    expect(selectedFields).toEqual(['table.A', 'table.B', 'table.C']);
+
+  });
+
+
+});

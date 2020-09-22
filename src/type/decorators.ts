@@ -193,6 +193,8 @@ export function ODataColumn(options: ColumnOptions = {}) {
             Edm.Decimal(object, propertyName);
             options.transformer.push(DecimalTransformer);
             break;
+          case 'uuid':
+            Edm.Guid(object, propertyName);
           default:
             Edm.String(object, propertyName);
             break;

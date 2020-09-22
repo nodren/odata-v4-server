@@ -2,6 +2,7 @@ import isEmpty from '@newdash/newdash/isEmpty';
 import { ConnectionOptions, DatabaseType, ValueTransformer } from 'typeorm';
 import { ODataQuery } from '..';
 import { ServerInternalError } from '../error';
+import { EdmType } from '../literal';
 import { transformQueryAst } from './visitor';
 
 export const DecimalTransformer: ValueTransformer = {
@@ -64,6 +65,13 @@ export interface DBHelper {
 
   buildSQL(opt: BuildSQLOption): BuildSQLResult;
 
+  /**
+   * map raw value from query string to db accepted format
+   * @param type
+   * @param raw
+   */
+  mapQueryValue(type: EdmType, raw: string): any;
+
 }
 
 const buildName = (...names: string[]): string => names.filter(Boolean).join('.');
@@ -76,6 +84,7 @@ const DEFAULT_COUNT_TOTAL_KEY = 'TOTAL';
 
 export abstract class BaseDBHelper implements DBHelper {
 
+
   getDatabaseType(): EDatabaseType {
     return 'default';
   }
@@ -86,7 +95,7 @@ export abstract class BaseDBHelper implements DBHelper {
 
     const nameMapper = this.createIdentifierBuilder(colNameMapper, tableName, schema);
 
-    const astResult = transformQueryAst(query, nameMapper);
+    const astResult = transformQueryAst(query, nameMapper, this.mapQueryValue.bind(this));
 
     const { sqlQuery, count, where, selectedFields } = astResult;
 
@@ -102,6 +111,18 @@ export abstract class BaseDBHelper implements DBHelper {
       queryStatement,
       countStatement
     };
+  }
+
+
+  mapQueryValue(type: EdmType, raw: string) {
+    switch (type) {
+      case EdmType.DateTimeOffset:
+        return new Date(raw).getTime();
+      case EdmType.Guid:
+        return `'${raw}'`;
+      default:
+        return raw;
+    }
   }
 
   abstract createIdentifierBuilder(colNameMapper: Function, tableName?: string, schema?: string): (columnName: string) => string;
@@ -163,9 +184,20 @@ export class MySqlDBHelper extends BaseDBHelper {
     return countStatement;
   }
 
+  mapQueryValue(type: EdmType, raw: string) {
+    switch (type) {
+      case EdmType.DateTimeOffset:
+        return new Date(raw).getTime();
+      case EdmType.Guid: case EdmType.String:
+        return `'${raw}'`;
+      default:
+        return raw;
+    }
+  }
+
 }
 
-export const createDBHelper = (options: ConnectionOptions): DBHelper => {
+export const createDBHelper = (options: Partial<ConnectionOptions>): DBHelper => {
   switch (options.type) {
     case 'mysql':
       return new MySqlDBHelper();
