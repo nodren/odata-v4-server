@@ -4,11 +4,28 @@ import '@odata/client/lib/polyfill';
 import { Server } from 'http';
 import * as os from 'os';
 import * as path from 'path';
-import { Connection, ConnectionOptions, createConnection } from 'typeorm';
+import { ColumnType, Connection, ConnectionOptions, createConnection } from 'typeorm';
 import { v4 } from 'uuid';
 import { createTypedODataServer, TypedODataServer } from '../../src';
 import { randomPort } from '../utils/randomPort';
 import { ready, shutdown } from '../utils/server';
+
+/**
+ * get char data type from env
+ *
+ * TEST only
+ */
+export function getTestCharDataType(): ColumnType {
+  const options = createTmpConnOpt();
+  switch (options?.type) {
+    case 'sap': case 'mysql': case 'sqlite': case 'sqljs':
+      return 'nvarchar';
+    case 'postgres':
+      return 'varchar';
+    default:
+      return 'text';
+  }
+}
 
 const createTmpDefaultOption = () => {
   let defaultOpt: ConnectionOptions = undefined;
@@ -86,7 +103,7 @@ export const createTmpMigrateConnOpt = (opt?: Partial<ConnectionOptions>) => {
 };
 
 
-export const createTmpConnOpt = (opt?: Partial<ConnectionOptions>) => {
+export const createTmpConnOpt = (opt?: Partial<ConnectionOptions> = {}) => {
 
   let defaultOpt: ConnectionOptions = createTmpDefaultOption();
 

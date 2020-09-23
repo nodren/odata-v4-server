@@ -1,5 +1,5 @@
 import { BaseODataModel, KeyProperty, ODataEntityType, ODataModel, ODataNavigation, OptionalProperty, Property, UUIDKeyProperty } from '../../src';
-import { createServerAndClient, createTmpConnection } from './utils';
+import { createServerAndClient, createTmpConnection, getTestCharDataType } from './utils';
 
 
 describe('Validate Test Suite', () => {
@@ -213,7 +213,7 @@ describe('Validate Test Suite', () => {
     @ODataModel()
     class ValidationString {
       @UUIDKeyProperty() id: string;
-      @Property({ length: 10 }) value: string;
+      @Property({ type: getTestCharDataType(), length: 10 }) value: string;
     }
 
     @ODataModel()

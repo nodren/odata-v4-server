@@ -207,9 +207,6 @@ export function ODataColumn(options: ColumnOptions = {}) {
             break;
           default:
             Edm.String(object, propertyName);
-            if (options.type === undefined) {
-              options.type = 'text';
-            }
             break;
         }
         break;
@@ -226,9 +223,6 @@ export function ODataColumn(options: ColumnOptions = {}) {
           default:
             // unknown or not have type
             Edm.Int32(object, propertyName);
-            if (options.type === undefined) {
-              options.type = 'int';
-            }
             break;
         }
         break;
@@ -273,6 +267,7 @@ export function ODataColumn(options: ColumnOptions = {}) {
       case 'varchar2':
       case 'char':
       case 'text':
+      case String:
         Assert.IsString({ groups: ODataMethods })(object, propertyName);
         break;
       case 'uuid':
@@ -281,7 +276,14 @@ export function ODataColumn(options: ColumnOptions = {}) {
       case 'datetime': case 'datetime2': case 'datetimeoffset':
         Assert.IsDateString({ groups: ODataMethods })(object, propertyName);
         break;
-      case 'int': case 'int2': case 'int4': case 'int8': case 'int64': case 'bigint':
+      case 'int':
+      case 'integer':
+      case 'int2':
+      case 'int4':
+      case 'int8':
+      case 'int64':
+      case 'bigint':
+      case Number:
         if (reflectType == Date) {
           Assert.IsDateOrDateString({ groups: ODataMethods })(object, propertyName);
         } else {

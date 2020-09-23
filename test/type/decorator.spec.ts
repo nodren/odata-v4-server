@@ -68,8 +68,8 @@ describe('Decorator Test Suite', () => {
     const entityProps = getODataColumns(A);
 
     expect(entityProps).toHaveLength(2);
-    expect(entityProps[0].type).toBe('int');
-    expect(entityProps[1].type).toBe('text');
+    expect(entityProps[0].type).toBe(Number);
+    expect(entityProps[1].type).toBe(String);
 
     expect(getODataColumns(new A)).toHaveLength(2);
 
