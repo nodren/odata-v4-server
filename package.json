@@ -10,7 +10,7 @@
   },
   "scripts": {
     "prebuild": "rimraf lib",
-    "build": "tsc && tsc lib/**.ts --noEmit",
+    "build": "tsc && npx tsc --noEmit --p tsconfig.lib.json",
     "lint": "eslint src --fix",
     "pretest": "eslint test --fix ",
     "test": "jest --forceExit",
