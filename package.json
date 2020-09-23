@@ -10,7 +10,7 @@
   },
   "scripts": {
     "prebuild": "rimraf lib",
-    "build": "tsc",
+    "build": "tsc && tsc lib/**.ts --noEmit",
     "lint": "eslint src --fix",
     "pretest": "eslint test --fix ",
     "test": "jest --forceExit",

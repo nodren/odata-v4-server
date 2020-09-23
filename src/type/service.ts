@@ -4,7 +4,7 @@ import { flatten } from '@newdash/newdash/flatten';
 import { forEach } from '@newdash/newdash/forEach';
 import { isArray } from '@newdash/newdash/isArray';
 import { isEmpty } from '@newdash/newdash/isEmpty';
-import { defaultParser, ODataFilter, ODataQuery, ODataQueryParam, param } from '@odata/parser';
+import { defaultParser, ODataFilter, ODataQueryParam, param, QueryOptionsNode as ODataQuery } from '@odata/parser';
 import { validate } from 'class-validator';
 import 'reflect-metadata';
 import { Connection, DeepPartial, QueryRunner, Repository } from 'typeorm';
