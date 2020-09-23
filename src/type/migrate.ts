@@ -82,13 +82,21 @@ export async function syncEntities(connectionOptions: Partial<ConnectionOptions>
 }
 
 
-export async function migrate(connectionOptions: Partial<ConnectionOptions>, versionNumber: number = 1):Promise<boolean> {
+export async function migrate(
+  connectionOptions: Partial<ConnectionOptions>,
+  versionNumber: number = 1
+): Promise<boolean> {
   const { entities } = connectionOptions;
 
   let dbConfigs: DBConfiguration;
 
   for (let idx = 0; idx < 3; idx++) {
     dbConfigs = await getDBConfiguration(connectionOptions);
+    // if remote database schema version is greater than local, no migration perform
+    if (dbConfigs.version.versionNumber >= versionNumber) {
+      logger('skip migration remote(%s), local(%s)', dbConfigs.version.versionNumber, versionNumber);
+      return false;
+    }
     if (dbConfigs.version.lock.locked == false) { break; }
     await sleep(60 * 1000);
   }
