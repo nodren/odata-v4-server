@@ -151,7 +151,7 @@ describe('Typeorm Test Suite', () => {
       entities: [TimeSheet]
     });
 
-    const { server, client, shutdownServer } = await createServerAndClient(conn, TimeSheet);
+    const { client, shutdownServer } = await createServerAndClient(conn, TimeSheet);
 
     try {
 

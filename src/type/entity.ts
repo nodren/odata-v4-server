@@ -2,7 +2,7 @@ import forEach from '@newdash/newdash/forEach';
 import { isFunction } from '@newdash/newdash/isFunction';
 import isUndefined from '@newdash/newdash/isUndefined';
 import { Connection, getConnection, Repository } from 'typeorm';
-import { getKeyProperties, getProperties } from '..';
+import { getKeyProperties, getProperties } from '../edm';
 import { ForeignKeyValidationError, StartupError } from '../error';
 import { getOrCreateTransaction, TransactionContext } from '../transaction';
 import { getConnectionName, getODataEntityNavigations, getODataServerType } from './decorators';

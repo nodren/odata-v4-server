@@ -43,6 +43,7 @@
     "@odata/metadata": "^0.1.14",
     "@odata/parser": "^0.2.1",
     "body-parser": "^1.19.0",
+    "class-validator": "^0.12.2",
     "colors": "^1.4.0",
     "cors": "^2.8.5",
     "debug": "^4.2.0",

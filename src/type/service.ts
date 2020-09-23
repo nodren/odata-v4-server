@@ -1,12 +1,13 @@
 // @ts-nocheck
 import { getUnProxyTarget, inject, InjectContainer, InjectWrappedInstance, LazyRef, noWrap, required, transient, withType } from '@newdash/inject';
+import { flatten } from '@newdash/newdash/flatten';
 import { forEach } from '@newdash/newdash/forEach';
 import { isArray } from '@newdash/newdash/isArray';
 import { isEmpty } from '@newdash/newdash/isEmpty';
-import { defaultParser, ODataFilter, ODataQueryParam, param } from '@odata/parser';
+import { defaultParser, ODataFilter, ODataQuery, ODataQueryParam, param } from '@odata/parser';
+import { validate } from 'class-validator';
 import 'reflect-metadata';
 import { Connection, DeepPartial, QueryRunner, Repository } from 'typeorm';
-import { getKeyProperties, ODataQuery } from '..';
 import { InjectKey } from '../constants';
 import { ODataController } from '../controller';
 import * as Edm from '../edm';
@@ -20,6 +21,7 @@ import { getODataEntityNavigations, getODataServerType } from './decorators';
 import { BaseODataModel } from './entity';
 import { findHooks, HookContext, HookEvents, HookType } from './hooks';
 import { TypedODataServer } from './server';
+
 
 const logger = createLogger('type:service');
 
@@ -331,7 +333,7 @@ export class TypedService<T = any> extends ODataController {
 
     const navigations = getODataEntityNavigations(entityType.prototype);
 
-    const [parentObjectKeyName] = getKeyProperties(entityType);
+    const [parentObjectKeyName] = Edm.getKeyProperties(entityType);
 
     const key = instance[parentObjectKeyName];
 
@@ -351,7 +353,7 @@ export class TypedService<T = any> extends ODataController {
             throw new ServerInternalError(`fk is not defined on entity ${entityType.name} or ${deepInsertElementType.name}`);
           }
           const service = await this._getService(deepInsertElementType);
-          const [navTargetKeyName] = getKeyProperties(deepInsertElementType);
+          const [navTargetKeyName] = Edm.getKeyProperties(deepInsertElementType);
 
           switch (options.type) {
             case 'OneToMany':
@@ -414,6 +416,7 @@ export class TypedService<T = any> extends ODataController {
 
   @odata.POST
   async create(@odata.body body: DeepPartial<T>): Promise<T> {
+    await this._validate(body); // validate raw payload firstly
     await this._transformInboundPayload(body);
 
     await this.executeHooks(HookType.beforeCreate, body);
@@ -424,6 +427,35 @@ export class TypedService<T = any> extends ODataController {
     await this.executeHooks(HookType.afterCreate, instance);
 
     return instance;
+  }
+
+  private async _validate(input: any): Promise<void> {
+    const entityType = await this._getEntityType();
+    const instance = Object.assign(new entityType(), input);
+
+    // check user not input not given prop
+    const entityProps = Edm.getProperties(entityType);
+
+    const msgs = [];
+
+    Object.keys(input).forEach((inputPropName) => {
+      if (!entityProps.includes(inputPropName)) {
+        msgs.push(`property '${inputPropName}' is not defined`);
+      }
+    });
+
+    // skip undefined for update
+    const validateMsgs = await validate(instance);
+
+    if (validateMsgs.length > 0) {
+      flatten(validateMsgs.map((msg) => Object.values(msg.constraints)))
+        .forEach((msg) => msgs.push(msg));
+    }
+
+    if (msgs.length > 0) {
+      throw new BadRequestError(msgs.join(', '));
+    }
+
   }
 
   // create or update
@@ -446,7 +478,6 @@ export class TypedService<T = any> extends ODataController {
     await this._transformInboundPayload(body);
     const repo = await this._getRepository();
     const instance = body;
-    await this._deepMerge(instance);
     await this.executeHooks(HookType.beforeUpdate, instance, key);
     await repo.update(key, instance);
     await this.executeHooks(HookType.afterUpdate, instance, key);

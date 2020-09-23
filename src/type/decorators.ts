@@ -1,9 +1,9 @@
 import { inject, InjectContainer, LazyRef } from '@newdash/inject';
 import { isClass } from '@newdash/inject/lib/utils';
 import { isArray } from '@newdash/newdash';
-import { has } from '@newdash/newdash/has';
 import { isEmpty } from '@newdash/newdash/isEmpty';
 import toInteger from '@newdash/newdash/toInteger';
+import { Contains, IsBoolean, IsDate, IsDateString, IsDefined, IsEmail, IsEmpty, IsEnum, IsInt, IsNumber, IsNumberString, IsOptional, IsPhoneNumber, IsString, IsUrl, IsUUID, MaxLength, MinLength } from 'class-validator';
 import 'reflect-metadata';
 import { Column, ColumnOptions, Entity, EntityOptions } from 'typeorm';
 import { ODataServer } from '..';
@@ -124,6 +124,8 @@ export function ODataModel(options: EntityOptions = {}, entitySetName?: string) 
 
 /**
  * define an odata entity type/domain model
+ *
+ * @deprecated do not use this
  */
 export const ODataEntityType = ODataModel;
 
@@ -148,7 +150,7 @@ export function ODataColumn(options: ColumnOptions = {}) {
 
     const entityColumns = getODataColumns(object);
 
-    const { primary, length, precision, nullable, scale } = options;
+    const { primary, length, precision, nullable, scale, generated } = options;
 
     if (primary) {
       Edm.Key(object, propertyName);
@@ -179,8 +181,15 @@ export function ODataColumn(options: ColumnOptions = {}) {
       options.transformer = [options.transformer];
     }
 
-    if (has(options, 'default')) {
+    if (options?.default !== undefined) {
       Edm.DefaultValue(options.default)(object, propertyName);
+    }
+
+    if (options?.nullable == true || options.default != undefined || options.generated) {
+      Assert.IsOptional()(object, propertyName);
+    }
+    else {
+      Assert.IsDefined()(object, propertyName);
     }
 
     const reflectType = Reflect.getMetadata('design:type', object, propertyName);
@@ -195,6 +204,13 @@ export function ODataColumn(options: ColumnOptions = {}) {
             break;
           case 'uuid':
             Edm.Guid(object, propertyName);
+            break;
+          case 'date':
+            Edm.Date(object, propertyName);
+            break;
+          case 'datetime': case 'datetime2': case 'datetimeoffset':
+            Edm.DateTimeOffset(object, propertyName);
+            break;
           default:
             Edm.String(object, propertyName);
             break;
@@ -205,14 +221,11 @@ export function ODataColumn(options: ColumnOptions = {}) {
           case 'int': case 'int2': case 'int4': case 'int8':
             Edm.Int16(object, propertyName);
             break;
-          case 'int64':
+          case 'int64': case 'bigint':
             Edm.Int64(object, propertyName);
             break;
           case 'decimal': case 'dec': case 'float': case 'float4': case 'float8':
-            Edm.Decimal(object, propertyName);
-            options.transformer.push(DecimalTransformer);
-            // report message here
-            break;
+            throw new StartupError(`can not use 'number' as programming type for the decimal database type`);
           default:
             // unknown or not have type
             Edm.Int32(object, propertyName);
@@ -235,6 +248,30 @@ export function ODataColumn(options: ColumnOptions = {}) {
     Reflect.defineMetadata(KEY_ODATA_ENTITY_PROPS, entityColumns, object);
     Reflect.defineMetadata(KEY_ODATA_ENTITY_PROP, options, object, propertyName);
     Column(options)(object, propertyName);
+
+    switch (options.type) {
+      case 'decimal': case 'dec': case 'string':
+        Assert.IsNumberString()(object, propertyName);
+        break;
+      case 'date':
+        Assert.IsString()(object, propertyName);
+        break;
+      case 'datetime': case 'datetime2': case 'datetimeoffset':
+        Assert.IsDateString()(object, propertyName);
+        break;
+      case 'int': case 'int2': case 'int4': case 'int8': case 'int64': case 'bigint':
+        if (reflectType == Date) {
+          Assert.IsDateString()(object, propertyName);
+        } else {
+          Assert.IsNumber()(object, propertyName);
+        }
+        break;
+      case 'bool': case 'boolean':
+        Assert.IsBoolean()(object, propertyName);
+        break;
+      default:
+        break;
+    }
 
   };
 }
@@ -511,4 +548,27 @@ export const oInject = {
   container: injectTheContainer,
   globalConnection: injectGlobalConnection,
   txConnection: injectTransactionConnection
+};
+
+
+export const Assert = {
+  IsDefined,
+  NotNull: IsDefined,
+  IsString,
+  IsNumber,
+  IsInt,
+  IsEnum,
+  IsPhoneNumber,
+  IsUrl,
+  IsOptional,
+  IsDate,
+  IsDateString,
+  IsBoolean,
+  IsNumberString,
+  IsEmail,
+  IsEmpty,
+  Contains,
+  IsUUID,
+  MaxLength,
+  MinLength
 };

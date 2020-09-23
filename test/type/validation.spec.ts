@@ -1,4 +1,4 @@
-import { BaseODataModel, KeyProperty, ODataEntityType, ODataNavigation, OptionalProperty } from '../../src';
+import { BaseODataModel, KeyProperty, ODataEntityType, ODataModel, ODataNavigation, OptionalProperty, Property, UUIDKeyProperty } from '../../src';
 import { createServerAndClient, createTmpConnection } from './utils';
 
 
@@ -8,7 +8,6 @@ describe('Validate Test Suite', () => {
 
     @ODataEntityType()
     class V1 extends BaseODataModel {
-
 
       @OptionalProperty({ unique: true })
       name: string;
@@ -156,6 +155,45 @@ describe('Validate Test Suite', () => {
     });
 
     await expect(async () => createServerAndClient(conn, V7, V8)).rejects.toThrow();
+
+  });
+
+  it('should raise error message when validate failed', async () => {
+
+    @ODataModel()
+    class ValidationModel1 {
+      @UUIDKeyProperty() id: string;
+      @Property() name: string;
+      @Property() age: number;
+      @OptionalProperty() m2Id: string;
+      @ODataNavigation({ type: 'OneToOne', entity: () => ValidationModel2, foreignKey: 'm2Id' })
+      m2: any
+    }
+
+    @ODataModel()
+    class ValidationModel2 {
+      @UUIDKeyProperty() id: string;
+      @Property() name: string;
+      @Property() age: number;
+    }
+
+
+    const conn = await createTmpConnection({
+      name: 'validate_conn_7',
+      entityPrefix: 'val_test_07',
+      entities: [ValidationModel1]
+    });
+
+    const { client, shutdownServer } = await createServerAndClient(conn);
+
+    try {
+
+      const es = client.getEntitySet<ValidationModel1>('ValidationModel1s');
+      await expect(() => es.create({ c: 1 })).rejects.toThrow();
+
+    } finally {
+      await shutdownServer();
+    }
 
   });
 
