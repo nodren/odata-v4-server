@@ -69,7 +69,7 @@ describe('Decorator Test Suite', () => {
 
     expect(entityProps).toHaveLength(2);
     expect(entityProps[0].type).toBe('int');
-    expect(entityProps[1].type).toBe('nvarchar');
+    expect(entityProps[1].type).toBe('text');
 
     expect(getODataColumns(new A)).toHaveLength(2);
 

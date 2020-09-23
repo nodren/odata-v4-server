@@ -149,7 +149,7 @@ export function ODataColumn(options: ColumnOptions = {}) {
 
     const entityColumns = getODataColumns(object);
 
-    const { primary, length, precision, nullable, scale, generated } = options;
+    const { primary, length, precision, nullable, scale } = options;
 
     if (primary) {
       Edm.Key(object, propertyName);
@@ -157,6 +157,7 @@ export function ODataColumn(options: ColumnOptions = {}) {
 
     if (length) {
       Edm.MaxLength(toInteger(length))(object, propertyName);
+      Assert.MaxLength(toInteger(length), { groups: ODataMethods })(object, propertyName);
     }
 
     if (precision) {
@@ -207,7 +208,7 @@ export function ODataColumn(options: ColumnOptions = {}) {
           default:
             Edm.String(object, propertyName);
             if (options.type === undefined) {
-              options.type = 'nvarchar';
+              options.type = 'text';
             }
             break;
         }
@@ -271,6 +272,7 @@ export function ODataColumn(options: ColumnOptions = {}) {
       case 'varchar':
       case 'varchar2':
       case 'char':
+      case 'text':
         Assert.IsString({ groups: ODataMethods })(object, propertyName);
         break;
       case 'uuid':

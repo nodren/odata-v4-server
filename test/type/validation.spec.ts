@@ -213,7 +213,7 @@ describe('Validate Test Suite', () => {
     @ODataModel()
     class ValidationString {
       @UUIDKeyProperty() id: string;
-      @Property() value: string;
+      @Property({ length: 10 }) value: string;
     }
 
     @ODataModel()
@@ -265,6 +265,8 @@ describe('Validate Test Suite', () => {
 
       await expect(() => client.getEntitySet('ValidationStrings').create({ value: false })).rejects.toThrow();
       await expect(() => client.getEntitySet('ValidationStrings').create({ id: 1, value: '123' })).rejects.toThrow();
+      // length exceed
+      await expect(() => client.getEntitySet('ValidationStrings').create({ value: '1234567891011' })).rejects.toThrow();
       await expect(() => client.getEntitySet('ValidationFloats').create({ value: 123 })).rejects.toThrow();
       await expect(() => client.getEntitySet('ValidationDecimals').create({ value: 123 })).rejects.toThrow();
       await expect(() => client.getEntitySet('ValidationIntegers').create({ value: '32' })).rejects.toThrow();
