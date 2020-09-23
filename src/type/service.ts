@@ -4,8 +4,8 @@ import { flatten } from '@newdash/newdash/flatten';
 import { forEach } from '@newdash/newdash/forEach';
 import { isArray } from '@newdash/newdash/isArray';
 import { isEmpty } from '@newdash/newdash/isEmpty';
-import { defaultParser, ODataFilter, ODataQueryParam, param, QueryOptionsNode as ODataQuery } from '@odata/parser';
-import { validate } from 'class-validator';
+import { defaultParser, ODataFilter, ODataMethod, ODataQueryParam, param, QueryOptionsNode as ODataQuery } from '@odata/parser';
+import { validate, ValidatorOptions } from 'class-validator';
 import 'reflect-metadata';
 import { Connection, DeepPartial, QueryRunner, Repository } from 'typeorm';
 import { InjectKey } from '../constants';
@@ -18,7 +18,7 @@ import * as odata from '../odata';
 import { TransactionContext } from '../transaction';
 import { DBHelper } from './db_helper';
 import { getODataEntityNavigations, getODataServerType } from './decorators';
-import { BaseODataModel } from './entity';
+import { BaseODataModel, getClassName } from './entity';
 import { findHooks, HookContext, HookEvents, HookType } from './hooks';
 import { TypedODataServer } from './server';
 
@@ -416,7 +416,7 @@ export class TypedService<T = any> extends ODataController {
 
   @odata.POST
   async create(@odata.body body: DeepPartial<T>): Promise<T> {
-    await this._validate(body); // validate raw payload firstly
+    await this._validate(body, odata.ODataMethodType.POST); // validate raw payload firstly
     await this._transformInboundPayload(body);
 
     await this.executeHooks(HookType.beforeCreate, body);
@@ -429,8 +429,9 @@ export class TypedService<T = any> extends ODataController {
     return instance;
   }
 
-  private async _validate(input: any): Promise<void> {
+  private async _validate(input: any, method: ODataMethod = ODataMethod.POST): Promise<void> {
     const entityType = await this._getEntityType();
+    const entityName = getClassName(entityType);
     const instance = Object.assign(new entityType(), input);
 
     // check user not input not given prop
@@ -444,8 +445,10 @@ export class TypedService<T = any> extends ODataController {
       }
     });
 
+    const option: ValidatorOptions = { groups: [method], skipUndefinedProperties: true };
+
     // skip undefined for update
-    const validateMsgs = await validate(instance);
+    const validateMsgs = await validate(instance, option);
 
     if (validateMsgs.length > 0) {
       flatten(validateMsgs.map((msg) => Object.values(msg.constraints)))
@@ -453,7 +456,7 @@ export class TypedService<T = any> extends ODataController {
     }
 
     if (msgs.length > 0) {
-      throw new BadRequestError(msgs.join(', '));
+      throw new BadRequestError(`Entity '${entityName}': ${msgs.join(', ')}`);
     }
 
   }
@@ -475,6 +478,7 @@ export class TypedService<T = any> extends ODataController {
   // odata patch will not response any content
   @odata.PATCH
   async update(@odata.key key: any, @odata.body body: DeepPartial<T>) {
+    await this._validate(body, odata.ODataMethodType.PATCH);
     await this._transformInboundPayload(body);
     const repo = await this._getRepository();
     const instance = body;

@@ -13,34 +13,19 @@ describe('Typeorm Test Suite', () => {
 
   it('should support shortcut to create a service', async () => {
 
-
     // define models
     @Entity()
     class Student extends BaseODataModel {
-
-      @IncKeyProperty()
-      id: number;
-
-      @Property()
-      name: string;
-
-      @Property()
-      age: number;
-
+      @IncKeyProperty() id: number;
+      @Property() name: string;
+      @Property() age: number;
     }
 
     @Entity()
     class Class extends BaseODataModel {
-
-      @IncKeyProperty()
-      id: number;
-
-      @Property()
-      name: string;
-
-      @Property()
-      desc: string;
-
+      @IncKeyProperty() id: number;
+      @Property() name: string;
+      @Property() desc: string;
     }
 
     const conn = await createTmpConnection({
@@ -49,7 +34,7 @@ describe('Typeorm Test Suite', () => {
       entities: [Student, Class]
     });
 
-    const { server, client, shutdownServer } = await createServerAndClient(conn, Student, Class);
+    const { client, shutdownServer } = await createServerAndClient(conn, Student, Class);
 
     try {
 

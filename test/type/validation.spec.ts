@@ -181,7 +181,7 @@ describe('Validate Test Suite', () => {
     const conn = await createTmpConnection({
       name: 'validate_conn_7',
       entityPrefix: 'val_test_07',
-      entities: [ValidationModel1]
+      entities: [ValidationModel1, ValidationModel2]
     });
 
     const { client, shutdownServer } = await createServerAndClient(conn);
@@ -190,6 +190,96 @@ describe('Validate Test Suite', () => {
 
       const es = client.getEntitySet<ValidationModel1>('ValidationModel1s');
       await expect(() => es.create({ c: 1 })).rejects.toThrow();
+
+      // skip mandatory check for update
+      const item = await es.create({ name: '1', age: 11 });
+      await es.update(item.id, { age: 12 });
+
+      // check mandatory for deep insert
+      await expect(() => es.create({ name: '1', age: 11, m2: { c: 1 } })).rejects.toThrow();
+
+      // pass mandatory check for deep insert
+      await es.create({ name: '1', age: 11, m2: { name: '1', age: 13 } });
+
+    } finally {
+      await shutdownServer();
+    }
+
+  });
+
+
+  it('should pass full type check for validation', async () => {
+
+    @ODataModel()
+    class ValidationString {
+      @UUIDKeyProperty() id: string;
+      @Property() value: string;
+    }
+
+    @ODataModel()
+    class ValidationFloat {
+      @UUIDKeyProperty() id: string;
+      @Property({ type: 'float' }) value: string;
+    }
+
+    @ODataModel()
+    class ValidationDecimal {
+      @UUIDKeyProperty() id: string;
+      @Property({ type: 'decimal' }) value: string;
+    }
+
+    @ODataModel()
+    class ValidationInteger {
+      @UUIDKeyProperty() id: string;
+      @Property({ type: 'int' }) value: number;
+    }
+
+    @ODataModel()
+    class ValidationDate {
+      @UUIDKeyProperty() id: string;
+      @Property() value: Date;
+    }
+
+    @ODataModel()
+    class ValidationBool {
+      @UUIDKeyProperty() id: string;
+      @Property() value: Boolean;
+    }
+
+    const conn = await createTmpConnection({
+      name: 'validate_conn_8',
+      entityPrefix: 'val_test_08',
+      entities: [ValidationString, ValidationFloat, ValidationDecimal, ValidationInteger, ValidationDate, ValidationBool]
+    });
+
+    const { client, shutdownServer } = await createServerAndClient(conn);
+
+    try {
+
+      await expect(() => client.getEntitySet('ValidationStrings').create({})).rejects.toThrow();
+      await expect(() => client.getEntitySet('ValidationFloats').create({})).rejects.toThrow();
+      await expect(() => client.getEntitySet('ValidationDecimals').create({})).rejects.toThrow();
+      await expect(() => client.getEntitySet('ValidationIntegers').create({})).rejects.toThrow();
+      await expect(() => client.getEntitySet('ValidationDates').create({})).rejects.toThrow();
+      await expect(() => client.getEntitySet('ValidationBools').create({})).rejects.toThrow();
+
+      await expect(() => client.getEntitySet('ValidationStrings').create({ value: false })).rejects.toThrow();
+      await expect(() => client.getEntitySet('ValidationStrings').create({ id: 1, value: '123' })).rejects.toThrow();
+      await expect(() => client.getEntitySet('ValidationFloats').create({ value: 123 })).rejects.toThrow();
+      await expect(() => client.getEntitySet('ValidationDecimals').create({ value: 123 })).rejects.toThrow();
+      await expect(() => client.getEntitySet('ValidationIntegers').create({ value: '32' })).rejects.toThrow();
+      await expect(() => client.getEntitySet('ValidationIntegers').create({ value: 33.99 })).rejects.toThrow();
+      await expect(() => client.getEntitySet('ValidationDates').create({ value: 3334 })).rejects.toThrow();
+      await expect(() => client.getEntitySet('ValidationBools').create({ value: 123 })).rejects.toThrow();
+
+      await client.getEntitySet('ValidationStrings').create({ value: '123213' });
+      // UUID check should passed
+      await client.getEntitySet('ValidationStrings').create({ id: 'a14dd2c8-6de2-46e2-b4fa-f69456c1fd10', value: '123213' });
+      await client.getEntitySet('ValidationFloats').create({ value: '33.99' });
+      await client.getEntitySet('ValidationDecimals').create({ value: '3213.122' });
+      await client.getEntitySet('ValidationIntegers').create({ value: 32 });
+      await client.getEntitySet('ValidationDates').create({ value: new Date() });
+      await client.getEntitySet('ValidationBools').create({ value: true });
 
     } finally {
       await shutdownServer();

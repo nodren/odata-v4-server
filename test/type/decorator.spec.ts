@@ -62,17 +62,14 @@ describe('Decorator Test Suite', () => {
   it('should support get odata columns for entities', () => {
 
     class A {
-
       @Property({}) a: number;
-
       @Property({}) b: string;
-
     }
     const entityProps = getODataColumns(A);
 
     expect(entityProps).toHaveLength(2);
-    expect(entityProps[0].type).toBe(Number);
-    expect(entityProps[1].type).toBe(String);
+    expect(entityProps[0].type).toBe('int');
+    expect(entityProps[1].type).toBe('nvarchar');
 
     expect(getODataColumns(new A)).toHaveLength(2);
 

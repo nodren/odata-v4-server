@@ -7,12 +7,12 @@ describe('Typed OData Server Integration Test Suite', () => {
   it('should run total integration tests', async () => {
 
     const conn = await createTmpConnection({
-      name: 'typed_service_int_test',
-      entityPrefix: 'unit_int_',
+      name: 'int_test',
+      entityPrefix: 'unit_int_01',
       entities: SchoolEntities
     });
 
-    const { client, shutdownServer } = await createServerAndClient(conn, ...SchoolEntities);
+    const { client, shutdownServer } = await createServerAndClient(conn);
 
     try {
       const students = client.getEntitySet<Student>('Students');

@@ -1,20 +1,19 @@
-import { inject, InjectContainer, LazyRef } from '@newdash/inject';
 import { isClass } from '@newdash/inject/lib/utils';
 import { isArray } from '@newdash/newdash';
 import { isEmpty } from '@newdash/newdash/isEmpty';
 import toInteger from '@newdash/newdash/toInteger';
-import { Contains, IsBoolean, IsDate, IsDateString, IsDefined, IsEmail, IsEmpty, IsEnum, IsInt, IsNumber, IsNumberString, IsOptional, IsPhoneNumber, IsString, IsUrl, IsUUID, MaxLength, MinLength } from 'class-validator';
+import { ODataMethod, ODataMethods } from '@odata/parser';
 import 'reflect-metadata';
 import { Column, ColumnOptions, Entity, EntityOptions } from 'typeorm';
-import { ODataServer } from '..';
-import { InjectKey } from '../constants';
-import * as Edm from '../edm';
-import { NotImplementedError, ServerInternalError, StartupError } from '../error';
-import { DateTimeTransformer, DBHelper, DecimalTransformer } from './db_helper';
-import { BaseODataModel } from './entity';
-import { TypedODataServer } from './server';
-import { TypedService } from './service';
-import { Class } from './types';
+import * as Edm from '../../edm';
+import { NotImplementedError, ServerInternalError, StartupError } from '../../error';
+import { ODataServer } from '../../server';
+import { DateTimeTransformer, DBHelper, DecimalTransformer } from '../db_helper';
+import { BaseODataModel } from '../entity';
+import { TypedODataServer } from '../server';
+import { TypedService } from '../service';
+import { Class } from '../types';
+import { Assert } from './assert';
 
 const KEY_CONN_NAME = 'odata:controller:connection';
 const KEY_ODATA_ENTITY_PROP = 'odata.entity:entity_prop';
@@ -185,12 +184,6 @@ export function ODataColumn(options: ColumnOptions = {}) {
       Edm.DefaultValue(options.default)(object, propertyName);
     }
 
-    if (options?.nullable == true || options.default != undefined || options.generated) {
-      Assert.IsOptional()(object, propertyName);
-    }
-    else {
-      Assert.IsDefined()(object, propertyName);
-    }
 
     const reflectType = Reflect.getMetadata('design:type', object, propertyName);
 
@@ -213,29 +206,41 @@ export function ODataColumn(options: ColumnOptions = {}) {
             break;
           default:
             Edm.String(object, propertyName);
+            if (options.type === undefined) {
+              options.type = 'nvarchar';
+            }
             break;
         }
         break;
       case Number:
         switch (options.type) {
-          case 'int': case 'int2': case 'int4': case 'int8':
+          case 'int2': case 'int4': case 'int8':
             Edm.Int16(object, propertyName);
             break;
           case 'int64': case 'bigint':
             Edm.Int64(object, propertyName);
             break;
           case 'decimal': case 'dec': case 'float': case 'float4': case 'float8':
-            throw new StartupError(`can not use 'number' as programming type for the decimal database type`);
+            throw new StartupError(`can not use 'number' as programming type for the ${options.type} database type`);
           default:
             // unknown or not have type
             Edm.Int32(object, propertyName);
+            if (options.type === undefined) {
+              options.type = 'int';
+            }
             break;
         }
         break;
       case Boolean:
         Edm.Boolean(object, propertyName);
+        if (options.type === undefined) {
+          options.type = 'boolean';
+        }
         break;
       case Date:
+        if (options.type !== undefined && options.type !== 'bigint') {
+          throw new StartupError(`please do not define the type of date time field`);
+        }
         Edm.DateTimeOffset(object, propertyName);
         options.type = 'bigint';
         options.transformer.push(DateTimeTransformer);
@@ -249,29 +254,45 @@ export function ODataColumn(options: ColumnOptions = {}) {
     Reflect.defineMetadata(KEY_ODATA_ENTITY_PROP, options, object, propertyName);
     Column(options)(object, propertyName);
 
+    if (options?.nullable == true || options?.default !== undefined || options?.generated) {
+      Assert.IsOptional({ groups: ODataMethods })(object, propertyName);
+    }
+    else {
+      Assert.IsDefined({ groups: [ODataMethod.POST] })(object, propertyName);
+    }
+
     switch (options.type) {
-      case 'decimal': case 'dec': case 'string':
-        Assert.IsNumberString()(object, propertyName);
+      case 'decimal': case 'dec': case 'float': case 'float4': case 'float8':
+        Assert.IsNumberString({}, { groups: ODataMethods })(object, propertyName);
         break;
       case 'date':
-        Assert.IsString()(object, propertyName);
+      case 'nvarchar':
+      case 'nvarchar2':
+      case 'varchar':
+      case 'varchar2':
+      case 'char':
+        Assert.IsString({ groups: ODataMethods })(object, propertyName);
+        break;
+      case 'uuid':
+        Assert.IsUUID('4', { groups: ODataMethods })(object, propertyName);
         break;
       case 'datetime': case 'datetime2': case 'datetimeoffset':
-        Assert.IsDateString()(object, propertyName);
+        Assert.IsDateString({ groups: ODataMethods })(object, propertyName);
         break;
       case 'int': case 'int2': case 'int4': case 'int8': case 'int64': case 'bigint':
         if (reflectType == Date) {
-          Assert.IsDateString()(object, propertyName);
+          Assert.IsDateOrDateString({ groups: ODataMethods })(object, propertyName);
         } else {
-          Assert.IsNumber()(object, propertyName);
+          Assert.IsInt({ groups: ODataMethods })(object, propertyName);
         }
         break;
       case 'bool': case 'boolean':
-        Assert.IsBoolean()(object, propertyName);
+        Assert.IsBoolean({ groups: ODataMethods })(object, propertyName);
         break;
       default:
         break;
     }
+
 
   };
 }
@@ -313,12 +334,12 @@ export const KeyProperty = createPropertyDecorator({ primary: true });
 /**
  * auto increment key property
  */
-export const IncKeyProperty = createPropertyDecorator({ primary: true, generated: 'increment' });
+export const IncKeyProperty = createPropertyDecorator({ primary: true, type: 'integer', generated: 'increment' });
 
 /**
  * uuid generated key property
  */
-export const UUIDKeyProperty = createPropertyDecorator({ primary: true, generated: 'uuid' });
+export const UUIDKeyProperty = createPropertyDecorator({ primary: true, type: 'uuid', generated: 'uuid' });
 
 /**
  * define property for odata entity type
@@ -479,96 +500,3 @@ export function withConnection(connectionName: string = 'default') {
 export function getConnectionName(target: typeof TypedService | typeof BaseODataModel) {
   return Reflect.getMetadata(KEY_CONN_NAME, target);
 }
-
-
-/**
- * inject odata service of entity type
- *
- * @param entityType entity class or lazy ref
- */
-export function injectService(entityType: LazyRef): ParameterDecorator {
-  if (!(entityType instanceof LazyRef)) {
-    throw new StartupError(`must provide a lazy ref to avoid undefined issue for cycle reference.`);
-  }
-  return function (target, targetKey, parameterIndex) {
-    inject.param(InjectKey.ODataTypedService, entityType)(target, targetKey, parameterIndex);
-    inject(InjectKey.InjectODataService)(target, targetKey, parameterIndex);
-  };
-}
-
-/**
- * inject request body
- *
- * @param target
- * @param targetKey
- * @param parameterIndex
- */
-export const injectBody: ParameterDecorator = (target, targetKey, parameterIndex) => {
-  inject(InjectKey.RequestBody)(target, targetKey, parameterIndex);
-};
-
-/**
- * inject server type
- *
- * @param target
- * @param targetKey
- * @param parameterIndex
- */
-export const injectServer: ParameterDecorator = (target, targetKey, parameterIndex) => {
-  inject(InjectKey.ServerType)(target, targetKey, parameterIndex);
-};
-
-/**
- * inject InjectContainer
- *
- * @param target
- * @param targetKey
- * @param parameterIndex
- */
-export const injectTheContainer: ParameterDecorator = (target, targetKey, parameterIndex) => {
-  inject(InjectContainer)(target, targetKey, parameterIndex);
-};
-
-export const injectGlobalConnection: ParameterDecorator = (target, targetKey, parameterIndex) => {
-  inject(InjectKey.GlobalConnection)(target, targetKey, parameterIndex);
-};
-
-export const injectTransactionConnection: ParameterDecorator = (target, targetKey, parameterIndex) => {
-  inject(InjectKey.TransactionConnection)(target, targetKey, parameterIndex);
-};
-
-
-/**
- * alias for odata inject
- */
-export const oInject = {
-  server: injectServer,
-  service: injectService,
-  body: injectBody,
-  container: injectTheContainer,
-  globalConnection: injectGlobalConnection,
-  txConnection: injectTransactionConnection
-};
-
-
-export const Assert = {
-  IsDefined,
-  NotNull: IsDefined,
-  IsString,
-  IsNumber,
-  IsInt,
-  IsEnum,
-  IsPhoneNumber,
-  IsUrl,
-  IsOptional,
-  IsDate,
-  IsDateString,
-  IsBoolean,
-  IsNumberString,
-  IsEmail,
-  IsEmpty,
-  Contains,
-  IsUUID,
-  MaxLength,
-  MinLength
-};
