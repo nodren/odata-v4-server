@@ -20,6 +20,7 @@ import { DBHelper } from './db_helper';
 import { getODataEntityNavigations, getODataServerType } from './decorators';
 import { BaseODataModel, getClassName } from './entity';
 import { findHooks, HookContext, HookEvents, HookType } from './hooks';
+import { closestString } from './libraries';
 import { TypedODataServer } from './server';
 
 
@@ -441,7 +442,7 @@ export class TypedService<T = any> extends ODataController {
 
     Object.keys(input).forEach((inputPropName) => {
       if (!entityProps.includes(inputPropName)) {
-        msgs.push(`property '${inputPropName}' is not defined`);
+        msgs.push(`property '${inputPropName}' is not defined (did you mean the property '${closestString(inputPropName, entityProps)}')`);
       }
     });
 
