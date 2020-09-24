@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.39](https://github.com/Soontao/odata-v4-server/compare/v0.2.38...v0.2.39) (2020-09-24)
+
+
+### Features
+
+* [#68](https://github.com/Soontao/odata-v4-server/issues/68) add validators for creation ([0a84b42](https://github.com/Soontao/odata-v4-server/commit/0a84b42e25e6342694fd323796140682349f601e))
+* [#68](https://github.com/Soontao/odata-v4-server/issues/68) provide field suggest for user ([20effcb](https://github.com/Soontao/odata-v4-server/commit/20effcb22ad07225dbd7c166a25deec478e585b5))
+* [#68](https://github.com/Soontao/odata-v4-server/issues/68) support validation on update ([d6a68e0](https://github.com/Soontao/odata-v4-server/commit/d6a68e0e3fb29d0f076c3737bfddfc523c2f7ee3))
+* optimize migration logic ([a54bee7](https://github.com/Soontao/odata-v4-server/commit/a54bee79155bb624e86e227a7804a0211c0d68b6))
+
+
+### Bug Fixes
+
+* char type for test ([2835dd3](https://github.com/Soontao/odata-v4-server/commit/2835dd3abc6e63e30af76dd6403bab4e7777dada))
+* windows build failed ([d0be225](https://github.com/Soontao/odata-v4-server/commit/d0be2255a2099042148e09887713464a179f977d))
+
 ### [0.2.38](https://github.com/Soontao/odata-v4-server/compare/v0.2.37...v0.2.38) (2020-09-22)
 
 
