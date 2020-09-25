@@ -1,4 +1,7 @@
-import { BaseODataModel, KeyProperty, ODataEntityType, ODataModel, ODataNavigation, OptionalProperty, Property, UUIDKeyProperty } from '../../src';
+import { ODataMethod } from '@odata/parser';
+import { ColumnOptions } from 'typeorm';
+import * as validate from 'validate.js';
+import { BaseODataModel, columnToValidateRule, EColumnOptions, KeyProperty, ODataEntityType, ODataModel, ODataNavigation, OptionalProperty, Property, UUIDKeyProperty } from '../../src';
 import { createServerAndClient, createTmpConnection, getTestCharDataType } from './utils';
 
 
@@ -289,5 +292,56 @@ describe('Validate Test Suite', () => {
 
   });
 
+  it('should support create validate option by column metadata', () => {
+
+    const uuidMeta: ColumnOptions = {
+      type: 'uuid',
+      generated: 'uuid'
+    };
+
+    const uuidValidateOptPost = columnToValidateRule(uuidMeta, ODataMethod.POST);
+
+    let errors = validate.single(undefined, uuidValidateOptPost);
+    expect(errors).toBeUndefined();
+    errors = validate.single(null, uuidValidateOptPost);
+    expect(errors).toBeUndefined();
+    // invalid uuid string
+    errors = validate.single('123432', uuidValidateOptPost);
+    expect(errors).toHaveLength(1);
+
+    const v1Meta: EColumnOptions = {
+      type: 'nvarchar'
+    };
+
+    expect(
+      validate.single(
+        undefined,
+        columnToValidateRule(v1Meta, ODataMethod.POST)
+      )
+    ).toHaveLength(1);
+
+    expect(
+      validate.single(
+        null,
+        columnToValidateRule(v1Meta, ODataMethod.POST)
+      )
+    ).toHaveLength(1);
+
+    expect(
+      validate.single(
+        undefined,
+        columnToValidateRule(v1Meta, ODataMethod.PATCH)
+      )
+    ).toBeUndefined();
+
+    expect(
+      validate.single(
+        null,
+        columnToValidateRule(v1Meta, ODataMethod.PATCH)
+      )
+    ).toBeUndefined();
+
+
+  });
 
 });

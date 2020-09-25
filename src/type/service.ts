@@ -1,11 +1,9 @@
 // @ts-nocheck
 import { getUnProxyTarget, inject, InjectContainer, InjectWrappedInstance, LazyRef, noWrap, required, transient, withType } from '@newdash/inject';
-import { flatten } from '@newdash/newdash/flatten';
 import { forEach } from '@newdash/newdash/forEach';
 import { isArray } from '@newdash/newdash/isArray';
 import { isEmpty } from '@newdash/newdash/isEmpty';
 import { defaultParser, ODataFilter, ODataMethod, ODataQueryParam, param, QueryOptionsNode as ODataQuery } from '@odata/parser';
-import { validate, ValidatorOptions } from 'class-validator';
 import 'reflect-metadata';
 import { Connection, DeepPartial, QueryRunner, Repository } from 'typeorm';
 import { InjectKey } from '../constants';
@@ -20,8 +18,9 @@ import { DBHelper } from './db_helper';
 import { getODataEntityNavigations, getODataServerType } from './decorators';
 import { BaseODataModel, getClassName } from './entity';
 import { findHooks, HookContext, HookEvents, HookType } from './hooks';
-import { closestString } from './libraries';
 import { TypedODataServer } from './server';
+import { applyValidate } from './validate';
+import validate = require('validate.js');
 
 
 const logger = createLogger('type:service');
@@ -433,28 +432,8 @@ export class TypedService<T = any> extends ODataController {
   private async _validate(input: any, method: ODataMethod = ODataMethod.POST): Promise<void> {
     const entityType = await this._getEntityType();
     const entityName = getClassName(entityType);
-    const instance = Object.assign(new entityType(), input);
 
-    // check user not input not given prop
-    const entityProps = Edm.getProperties(entityType);
-
-    const msgs = [];
-
-    Object.keys(input).forEach((inputPropName) => {
-      if (!entityProps.includes(inputPropName)) {
-        msgs.push(`property '${inputPropName}' is not defined (did you mean the property '${closestString(inputPropName, entityProps)}')`);
-      }
-    });
-
-    const option: ValidatorOptions = { groups: [method], skipUndefinedProperties: true };
-
-    // skip undefined for update
-    const validateMsgs = await validate(instance, option);
-
-    if (validateMsgs.length > 0) {
-      flatten(validateMsgs.map((msg) => Object.values(msg.constraints)))
-        .forEach((msg) => msgs.push(msg));
-    }
+    const msgs = applyValidate(entityType, input, method);
 
     if (msgs.length > 0) {
       throw new BadRequestError(`Entity '${entityName}': ${msgs.join(', ')}`);

@@ -1,4 +1,4 @@
-import { BaseODataModel, createPropertyDecorator, getODataColumns, getPropertyOptions, isODataEntityType, KeyProperty, ODataEntityType, OptionalProperty, Property, UUIDKeyProperty } from '../../src';
+import { BaseODataModel, createPropertyDecorator, getODataColumns, getPropertyOptions, getValidateOptions, isODataEntityType, KeyProperty, ODataEntityType, ODataModel, OptionalProperty, Property, UUIDKeyProperty, Validate } from '../../src';
 import { createServerAndClient } from './utils';
 
 
@@ -64,18 +64,53 @@ describe('Decorator Test Suite', () => {
     class A {
       @Property({}) a: number;
       @Property({}) b: string;
+      @Property({ type: 'nvarchar' }) c: string;
+
     }
     const entityProps = getODataColumns(A);
 
-    expect(entityProps).toHaveLength(2);
-    expect(entityProps[0].type).toBe(Number);
-    expect(entityProps[1].type).toBe(String);
+    expect(entityProps).toHaveLength(3);
+    expect(entityProps[0].reflectType).toBe(Number);
+    expect(entityProps[1].reflectType).toBe(String);
+    expect(entityProps[2].type).toBe('nvarchar');
 
-    expect(getODataColumns(new A)).toHaveLength(2);
+
+    expect(getODataColumns(new A)).toHaveLength(3);
 
     expect(isODataEntityType(class C { })).toBeFalsy();
     expect(isODataEntityType(A)).toBeTruthy();
     expect(isODataEntityType(new A)).toBeTruthy();
+
+
+  });
+
+  it('should add @Validate to entity', () => {
+
+    @ODataModel()
+    class A {
+
+      @UUIDKeyProperty()
+      id: string;
+
+      @Validate({
+        format: { pattern: /^\d+$/, message: 'number only' }
+      })
+      @OptionalProperty()
+      name: string;
+
+    }
+
+    let opt = getValidateOptions(new A, 'name');
+
+    expect(opt).not.toBeUndefined();
+    expect(opt.format).not.toBeUndefined();
+    expect(opt.format.pattern).not.toBeUndefined();
+
+    opt = getValidateOptions(A, 'name');
+
+    expect(opt).not.toBeUndefined();
+    expect(opt.format).not.toBeUndefined();
+    expect(opt.format.pattern).not.toBeUndefined();
 
 
   });

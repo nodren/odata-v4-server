@@ -2,7 +2,6 @@ import { isClass } from '@newdash/inject/lib/utils';
 import { isArray } from '@newdash/newdash';
 import { isEmpty } from '@newdash/newdash/isEmpty';
 import toInteger from '@newdash/newdash/toInteger';
-import { ODataMethod, ODataMethods } from '@odata/parser';
 import 'reflect-metadata';
 import { Column, ColumnOptions, Entity, EntityOptions } from 'typeorm';
 import * as Edm from '../../edm';
@@ -13,7 +12,6 @@ import { BaseODataModel } from '../entity';
 import { TypedODataServer } from '../server';
 import { TypedService } from '../service';
 import { Class } from '../types';
-import { Assert } from './assert';
 
 const KEY_CONN_NAME = 'odata:controller:connection';
 const KEY_ODATA_ENTITY_PROP = 'odata.entity:entity_prop';
@@ -24,6 +22,13 @@ const KEY_ODATA_ENTITY_NAVIGATIONS = 'odata.entity:entity_navigations';
 const KEY_ODATA_ENTITY_TYPE = 'odata.entity:entity_type';
 const KEY_TYPEORM_DB_TYPE = 'odata.typeorm:db_type';
 const KEY_WITH_ODATA_SERVER = 'odata:with_server';
+
+export interface EColumnOptions extends ColumnOptions {
+  /**
+   * reflect metadata type, could be undefined
+   */
+  reflectType?: Class;
+}
 
 
 /**
@@ -128,7 +133,7 @@ export function ODataModel(options: EntityOptions = {}, entitySetName?: string) 
  */
 export const ODataEntityType = ODataModel;
 
-export const getODataColumns = (classOrInstance): Array<ColumnOptions> => {
+export const getODataColumns = (classOrInstance): Array<EColumnOptions> => {
   if (isClass(classOrInstance)) {
     return Reflect.getOwnMetadata(KEY_ODATA_ENTITY_PROPS, classOrInstance.prototype) || [];
   }
@@ -157,7 +162,6 @@ export function ODataColumn(options: ColumnOptions = {}) {
 
     if (length) {
       Edm.MaxLength(toInteger(length))(object, propertyName);
-      Assert.MaxLength(toInteger(length), { groups: ODataMethods })(object, propertyName);
     }
 
     if (precision) {
@@ -244,59 +248,13 @@ export function ODataColumn(options: ColumnOptions = {}) {
         throw new NotImplementedError(`Not support the type of field '${propertyName}'.`);
     }
 
-    entityColumns.push(options);
-    Reflect.defineMetadata(KEY_ODATA_ENTITY_PROPS, entityColumns, object);
-    Reflect.defineMetadata(KEY_ODATA_ENTITY_PROP, options, object, propertyName);
     Column(options)(object, propertyName);
 
-    if (options?.nullable == true || options?.default !== undefined || options?.generated) {
-      Assert.IsOptional({ groups: ODataMethods })(object, propertyName);
-    }
-    else {
-      Assert.IsDefined({ groups: [ODataMethod.POST] })(object, propertyName);
-    }
+    const eOption = Object.assign({}, options, { reflectType });
 
-    switch (options.type) {
-      case 'decimal': case 'dec': case 'float': case 'float4': case 'float8':
-        Assert.IsNumberString({}, { groups: ODataMethods })(object, propertyName);
-        break;
-      case 'date':
-      case 'nvarchar':
-      case 'nvarchar2':
-      case 'varchar':
-      case 'varchar2':
-      case 'char':
-      case 'text':
-      case String:
-        Assert.IsString({ groups: ODataMethods })(object, propertyName);
-        break;
-      case 'uuid':
-        Assert.IsUUID('4', { groups: ODataMethods })(object, propertyName);
-        break;
-      case 'datetime': case 'datetime2': case 'datetimeoffset':
-        Assert.IsDateString({ groups: ODataMethods })(object, propertyName);
-        break;
-      case 'int':
-      case 'integer':
-      case 'int2':
-      case 'int4':
-      case 'int8':
-      case 'int64':
-      case 'bigint':
-      case Number:
-        if (reflectType == Date) {
-          Assert.IsDateOrDateString({ groups: ODataMethods })(object, propertyName);
-        } else {
-          Assert.IsInt({ groups: ODataMethods })(object, propertyName);
-        }
-        break;
-      case 'bool': case 'boolean':
-        Assert.IsBoolean({ groups: ODataMethods })(object, propertyName);
-        break;
-      default:
-        break;
-    }
-
+    entityColumns.push(eOption);
+    Reflect.defineMetadata(KEY_ODATA_ENTITY_PROPS, entityColumns, object);
+    Reflect.defineMetadata(KEY_ODATA_ENTITY_PROP, eOption, object, propertyName);
 
   };
 }
@@ -307,9 +265,9 @@ export function ODataColumn(options: ColumnOptions = {}) {
  * @param target
  * @param propsName
  */
-export function getPropertyOptions(target: typeof BaseODataModel, propsName: string): ColumnOptions {
-  if (target.prototype instanceof BaseODataModel) {
-    return Reflect.getMetadata(KEY_ODATA_ENTITY_PROP, target.prototype, propsName);
+export function getPropertyOptions(target: any, propsName: string): EColumnOptions {
+  if (isClass(target)) {
+    return Reflect.getOwnMetadata(KEY_ODATA_ENTITY_PROP, target.prototype, propsName);
   }
   return Reflect.getMetadata(KEY_ODATA_ENTITY_PROP, target, propsName);
 }
