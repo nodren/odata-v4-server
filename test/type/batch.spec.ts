@@ -132,7 +132,7 @@ describe('Batch Test Suite', () => {
       entities: [B3]
     });
 
-    const { server, client, shutdownServer } = await createServerAndClient(conn, B3);
+    const { client, shutdownServer } = await createServerAndClient(conn, B3);
 
     try {
 
@@ -268,7 +268,7 @@ describe('Batch Test Suite', () => {
         createRequest({ requestId: '1', dependsOn: ['3'] }),
         createRequest({ requestId: '2', dependsOn: ['2'] })
       ];
-      await expect(() => client.execBatchRequestsJson(requests3)).rejects.toThrowError('dependsOn [3] not existed in batch requests');
+      await expect(() => client.execBatchRequestsJson(requests3)).rejects.toThrowError('request [1] dependsOn [3] not existed in atom group [default]');
 
       // cycle dependsOn
       const requests4 = [
@@ -276,10 +276,9 @@ describe('Batch Test Suite', () => {
         createRequest({ requestId: '2', dependsOn: ['4'] }),
         createRequest({ requestId: '4', dependsOn: ['1'] })
       ];
-      const res4Bodies = await Promise.all((await client.execBatchRequestsJson(requests4)).map((res) => res.json()));
 
-      expect(res4Bodies).toHaveLength(requests4.length);
-      expect(res4Bodies[0].error.message).toBe('found cycle dependsOn in requests [4->2->1->4]');
+      await expect(() => client.execBatchRequestsJson(requests4)).rejects.toThrowError('found cycle dependsOn in requests [4->2->1->4]');
+
 
       // dependsOn another atom group request
       const requests5 = [
@@ -288,25 +287,9 @@ describe('Batch Test Suite', () => {
         createRequest({ requestId: '4', atomicityGroup: '1' }),
         createRequest({ requestId: '6', dependsOn: ['2'], atomicityGroup: '2' })
       ];
-      const res5 = await client.execBatchRequestsJson(requests5);
-      const res5Bodies = await Promise.all(res5.map(async (res) => ({
-        body: await res.json(),
-        headers: res.headers,
-        status: res.status
-      })));
-      expect(res5Bodies).toHaveLength(requests5.length);
 
-      res5Bodies.forEach((res5Body) => {
-        switch (res5Body.headers['x-batch-atom-group']) {
-          case '1':
-            expect(res5Body.status).toBe(201);
-            break;
-          case '2':
-            expect(res5Body.status).toBe(500);
-            expect(res5Body.body.error.message).toBe('not found request [6] in atomicityGroup [2]');
-            break;
-        }
-      });
+      await expect(() => client.execBatchRequestsJson(requests5)).rejects.toThrowError('request [6] dependsOn [2] not existed in atom group [2]');
+
 
     } finally {
       await shutdownServer();

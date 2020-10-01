@@ -68,16 +68,16 @@ function checkDependsOnIsValid(requests: Array<JsonBatchRequest>) {
     } else {
       ids.add(req.id);
     }
+
+  }
+  for (const req of requests) {
     if (isArrayLike(req.dependsOn)) {
       for (const dep of req.dependsOn) {
-        deps.add(dep);
+        if (!ids.has(dep)) {
+          throw new TypeError(`request [${req.id}] dependsOn [${dep}] not existed in atom group [${req.atomicityGroup ?? DEFAULT_ATOM_GROUP}]`);
+        }
       }
     }
-  }
-  const notExistDeps = [];
-  deps.forEach((dep) => { if (!ids.has(dep)) { notExistDeps.push(dep); } });
-  if (notExistDeps.length > 0) {
-    throw new TypeError(`dependsOn [${notExistDeps.join(', ')}] not existed in batch requests`);
   }
 }
 
@@ -90,11 +90,7 @@ export function groupDependsOn(requests: Array<JsonBatchRequest>): Array<Array<J
     reqMap.set(req.id, req);
     if (req.dependsOn !== undefined) {
       for (const dep of req.dependsOn) {
-        if (ids.has(dep)) {
-          g.setEdge(req.id, dep);
-        } else {
-          throw new TypeError(`not found request [${req.id}] in atomicityGroup [${req.atomicityGroup || 'default'}]`);
-        }
+        g.setEdge(req.id, dep);
       }
     } else {
       g.setNode(req.id);
@@ -127,6 +123,7 @@ export function groupDependsOn(requests: Array<JsonBatchRequest>): Array<Array<J
 
 const X_HEADER_BATCH_REQUEST_ID = 'x-batch-request-id';
 const X_HEADER_BATCH_ATOM_GROUP = 'x-batch-atom-group';
+const DEFAULT_ATOM_GROUP = 'default';
 
 /**
  * create `/$batch` requests handler
@@ -147,11 +144,10 @@ export function withODataBatchRequestHandler(server: typeof ODataServer) {
         throw new BadRequestError(errors.join(', '));
       }
 
-      // ensure dependsOn is valid
-      checkDependsOnIsValid(body.requests);
-
       // group by 'atomicityGroup'
-      const groups: Record<string, JsonBatchRequest[]> = groupBy(body.requests, (bRequest) => bRequest.atomicityGroup ?? 'default');
+      const groups: Record<string, JsonBatchRequest[]> = groupBy(body.requests, (bRequest) => bRequest.atomicityGroup ?? DEFAULT_ATOM_GROUP);
+
+      Object.values(groups).forEach(checkDependsOnIsValid);
 
       // run parallel in theory
       const collectedResults = await Promise.all(map(groups, async (groupRequests, groupName) => {
@@ -167,28 +163,8 @@ export function withODataBatchRequestHandler(server: typeof ODataServer) {
         const txContext = createTransactionContext();
         // if any item process failed, this value will be true
         let anyItemProcessedFailed = false;
-        let dependsOnGroups: JsonBatchRequest<any>[][];
 
-        try {
-
-          dependsOnGroups = groupDependsOn(groupRequests);
-
-        } catch (error) {
-
-          return groupRequests.map(
-            (groupRequest) => ({
-              id: groupRequest.id,
-              headers: {
-                [X_HEADER_BATCH_REQUEST_ID]: groupRequest.id,
-                [X_HEADER_BATCH_ATOM_GROUP]: groupName
-              },
-              status: 500,
-              body: { error: { code: 500, message: error.message } }
-            })
-          );
-
-        }
-
+        const dependsOnGroups = groupDependsOn(groupRequests);
 
         // execute each request in same atom group series
 
