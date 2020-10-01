@@ -1,6 +1,11 @@
+// @ts-nocheck
+import { DeepPartial } from '@newdash/newdash';
+import { BatchRequestOptionsV4 } from '@odata/client';
+import { ODataMethod } from '@odata/parser';
 import { v4 } from 'uuid';
-import { BaseODataModel, KeyProperty, ODataEntityType, OptionalProperty } from '../../src';
+import { IncKeyProperty, KeyProperty, ODataModel, OptionalProperty } from '../../src';
 import { ERROR_BATCH_REQUEST_FAST_FAIL } from '../../src/messages';
+import { groupDependsOn } from '../../src/middlewares';
 import { createServerAndClient, createTmpConnection } from './utils';
 
 
@@ -8,8 +13,8 @@ describe('Batch Test Suite', () => {
 
   it('should raise error when payload wrong', async () => {
 
-    @ODataEntityType()
-    class B1 extends BaseODataModel {
+    @ODataModel()
+    class B1 {
 
       @KeyProperty()
       key: number;
@@ -47,8 +52,8 @@ describe('Batch Test Suite', () => {
 
   it('should share single transaction by default (without atom group)', async () => {
 
-    @ODataEntityType()
-    class B2 extends BaseODataModel {
+    @ODataModel()
+    class B2 {
 
       @KeyProperty({ generated: 'increment' })
       key: number;
@@ -104,8 +109,8 @@ describe('Batch Test Suite', () => {
 
   it('should support fast failed', async () => {
 
-    @ODataEntityType()
-    class B3 extends BaseODataModel {
+    @ODataModel()
+    class B3 {
 
       @KeyProperty({ generated: 'increment' })
       key: number;
@@ -163,6 +168,145 @@ describe('Batch Test Suite', () => {
       // and each atom group will share single batch request
       // and rollback when any errors occurs
       expect(items).toHaveLength(0);
+
+    } finally {
+      await shutdownServer();
+    }
+
+  });
+
+  it('should support order by dependsOn', () => {
+
+    const groups = groupDependsOn([
+      { id: '0', method: ODataMethod.GET, url: '/' },
+      { id: '1', method: ODataMethod.GET, url: '/', dependsOn: ['0'] },
+      { id: '2', method: ODataMethod.GET, url: '/', dependsOn: ['0'] },
+      { id: '3', method: ODataMethod.GET, url: '/', dependsOn: ['2'] }
+    ]);
+
+    expect(groups).toHaveLength(1);
+    expect(groups[0].map((req) => req.id)).toStrictEqual(['0', '1', '2', '3']);
+
+    const groups2 = groupDependsOn([
+      { id: '0', method: ODataMethod.GET, url: '/' },
+      { id: '1', method: ODataMethod.GET, url: '/', dependsOn: ['0'] },
+      { id: '2', method: ODataMethod.GET, url: '/', dependsOn: ['0'] },
+      { id: '3', method: ODataMethod.GET, url: '/', dependsOn: ['2'] },
+      { id: '4', method: ODataMethod.GET, url: '/' },
+      { id: '5', method: ODataMethod.GET, url: '/', dependsOn: ['6'] },
+      { id: '6', method: ODataMethod.GET, url: '/', dependsOn: ['4'] }
+    ]);
+
+    expect(groups2).toHaveLength(2);
+    expect(groups2[0].map((req) => req.id)).toStrictEqual(['0', '1', '2', '3']);
+    expect(groups2[1].map((req) => req.id)).toStrictEqual(['4', '6', '5']);
+
+
+    expect(() => groupDependsOn([
+      { id: '0', method: ODataMethod.GET, url: '/', dependsOn: ['4'] },
+      { id: '1', method: ODataMethod.GET, url: '/', dependsOn: ['0'] },
+      { id: '2', method: ODataMethod.GET, url: '/', dependsOn: ['1'] },
+      { id: '3', method: ODataMethod.GET, url: '/', dependsOn: ['2'] },
+      { id: '4', method: ODataMethod.GET, url: '/', dependsOn: ['3'] }
+    ])).toThrowError('found cycle dependsOn in requests [1->2->3->4->0->1]');
+
+  });
+
+  it('should support dependsOn requests', async () => {
+
+    @ODataModel()
+    class DependsOnModel {
+      @IncKeyProperty() key: number;
+      @OptionalProperty() num: number;
+    }
+
+    const conn = await createTmpConnection({
+      name: 'batch_c_04',
+      entities: [DependsOnModel]
+    });
+
+    const { client, shutdownServer } = await createServerAndClient(conn);
+
+    try {
+
+      let idx = -1;
+      function createRequest(req?: DeepPartial<BatchRequestOptionsV4<DependsOnModel>>) {
+        idx++;
+        return client.newBatchRequest(Object.assign({}, {
+          requestId: idx.toString(), method: 'POST',
+          collection: 'DependsOnModels',
+          entity: { num: idx }
+        }, req) as BatchRequestOptionsV4<DependsOnModel>);
+      }
+
+      const requests = [
+        createRequest(),
+        createRequest({ dependsOn: ['2'] }),
+        createRequest({ dependsOn: ['0'] })
+      ];
+
+      const resHeaders = await Promise.all((await client.execBatchRequestsJson(requests)).map((res) => res.headers));
+
+      expect(resHeaders).toHaveLength(3);
+
+      expect(resHeaders).toMatchObject([
+        { 'x-batch-request-id': '0' },
+        { 'x-batch-request-id': '2' }, // run the third request before the second request
+        { 'x-batch-request-id': '1' }
+      ]);
+
+      // duplicate request id
+      const requests2 = [
+        createRequest({ requestId: '1' }),
+        createRequest({ requestId: '1' })
+      ];
+      await expect(() => client.execBatchRequestsJson(requests2)).rejects.toThrowError('request id [1] is duplicate');
+
+
+      // dependsOn not exist
+      const requests3 = [
+        createRequest({ requestId: '1', dependsOn: ['3'] }),
+        createRequest({ requestId: '2', dependsOn: ['2'] })
+      ];
+      await expect(() => client.execBatchRequestsJson(requests3)).rejects.toThrowError('dependsOn [3] not existed in batch requests');
+
+      // cycle dependsOn
+      const requests4 = [
+        createRequest({ requestId: '1', dependsOn: ['2'] }),
+        createRequest({ requestId: '2', dependsOn: ['4'] }),
+        createRequest({ requestId: '4', dependsOn: ['1'] })
+      ];
+      const res4Bodies = await Promise.all((await client.execBatchRequestsJson(requests4)).map((res) => res.json()));
+
+      expect(res4Bodies).toHaveLength(requests4.length);
+      expect(res4Bodies[0].error.message).toBe('found cycle dependsOn in requests [4->2->1->4]');
+
+      // dependsOn another atom group request
+      const requests5 = [
+        createRequest({ requestId: '1', dependsOn: ['2'], atomicityGroup: '1' }),
+        createRequest({ requestId: '2', dependsOn: ['4'], atomicityGroup: '1' }),
+        createRequest({ requestId: '4', atomicityGroup: '1' }),
+        createRequest({ requestId: '6', dependsOn: ['2'], atomicityGroup: '2' })
+      ];
+      const res5 = await client.execBatchRequestsJson(requests5);
+      const res5Bodies = await Promise.all(res5.map(async (res) => ({
+        body: await res.json(),
+        headers: res.headers,
+        status: res.status
+      })));
+      expect(res5Bodies).toHaveLength(requests5.length);
+
+      res5Bodies.forEach((res5Body) => {
+        switch (res5Body.headers['x-batch-atom-group']) {
+          case '1':
+            expect(res5Body.status).toBe(201);
+            break;
+          case '2':
+            expect(res5Body.status).toBe(500);
+            expect(res5Body.body.error.message).toBe('not found request [6] in atomicityGroup [2]');
+            break;
+        }
+      });
 
     } finally {
       await shutdownServer();

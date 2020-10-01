@@ -115,7 +115,7 @@ export const createTmpConnOpt = (opt?: Partial<ConnectionOptions> = {}) => {
     defaultOpt, opt,
     {
       synchronize: true,
-      entityPrefix: createEntityPrefix(opt.entityPrefix),
+      entityPrefix: createEntityPrefix(opt.entityPrefix || opt.name),
       logging: Boolean(process.env.TEST_DB_LOG)
     }
   );
