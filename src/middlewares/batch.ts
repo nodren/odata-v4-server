@@ -53,7 +53,7 @@ const isFastFail = (req: Request) => {
 };
 
 /**
- * create $batch requests handler
+ * create `/$batch` requests handler
  *
  * @param server
  */
@@ -88,11 +88,20 @@ export function withODataBatchRequestHandler(server: typeof ODataServer) {
         // if any item process failed, this value will be true
         let anyItemProcessedFailed = false;
 
-        for (let idx = 0; idx < groupRequests.length; idx++) {
-
-          const batchRequest = groupRequests[idx];
+        for (const batchRequest of groupRequests) {
 
           const batchRequestId = `group('${batchRequest.atomicityGroup}'), requestId('${batchRequest.id}'), url('${batchRequest.url}')`;
+
+          const ctx: ODataHttpContext = {
+            url: batchRequest.url,
+            method: batchRequest.method,
+            protocol: req.secure ? 'https' : 'http',
+            host: req.headers.host,
+            base: req.baseUrl,
+            request: req,
+            response: res,
+            tx: txContext
+          };
 
           try {
 
@@ -107,28 +116,11 @@ export function withODataBatchRequestHandler(server: typeof ODataServer) {
               continue;
             }
 
-            const ctx: ODataHttpContext = {
-              url: batchRequest.url,
-              method: batchRequest.method,
-              protocol: req.secure ? 'https' : 'http',
-              host: req.headers.host,
-              base: req.baseUrl,
-              request: req,
-              response: res,
-              tx: txContext
-            };
-
-            const processor = await server.createProcessor(ctx, {
-              metadata: res['metadata']
-            });
+            const processor = await server.createProcessor(ctx, { metadata: res['metadata'] });
 
             const result = await processor.execute(batchRequest.body);
 
-            groupResults.push({
-              id: batchRequest.id,
-              status: result.statusCode || 200,
-              body: result.body
-            });
+            groupResults.push({ id: batchRequest.id, status: result.statusCode || 200, body: result.body });
 
           } catch (err) {
 
@@ -141,15 +133,11 @@ export function withODataBatchRequestHandler(server: typeof ODataServer) {
             groupResults.push({
               id: batchRequest.id,
               status: statusCode,
-              body: {
-                error: {
-                  code: statusCode,
-                  message: err.message
-                }
-              }
+              body: { error: { code: statusCode, message: err.message } }
             });
 
           }
+
         }
 
         if (anyItemProcessedFailed) {
