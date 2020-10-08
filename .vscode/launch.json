@@ -12,6 +12,7 @@
       "skipFiles": [
         "<node_internals>/**"
       ],
+      "outputCapture": "console",
       "envFile": "${workspaceFolder}/.env",
       "sourceMaps": true
     },

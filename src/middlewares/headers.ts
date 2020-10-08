@@ -1,7 +1,10 @@
-import isArray from '@newdash/newdash/isArray';
+import { isArray } from '@newdash/newdash/isArray';
+import { toNumber } from '@newdash/newdash/toNumber';
 import { NextFunction, Request, Response } from 'express';
+import { HttpHeaderConstants } from '../constants';
 import { ServerInternalError, UnsupportedMediaTypeError } from '../error';
 import { ODataMetadataType } from '../processor';
+
 
 /**
  *
@@ -12,7 +15,7 @@ import { ODataMetadataType } from '../processor';
  * @param next
  */
 export function withODataHeader(req: Request, res: Response, next: NextFunction) {
-  res.setHeader('OData-Version', '4.0');
+  res.setHeader(HttpHeaderConstants.HttpHeaderODataVersion, HttpHeaderConstants.ODataValueVersion40);
   if (req.headers.accept &&
     req.headers.accept.indexOf('application/json') < 0 &&
     req.headers.accept.indexOf('text/html') < 0 &&
@@ -32,7 +35,10 @@ export function withODataHeader(req: Request, res: Response, next: NextFunction)
  */
 export function withODataVersionVerify(req: Request) {
   req.url = req.url.replace(/[\/]+/g, '/').replace(':/', '://');
-  if (req.headers['odata-maxversion'] && req.headers['odata-maxversion'] < '4.0') {
+  if (
+    req.headers[HttpHeaderConstants.ODataValueMaxVersion]
+    && toNumber(req.headers[HttpHeaderConstants.ODataValueMaxVersion]) < 4
+  ) {
     return req.next(new ServerInternalError('Only OData version 4.0 supported'));
   }
   req.next();
@@ -53,7 +59,7 @@ export function ensureODataMetadataType(req: Request, res: Response) {
 }
 
 export function ensureODataContentType(req: Request, res: Response, contentType?: string) {
-  contentType = contentType || 'application/json';
+  contentType = contentType || HttpHeaderConstants.HttpContentTypeJson;
   if (contentType.indexOf('odata.metadata=') < 0) {
     contentType += `;odata.metadata=${ODataMetadataType[res['metadata']]}`;
   }
@@ -70,11 +76,11 @@ export function ensureODataContentType(req: Request, res: Response, contentType?
 }
 
 export function ensureODataHeaders(req: Request, res: Response, next?: NextFunction) {
-  res.setHeader('OData-Version', '4.0');
+  res.setHeader(HttpHeaderConstants.HttpHeaderODataVersion, HttpHeaderConstants.ODataValueVersion40);
 
   ensureODataMetadataType(req, res);
 
-  let charset = req.headers['accept-charset'] || 'utf-8';
+  let charset = req.headers[HttpHeaderConstants.HttpHeaderAcceptCharset] || HttpHeaderConstants.HttpCharsetUTF8;
   if (isArray(charset)) {
     charset = charset[0];
   }
@@ -82,17 +88,20 @@ export function ensureODataHeaders(req: Request, res: Response, next?: NextFunct
 
   ensureODataContentType(req, res);
 
-  if ((req.headers.accept && req.headers.accept.indexOf('charset') < 0) || req.headers['accept-charset']) {
+  if (
+    (req.headers.accept && req.headers.accept.indexOf('charset') < 0)
+    || req.headers[HttpHeaderConstants.HttpHeaderAcceptCharset]
+  ) {
     const bufferEncoding = {
       'utf-8': 'utf8',
       'utf-16': 'utf16le'
     };
-    const origsend = res.send;
+    const originalSend = res.send;
     res.send = <any>((data) => {
       if (typeof data == 'object') {
         data = JSON.stringify(data);
       }
-      origsend.call(res, Buffer.from(data, bufferEncoding[charset as string]));
+      originalSend.call(res, Buffer.from(data, bufferEncoding[charset as string]));
     });
   }
 

@@ -1,5 +1,23 @@
 
 
+export enum HttpHeaderConstants {
+
+  HttpHeaderAccept = 'accept',
+  HttpHeaderODataVersion = 'OData-Version',
+  HttpHeaderAcceptCharset = 'accept-charset',
+  ODataValueMaxVersion = 'odata-maxversion',
+
+  HttpContentTypeJson = 'application/json',
+  HttpContentTypeTextXml = 'text/xml',
+  HttpContentTypeXml = 'xml',
+  HttpContentTypeAny = '*/*',
+
+  HttpCharsetUTF8 = 'utf-8',
+  ODataValueMetadata = 'odata.metadata',
+  ODataValueVersion40 = '4.0',
+
+}
+
 /**
  * the key which support to injection
  */
