@@ -24,7 +24,7 @@ NodeJS OData(V4) Server Implementation.
 ## Features
 
 * OASIS Standard `OData` Version **4.0** server
-* usable as a standalone server, as an Express router
+* usable as a standalone server, or as an `Express` router
 * expose service document and service metadata - `$metadata`
 * setup metadata using decorators or [@odata/metadata](https://github.com/Soontao/odata-v4-metadata)
 * supported data types are `Edm primitives`, `complex types`, `navigation properties`
