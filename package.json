@@ -17,7 +17,7 @@
     "test": "jest --forceExit",
     "coverage": "npm test -- --coverage --no-cache",
     "prepublishOnly": "npm test && npm run build",
-    "release": "standard-version --no-verify && git push --follow-tags origin master"
+    "release": "standard-version --no-verify && git push --follow-tags origin main"
   },
   "keywords": [
     "OData",
@@ -39,7 +39,7 @@
   ],
   "dependencies": {
     "@cypress/schema-tools": "^4.7.5",
-    "@newdash/inject": "^0.2.19",
+    "@newdash/inject": "^0.2.21",
     "@newdash/newdash": "^5.14.0",
     "@odata/metadata": "^0.1.14",
     "@odata/parser": "^0.2.3",
