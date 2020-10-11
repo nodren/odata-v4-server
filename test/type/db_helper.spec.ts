@@ -48,5 +48,14 @@ describe('DB Helper Test Suite', () => {
 
   });
 
+  it('should support $expand($select)', () => {
+    const helper = createDBHelper({ type: 'sqljs' });
+    const ast = defaultParser.query('$expand=a($select=aName,aDescription)&$select=name,description');
+    const nameMapper: FieldNameMapper = (fieldName) => `table.${fieldName}`;
+    const { selectedFields } = transformQueryAst(ast, nameMapper, helper.mapQueryValue);
+    expect(selectedFields).toEqual(['table.name', 'table.description']);
+
+  });
+
 
 });

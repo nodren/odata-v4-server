@@ -1,8 +1,9 @@
 import { identity } from '@newdash/newdash/.internal/identity';
-import { Token, traverseAst, traverseAstDeepFirst, Traverser } from '@odata/parser';
+import { Token, TokenType, traverseAst, traverseAstDeepFirst, Traverser } from '@odata/parser';
 import { ODataQuery } from '..';
 import { NotImplementedError } from '../error';
 import { EdmType } from '../literal';
+import { getODataNavigation } from './decorators';
 
 interface ValueMapper {
   (type: EdmType, raw: string): any
@@ -75,7 +76,9 @@ export const transformQueryAst = (node: ODataQuery, nameMapper: FieldNameMapper 
   let inlineCount = false;
 
   const orderBy = [];
-  const selects = [];
+  const selects = new Set();
+
+  const navSelects = new Set();
 
   const traverser: Traverser = {
     Top: (node) => {
@@ -97,7 +100,7 @@ export const transformQueryAst = (node: ODataQuery, nameMapper: FieldNameMapper 
     SelectItem: (node) => {
       // only support simple property of entity
       // please raise error on deep path
-      selects.push(nameMapper(node.raw));
+      selects.add(nameMapper(node.raw));
     },
     InlineCount: (node) => {
       inlineCount = node.value?.raw == 'true';
@@ -111,10 +114,39 @@ export const transformQueryAst = (node: ODataQuery, nameMapper: FieldNameMapper 
     }
   };
 
-  // only first level options
-  // @ts-ignore
-  node.value?.options?.forEach((option) => {
-    traverseAst(traverser, option);
+  node.value?.['options']?.forEach((option: Token) => {
+    // ignore $expand inner parameters
+    if (option.type !== TokenType.Expand) {
+      traverseAst(traverser, option);
+    }
+    else {
+      // force add expand item required fk to selects
+      if ('@odata.type' in node) {
+        const rootType = node['@odata.type'];
+        for (const expandItem of option?.value?.items) {
+          if ('@odata.type' in expandItem) {
+            const expandItemPath = expandItem.value?.path?.raw;
+            if (expandItemPath !== undefined) {
+              const nav = getODataNavigation(rootType, expandItemPath);
+              if (nav !== undefined) {
+                switch (nav.type) {
+                  case 'ManyToOne':
+                  case 'OneToOne':
+                    if (nav.foreignKey !== undefined) {
+                      navSelects.add(nav.foreignKey);
+                    }
+                    break;
+                  default:
+                    break;
+                }
+              }
+            }
+          }
+
+        }
+
+      }
+    }
   });
 
   const parts = [];
@@ -131,7 +163,14 @@ export const transformQueryAst = (node: ODataQuery, nameMapper: FieldNameMapper 
 
   const sqlQuery = parts.length > 0 ? parts.join(' ') : '';
 
-  return { sqlQuery, selectedFields: selects, count: inlineCount, where, offset, limit };
+  // if use want to projection table
+  if (selects.size > 0) {
+    for (const navSelect of navSelects) {
+      selects.add(navSelect);
+    }
+  }
+
+  return { sqlQuery, selectedFields: Array.from(selects), count: inlineCount, where, offset, limit };
 
 };
 
