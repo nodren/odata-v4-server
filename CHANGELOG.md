@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.41](https://github.com/Soontao/odata-v4-server/compare/v0.2.40...v0.2.41) (2020-10-11)
+
+
+### Features
+
+* [#96](https://github.com/Soontao/odata-v4-server/issues/96) enhance $expand logic on SQL build ([fcffee4](https://github.com/Soontao/odata-v4-server/commit/fcffee4ee63b650185f0e48494082370addfc8d7))
+
+
+### Bug Fixes
+
+* type issue ([060ed9a](https://github.com/Soontao/odata-v4-server/commit/060ed9a32f4a033845931d0ebc53f95328817690))
+
 ### [0.2.40](https://github.com/Soontao/odata-v4-server/compare/v0.2.39...v0.2.40) (2020-10-11)
 
 
