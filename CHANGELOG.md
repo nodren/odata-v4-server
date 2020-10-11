@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.42](https://github.com/Soontao/odata-v4-server/compare/v0.2.41...v0.2.42) (2020-10-11)
+
+
+### Bug Fixes
+
+* projection not works correctly in deep expand ([fc52615](https://github.com/Soontao/odata-v4-server/commit/fc526156ea5d2c2c34a29386d822bbd4df4d8320))
+
 ### [0.2.41](https://github.com/Soontao/odata-v4-server/compare/v0.2.40...v0.2.41) (2020-10-11)
 
 
