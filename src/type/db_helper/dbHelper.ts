@@ -1,5 +1,5 @@
+import { QueryOptionsNode as ODataQuery } from '@odata/parser';
 import { DatabaseType } from 'typeorm';
-import { ODataQuery } from '../..';
 import { EdmType } from '../../literal';
 import { transformQueryAst } from '../visitor';
 

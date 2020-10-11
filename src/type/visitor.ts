@@ -1,8 +1,8 @@
 import { identity } from '@newdash/newdash/.internal/identity';
-import { Token, TokenType, traverseAst, traverseAstDeepFirst, Traverser } from '@odata/parser';
-import { ODataQuery } from '..';
+import { QueryOptionsNode as ODataQuery, Token, TokenType, traverseAst, traverseAstDeepFirst, Traverser } from '@odata/parser';
 import { NotImplementedError } from '../error';
 import { EdmType } from '../literal';
+import { ODATA_TYPE } from '../visitor';
 import { getODataNavigation } from './decorators';
 
 interface ValueMapper {
@@ -121,10 +121,10 @@ export const transformQueryAst = (node: ODataQuery, nameMapper: FieldNameMapper 
     }
     else {
       // force add expand item required fk to selects
-      if ('@odata.type' in node) {
-        const rootType = node['@odata.type'];
+      if (ODATA_TYPE in node) {
+        const rootType = node[ODATA_TYPE];
         for (const expandItem of option?.value?.items) {
-          if ('@odata.type' in expandItem) {
+          if (ODATA_TYPE in expandItem) {
             const expandItemPath = expandItem.value?.path?.raw;
             if (expandItemPath !== undefined) {
               const nav = getODataNavigation(rootType, expandItemPath);
