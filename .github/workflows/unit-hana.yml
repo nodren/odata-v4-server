@@ -28,7 +28,7 @@ jobs:
       run: npm run build
 
     - name: npm test
-      run: npm run coverage
+      run: npm run test -- -i
       env:
         CI: true
         HANA_USER: ${{ secrets.CLOUD_HANA_USER }}

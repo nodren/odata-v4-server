@@ -14,7 +14,7 @@
     "postbuild": "tsc --noEmit --p tsconfig.lib.json",
     "lint": "eslint src --fix",
     "pretest": "eslint test --fix ",
-    "test": "jest -w 4 --forceExit",
+    "test": "jest --forceExit",
     "coverage": "npm test -- --coverage --no-cache",
     "prepublishOnly": "npm test && npm run build",
     "release": "standard-version --no-verify && git push --follow-tags origin main"

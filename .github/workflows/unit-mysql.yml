@@ -45,7 +45,7 @@ jobs:
       run: npm run build
 
     - name: npm test
-      run: npm run coverage
+      run: npm run test
       env:
         CI: true
         MYSQL_USER: odata_test
