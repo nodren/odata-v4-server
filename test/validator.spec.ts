@@ -1,4 +1,5 @@
-import { HttpRequestError, odata, ODataController, ODataQuery, ODataServer } from '../src';
+import { HttpRequestError, odata, ODataController, ODataServer } from '../src';
+import { ODataQuery } from '../src/type/types';
 
 class ValidationError extends HttpRequestError {
   constructor() {
