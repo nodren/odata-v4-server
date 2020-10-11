@@ -84,6 +84,7 @@ describe('server query result Test Suite', () => {
   });
 
   it('should support $select parameter', async () => {
+
     @ODataModel()
     class SelectModel {
       @UUIDKeyProperty() key: string;
@@ -126,6 +127,8 @@ describe('server query result Test Suite', () => {
 
     try {
       const selectModels = client.getEntitySet<SelectModel>('SelectModels');
+      const selectRefModels = client.getEntitySet<SelectRefModel>('SelectRefModels');
+
       const createdItem = await selectModels.create({
         f1: 'v1',
         f2: 'v2',
@@ -172,6 +175,22 @@ describe('server query result Test Suite', () => {
       expect(onlyF1ExpandedRF1Objects[0].refs[0]).toHaveProperty('rf1');
       expect(onlyF1ExpandedRF1Objects[0].refs[0]).not.toHaveProperty('rf2');
       expect(onlyF1ExpandedRF1Objects[0].refs[0]).not.toHaveProperty('rf3');
+      const [{ key }] = await selectRefModels.query();
+
+      const r4 = await selectRefModels.retrieve(
+        key,
+        client.newParam().expand('sm($select=f1)').select('rf1')
+      );
+
+      expect(r4).toHaveProperty('rf1');
+      expect(r4).toHaveProperty('sm');
+      expect(r4).not.toHaveProperty('rf2');
+      expect(r4).not.toHaveProperty('rf2');
+
+      expect(r4.sm).toHaveProperty('f1');
+      expect(r4.sm).not.toHaveProperty('f2');
+      expect(r4.sm).not.toHaveProperty('f3');
+
 
     } finally {
       await shutdownServer();

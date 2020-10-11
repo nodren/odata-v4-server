@@ -1790,7 +1790,7 @@ export class ODataProcessor extends Transform {
           if (part.key) {
             part.key.forEach((key) => params[key.name] = key.value);
           }
-          navigationResult = await this.__read(ctrl, part, params, result, foreignFilter, navigationType, include, select);
+          navigationResult = await this.__read(ctrl, part, params, result, foreignFilter, navigationType, include, include.select);
         } else {
           const foreignKeys = Edm.getForeignKeys(elementType, include.navigationProperty);
           const part: any = {};
@@ -1801,7 +1801,7 @@ export class ODataProcessor extends Transform {
           if (nav?.type == 'OneToOne' && !isEmpty(nav.targetForeignKey)) {
             const [keyName] = Edm.getKeyProperties(elementType);
             const foreignFilter = ODataFilter.New().field(nav.targetForeignKey).eq(result[keyName]).toString();
-            navigationResult = await this.__read(ctrl, part, params, result, foreignFilter, navigationType, include, select);
+            navigationResult = await this.__read(ctrl, part, params, result, foreignFilter, navigationType, include, include.select);
 
             const data = get(navigationResult, '_originalResult.value[0]');
 
@@ -1822,7 +1822,7 @@ export class ODataProcessor extends Transform {
             if (part.key) {
               part.key.forEach((key) => params[key.name] = key.value);
             }
-            navigationResult = await this.__read(ctrl, part, params, result, undefined, navigationType, include, select);
+            navigationResult = await this.__read(ctrl, part, params, result, undefined, navigationType, include, include.select);
 
           }
 
