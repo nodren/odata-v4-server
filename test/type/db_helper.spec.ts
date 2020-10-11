@@ -16,14 +16,14 @@ describe('DB Helper Test Suite', () => {
 
   });
 
-  it('should support converting odata query to sql', () => {
+  it('should support converting odata query to sql 2', () => {
 
     const helper = createDBHelper({ type: 'sqljs' });
 
     const ast = defaultParser.query('$format=json&$select=A,B,C&$top=10&$skip=30&$filter=A eq 1&$orderby=A desc,V asc');
     const { selectedFields, sqlQuery } = transformQueryAst(ast, undefined, helper.mapQueryValue);
 
-    expect(sqlQuery.trim()).toEqual('WHERE A = 1 LIMIT 10 OFFSET 30 ORDERBY A DESC, V ASC');
+    expect(sqlQuery.trim()).toEqual('WHERE A = 1 LIMIT 10 OFFSET 30 ORDER BY A DESC, V ASC');
     expect(selectedFields).toEqual(['A', 'B', 'C']);
 
   });
@@ -43,7 +43,7 @@ describe('DB Helper Test Suite', () => {
     const nameMapper: FieldNameMapper = (fieldName) => `table.${fieldName}`;
     const { selectedFields, sqlQuery } = transformQueryAst(ast, nameMapper, helper.mapQueryValue);
 
-    expect(sqlQuery.trim()).toEqual('WHERE table.A = 1 LIMIT 10 OFFSET 30 ORDERBY table.A DESC, table.V ASC');
+    expect(sqlQuery.trim()).toEqual('WHERE table.A = 1 LIMIT 10 OFFSET 30 ORDER BY table.A DESC, table.V ASC');
     expect(selectedFields).toEqual(['table.A', 'table.B', 'table.C']);
 
   });

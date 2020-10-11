@@ -69,7 +69,6 @@ export interface FieldNameMapper {
 
 export const transformQueryAst = (node: ODataQuery, nameMapper: FieldNameMapper = identity, valueMapper: ValueMapper) => {
 
-  let sqlQuery = '';
   let offset = 0;
   let limit = 0;
   let where = '';
@@ -118,16 +117,19 @@ export const transformQueryAst = (node: ODataQuery, nameMapper: FieldNameMapper 
     traverseAst(traverser, option);
   });
 
+  const parts = [];
 
   if (where && where.trim().length > 0) {
-    sqlQuery += ` WHERE ${where}`;
+    parts.push(`WHERE ${where}`);
   }
   if (offset || limit) {
-    sqlQuery += ` LIMIT ${limit} OFFSET ${offset}`;
+    parts.push(`LIMIT ${limit} OFFSET ${offset}`);
   }
   if (orderBy.length > 0) {
-    sqlQuery += ` ORDERBY ${orderBy.join(', ')}`;
+    parts.push(`ORDER BY ${orderBy.join(', ')}`);
   }
+
+  const sqlQuery = parts.length > 0 ? parts.join(' ') : '';
 
   return { sqlQuery, selectedFields: selects, count: inlineCount, where, offset, limit };
 
