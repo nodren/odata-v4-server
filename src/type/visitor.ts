@@ -133,13 +133,13 @@ export const transformQueryAst = (node: ODataQuery, nameMapper: FieldNameMapper 
                 switch (nav.type) {
                   // add current model's pk to allow the navigation could access the PK
                   case 'OneToMany':
-                    navSelects.add(getKeyProperties(rootType)[0]);
+                    navSelects.add(nameMapper(getKeyProperties(rootType)[0]));
                     break;
                   // add current models' fk to allow the navigation could access the FK
                   case 'ManyToOne':
                   case 'OneToOne':
                     if (nav.foreignKey !== undefined) {
-                      navSelects.add(nav.foreignKey);
+                      navSelects.add(nameMapper(nav.foreignKey));
                     }
                     break;
                   default:

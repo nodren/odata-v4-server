@@ -118,7 +118,7 @@ describe('server query result Test Suite', () => {
 
 
     const conn = await createTmpConnection({
-      name: 's_query_conn_2',
+      name: 's_query_conn_3',
       entities: [SelectModel, SelectRefModel]
     });
 
