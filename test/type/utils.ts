@@ -65,7 +65,13 @@ const createTmpDefaultOption = () => {
       encrypt: Boolean(process.env.HANA_CLOUD_VERIFY),
       sslValidateCertificate: Boolean(process.env.HANA_CLOUD_VERIFY),
 
-      pool: { requestTimeout: 3 * 60 * 1000, max: 3 }
+      pool: {
+        idleTimeout: 5 * 60 * 1000,
+        requestTimeout: 3 * 60 * 1000,
+        min: 5,
+        max: 15,
+        maxWaitingRequests: 3 * 60 * 1000
+      }
     };
   }
 
