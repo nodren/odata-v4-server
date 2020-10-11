@@ -8,7 +8,8 @@ module.exports = {
   ],
   'testTimeout': 10 * 60 * 1000, // 10 minutes
   'collectCoverageFrom': [
-    'src/**/*',
+    'src/type/**/*',
+    'src/middlewares/**/*',
     '!**/node_modules/**'
   ],
   'coveragePathIgnorePatterns': [

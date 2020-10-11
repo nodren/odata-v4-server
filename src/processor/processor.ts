@@ -1199,7 +1199,7 @@ export class ODataProcessor extends Transform {
     if (part.key) {
       part.key.forEach((key) => params[key.name] = key.value);
     }
-    return (data) => this.__read(ctrl, part, params, data);
+    return (data) => this.__read(ctrl, part, params, data, undefined, undefined, undefined, this.resourcePath.select);
   }
 
   private __actionOrFunctionImport(part: NavigationPart): Function {

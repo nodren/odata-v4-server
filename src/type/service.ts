@@ -335,7 +335,7 @@ export class TypedService<T = any> extends ODataController {
 
     const [parentObjectKeyName] = Edm.getKeyProperties(entityType);
 
-    const key = instance[parentObjectKeyName];
+    const parentObjectKey = instance[parentObjectKeyName];
 
     for (const navigationName in navigations) {
       if (Object.prototype.hasOwnProperty.call(navigations, navigationName)) {
@@ -360,7 +360,7 @@ export class TypedService<T = any> extends ODataController {
               if (isArray(navigationData)) {
                 parentBody[navigationName] = await Promise.all(
                   navigationData.map((navigationItem) => {
-                    navigationItem[navTargetFKName] = parentBody[parentObjectKeyName];
+                    navigationItem[navTargetFKName] = parentObjectKey;
                     return service.create(navigationItem);
                   })
                 );
@@ -371,7 +371,7 @@ export class TypedService<T = any> extends ODataController {
               break;
             case 'ManyToOne':
               parentBody[navigationName] = await service.create(navigationData);
-              await repo.update(key, { [parentObjectFKName]: parentBody[navigationName][navTargetKeyName] });
+              await repo.update(parentObjectKey, { [parentObjectFKName]: parentBody[navigationName][navTargetKeyName] });
               break;
             default:
 
@@ -383,7 +383,7 @@ export class TypedService<T = any> extends ODataController {
 
               if (parentObjectFKName) {
                 // save the fk to parent table
-                await repo.update(key, { [parentObjectFKName]: parentBody[navigationName][navTargetKeyName] });
+                await repo.update(parentObjectKey, { [parentObjectFKName]: parentBody[navigationName][navTargetKeyName] });
               }
 
               break;

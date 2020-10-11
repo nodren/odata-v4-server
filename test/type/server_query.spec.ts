@@ -1,4 +1,4 @@
-import { ODataModel, OptionalProperty, UUIDKeyProperty } from '../../src';
+import { ODataModel, ODataNavigation, OptionalProperty, UUIDKeyProperty } from '../../src';
 import { Class, SchoolEntities } from './school_model';
 import { createServerAndClient, createTmpConnection } from './utils';
 
@@ -76,6 +76,102 @@ describe('server query result Test Suite', () => {
         o4.key,
         o3.key
       ]);
+
+    } finally {
+      await shutdownServer();
+    }
+
+  });
+
+  it('should support $select parameter', async () => {
+    @ODataModel()
+    class SelectModel {
+      @UUIDKeyProperty() key: string;
+      @OptionalProperty() f1: string;
+      @OptionalProperty() f2: string;
+      @OptionalProperty() f3: string;
+
+      @ODataNavigation({
+        type: 'OneToMany',
+        entity: () => SelectRefModel,
+        targetForeignKey: 'sMId'
+      })
+      refs: Array<SelectRefModel>
+
+
+    }
+
+    @ODataModel()
+    class SelectRefModel {
+      @UUIDKeyProperty() key: string;
+      @OptionalProperty() rf1: string;
+      @OptionalProperty() rf2: string;
+      @OptionalProperty() rf3: string;
+      @OptionalProperty() sMId: string;
+      @ODataNavigation({
+        type: 'ManyToOne',
+        entity: () => SelectModel,
+        foreignKey: 'sMId'
+      })
+      sm: SelectModel;
+    }
+
+
+    const conn = await createTmpConnection({
+      name: 's_query_conn_2',
+      entities: [SelectModel, SelectRefModel]
+    });
+
+    const { client, shutdownServer } = await createServerAndClient(conn);
+
+    try {
+      const selectModels = client.getEntitySet<SelectModel>('SelectModels');
+      const createdItem = await selectModels.create({
+        f1: 'v1',
+        f2: 'v2',
+        f3: 'v3',
+        refs: [{
+          rf1: 'v1',
+          rf2: 'v2',
+          rf3: 'v3'
+        }]
+      });
+
+      const onlyF1Object = await selectModels.retrieve(createdItem.key, client.newParam().select('f1'));
+      expect(onlyF1Object).toHaveProperty('f1');
+      expect(onlyF1Object).not.toHaveProperty('f2');
+      expect(onlyF1Object).not.toHaveProperty('f3');
+
+      const onlyF1ExpandedRF1Object = await selectModels.retrieve(
+        createdItem.key,
+        client.newParam().expand('refs($select=rf1)').select('f1')
+      );
+
+      expect(onlyF1ExpandedRF1Object).toHaveProperty('f1');
+      expect(onlyF1ExpandedRF1Object).toHaveProperty('refs');
+      expect(onlyF1ExpandedRF1Object).not.toHaveProperty('f2');
+      expect(onlyF1ExpandedRF1Object).not.toHaveProperty('f3');
+      expect(onlyF1ExpandedRF1Object.refs[0]).toHaveProperty('rf1');
+      expect(onlyF1ExpandedRF1Object.refs[0]).not.toHaveProperty('rf2');
+      expect(onlyF1ExpandedRF1Object.refs[0]).not.toHaveProperty('rf3');
+
+
+      const onlyF1Objects = await selectModels.query(client.newParam().select('f1'));
+      expect(onlyF1Objects[0]).toHaveProperty('f1');
+      expect(onlyF1Objects[0]).not.toHaveProperty('f2');
+      expect(onlyF1Objects[0]).not.toHaveProperty('f3');
+
+      const onlyF1ExpandedRF1Objects = await selectModels.query(
+        client.newParam().expand('refs($select=rf1)').select('f1')
+      );
+
+      expect(onlyF1ExpandedRF1Objects[0]).toHaveProperty('f1');
+      expect(onlyF1ExpandedRF1Objects[0]).toHaveProperty('refs');
+      expect(onlyF1ExpandedRF1Objects[0]).not.toHaveProperty('f2');
+      expect(onlyF1ExpandedRF1Objects[0]).not.toHaveProperty('f3');
+      expect(onlyF1ExpandedRF1Objects[0].refs[0]).toHaveProperty('rf1');
+      expect(onlyF1ExpandedRF1Objects[0].refs[0]).not.toHaveProperty('rf2');
+      expect(onlyF1ExpandedRF1Objects[0].refs[0]).not.toHaveProperty('rf3');
 
     } finally {
       await shutdownServer();

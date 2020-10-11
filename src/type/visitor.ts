@@ -1,5 +1,6 @@
 import { identity } from '@newdash/newdash/.internal/identity';
 import { QueryOptionsNode as ODataQuery, Token, TokenType, traverseAst, traverseAstDeepFirst, Traverser } from '@odata/parser';
+import { getKeyProperties } from '../edm';
 import { NotImplementedError } from '../error';
 import { EdmType } from '../literal';
 import { ODATA_TYPE } from '../visitor';
@@ -130,10 +131,15 @@ export const transformQueryAst = (node: ODataQuery, nameMapper: FieldNameMapper 
               const nav = getODataNavigation(rootType, expandItemPath);
               if (nav !== undefined) {
                 switch (nav.type) {
+                  // add current model's pk to allow the navigation could access the PK
+                  case 'OneToMany':
+                    navSelects.add(getKeyProperties(rootType)[0]);
+                    break;
+                  // add current models' fk to allow the navigation could access the FK
                   case 'ManyToOne':
                   case 'OneToOne':
                     if (nav.foreignKey !== undefined) {
-                      navSelects.add(nav.foreignKey.split('/')[0]);
+                      navSelects.add(nav.foreignKey);
                     }
                     break;
                   default:
