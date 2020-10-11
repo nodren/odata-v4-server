@@ -133,7 +133,7 @@ export const transformQueryAst = (node: ODataQuery, nameMapper: FieldNameMapper 
                   case 'ManyToOne':
                   case 'OneToOne':
                     if (nav.foreignKey !== undefined) {
-                      navSelects.add(nav.foreignKey);
+                      navSelects.add(nav.foreignKey.split('/')[0]);
                     }
                     break;
                   default:
