@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.40](https://github.com/Soontao/odata-v4-server/compare/v0.2.39...v0.2.40) (2020-10-11)
+
+
+### Features
+
+* [#25](https://github.com/Soontao/odata-v4-server/issues/25) 'dependsOn' support ([f23a50b](https://github.com/Soontao/odata-v4-server/commit/f23a50b9959b93106becd62e5af06141f3f8a504))
+* [#68](https://github.com/Soontao/odata-v4-server/issues/68) enhance ([e3f52da](https://github.com/Soontao/odata-v4-server/commit/e3f52da910ad2c4f489ededd9209f80478705eb8))
+
 ### [0.2.39](https://github.com/Soontao/odata-v4-server/compare/v0.2.38...v0.2.39) (2020-09-24)
 
 
