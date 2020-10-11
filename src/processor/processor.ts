@@ -1023,11 +1023,12 @@ export class ODataProcessor extends Transform {
         (include && filter && include.query) ||
         (!include && this.resourcePath.navigation.indexOf(part) == this.resourcePath.navigation.length - 1)
       ) {
-        queryString = Object.keys((include || this).query).map((p) => {
-          if (p == '$filter' && filter) {
-            (include || this).query[p] = `(${(include || this).query[p]}) and (${filter})`;
+        const theQuery = (include ?? this).query;
+        queryString = Object.keys(theQuery).map((p) => {
+          if (p === '$filter' && filter) {
+            return `${p}=(${theQuery[p]}) and (${filter})`;
           }
-          return `${p}=${(include || this).query[p]}`;
+          return `${p}=${theQuery[p]}`;
         }).join('&') || queryString;
       }
 
