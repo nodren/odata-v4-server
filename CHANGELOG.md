@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.43](https://github.com/Soontao/odata-v4-server/compare/v0.2.42...v0.2.43) (2020-10-11)
+
+
+### Bug Fixes
+
+* mysql identifier issue ([a75d2cb](https://github.com/Soontao/odata-v4-server/commit/a75d2cb509d9de3194187ef7b65fdc3fce3b9a4d))
+
 ### [0.2.42](https://github.com/Soontao/odata-v4-server/compare/v0.2.41...v0.2.42) (2020-10-11)
 
 
