@@ -989,7 +989,6 @@ export class ODataProcessor extends Transform {
   }
 
   private async __read(ctrl: typeof ODataController, part: any, params: any, data?: any, filter?: string | Function, elementType?: any, include?, select?) {
-    select = select || this.resourcePath.select;
 
     if (this.ctrl) {
       this.prevCtrl = this.ctrl;
@@ -1089,9 +1088,9 @@ export class ODataProcessor extends Transform {
         const typeParam = odata.getTypeParameter(ctrl, fn.name);
         if (typeParam) {
           params[typeParam] = (
-            body['@odata.type'] ||
-            (`${ctrlInstance.elementType.namespace}.${ctrlInstance.elementType.name}`)).replace(/^#/, ''
-          );
+            body['@odata.type'] ??
+            (`${ctrlInstance.elementType.namespace}.${ctrlInstance.elementType.name}`)
+          ).replace(/^#/, '');
         }
         if (bodyParam) {
           await this.__deserialize(body, ctrl.prototype.elementType);
