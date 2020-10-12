@@ -2,10 +2,11 @@ import { isClass } from '@newdash/inject/lib/utils';
 import { isArray } from '@newdash/newdash';
 import { isEmpty } from '@newdash/newdash/isEmpty';
 import toInteger from '@newdash/newdash/toInteger';
+import { BigNumber } from 'bignumber.js';
 import 'reflect-metadata';
 import { Column, ColumnOptions, Entity, EntityOptions } from 'typeorm';
 import * as Edm from '../../edm';
-import { NotImplementedError, ServerInternalError, StartupError } from '../../error';
+import { NotImplementedError, PropertyDefinitionError, ServerInternalError, StartupError } from '../../error';
 import { ODataServer } from '../../server';
 import { DateTimeTransformer, DBHelper, DecimalTransformer } from '../db_helper';
 import { BaseODataModel } from '../entity';
@@ -194,12 +195,11 @@ export function ODataColumn(options: ColumnOptions = {}) {
 
     switch (reflectType) {
       case String:
-
         switch (options.type) {
           case 'decimal': case 'dec': case 'float': case 'float4': case 'float8':
-            Edm.Decimal(object, propertyName);
-            options.transformer.push(DecimalTransformer);
-            break;
+          case 'int2': case 'int4': case 'int8':
+          case 'int64': case 'bigint':
+            throw new StartupError(`please use 'BigNumber' to define numeric property.`);
           case 'uuid':
             Edm.Guid(object, propertyName);
             break;
@@ -207,10 +207,32 @@ export function ODataColumn(options: ColumnOptions = {}) {
             Edm.Date(object, propertyName);
             break;
           case 'datetime': case 'datetime2': case 'datetimeoffset':
-            Edm.DateTimeOffset(object, propertyName);
-            break;
+            throw PropertyDefinitionError.wrongDBType(reflectType, options.type);
           default:
             Edm.String(object, propertyName);
+            break;
+        }
+        break;
+      case BigNumber:
+        switch (options.type) {
+          case 'decimal': case 'dec': case 'float': case 'float4': case 'float8':
+            Edm.Decimal(object, propertyName);
+            options.transformer.push(DecimalTransformer);
+            break;
+          case 'int2': case 'int4': case 'int8':
+            Edm.Int16(object, propertyName);
+            options.transformer.push(DecimalTransformer);
+            break;
+          case 'int64': case 'bigint':
+            Edm.Int64(object, propertyName);
+            options.transformer.push(DecimalTransformer);
+            break;
+          case 'uuid':
+          case 'date':
+          case 'datetime': case 'datetime2': case 'datetimeoffset':
+            throw PropertyDefinitionError.wrongDBType(reflectType, options.type);
+          default:
+            Edm.Decimal(object, propertyName);
             break;
         }
         break;
@@ -219,11 +241,12 @@ export function ODataColumn(options: ColumnOptions = {}) {
           case 'int2': case 'int4': case 'int8':
             Edm.Int16(object, propertyName);
             break;
-          case 'int64': case 'bigint':
-            Edm.Int64(object, propertyName);
+          case 'integer':
+            Edm.Int32(object, propertyName);
             break;
+          case 'int64': case 'bigint':
           case 'decimal': case 'dec': case 'float': case 'float4': case 'float8':
-            throw new StartupError(`can not use 'number' as programming type for the ${options.type} database type`);
+            throw PropertyDefinitionError.wrongDBType(reflectType, options.type);
           default:
             // unknown or not have type
             Edm.Int32(object, propertyName);
@@ -238,7 +261,7 @@ export function ODataColumn(options: ColumnOptions = {}) {
         break;
       case Date:
         if (options.type !== undefined && options.type !== 'bigint') {
-          throw new StartupError(`please do not define the type of date time field`);
+          throw new PropertyDefinitionError(`please do not define the type of date time field`);
         }
         Edm.DateTimeOffset(object, propertyName);
         options.type = 'bigint';

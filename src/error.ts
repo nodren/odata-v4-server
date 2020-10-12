@@ -1,3 +1,5 @@
+import { getClassName } from '@newdash/inject/lib/utils';
+import { Class } from './type/types';
 
 export class CustomError extends Error {
   constructor(message?: string) {
@@ -14,6 +16,18 @@ export class StartupError extends CustomError {
     super(message);
   }
 
+}
+
+
+export class PropertyDefinitionError extends CustomError {
+  constructor(message: string) {
+    super(message);
+  }
+
+  static wrongDBType(reflectType: Class | string, databaseType: string) {
+    const reflectTypeName = typeof reflectType === 'string' ? reflectType : getClassName(reflectType);
+    return new PropertyDefinitionError(`can not use database type '${databaseType}' with js type ${reflectTypeName}.`);
+  }
 }
 
 export class ForeignKeyValidationError extends StartupError {

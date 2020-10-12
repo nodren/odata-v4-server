@@ -1,5 +1,6 @@
 import { lazyRef } from '@newdash/inject';
 import { ODataFilter } from '@odata/parser';
+import BigNumber from 'bignumber.js';
 import { Edm, InjectedTypedService, KeyProperty, ODataAction, ODataFunction, ODataModel, oInject, Property, UUIDKeyProperty, withEntitySetName } from '../../src';
 import { createServerAndClient, createTmpConnection } from './utils';
 
@@ -16,7 +17,7 @@ describe('Entity Type Test Suite', () => {
       @Property()
       voltageLevel: string;
       @Property({ type: 'decimal', precision: 12, scale: 2 })
-      energyFee: string;
+      energyFee: BigNumber;
       @Property()
       funds: boolean;
       @Property({ type: 'date' })
@@ -25,8 +26,7 @@ describe('Entity Type Test Suite', () => {
     }
 
     const conn = await createTmpConnection({
-      name: 'entity_test_conn_01',
-      entityPrefix: 'entity_test_01',
+      name: 'entity_t_01',
       entities: [TestProposal1]
     });
 
@@ -38,18 +38,18 @@ describe('Entity Type Test Suite', () => {
       const testObject: Partial<TestProposal1> = {
         endDate: '2020-09-03',
         funds: true,
-        energyFee: '33.99',
+        energyFee: new BigNumber('33.99'), // will be stringify as '33.99'
         voltageLevel: 'test2'
       };
-
+      const cTestObject = JSON.parse(JSON.stringify(testObject));
       const created = await set.create(testObject);
-      expect(created).toMatchObject(testObject);
+      expect(created).toMatchObject(cTestObject);
 
       const [findObj1] = await set.query();
-      expect(findObj1).toMatchObject(testObject);
+      expect(findObj1).toMatchObject(cTestObject);
 
       const retrieved1 = await set.retrieve(created.id);
-      expect(retrieved1).toMatchObject(testObject);
+      expect(retrieved1).toMatchObject(cTestObject);
 
 
     } finally {

@@ -1,5 +1,6 @@
 import { isClass } from '@newdash/inject/lib/utils';
 import { ODataMethod } from '@odata/parser';
+import BigNumber from 'bignumber.js';
 import 'reflect-metadata';
 import { EColumnOptions } from './odata';
 
@@ -19,7 +20,7 @@ export interface ConstraintOption {
    */
   exclusion?: any[];
   /**
-   * The format validator will validate a value against a regular expression of your chosing.
+   * The format validator will validate a value against a regular expression of your choosing.
    */
   format?: {
     pattern?: RegExp;
@@ -157,14 +158,16 @@ export function columnToValidateRule(
     case 'int64':
     case 'bigint':
     case Number:
-      if (options.reflectType == Date) {
+      if (options.reflectType === Date) {
         cOption.type = 'string';
         cOption.format = {
           pattern: ISO_DATE_FORMAT,
           message: 'invalid datetime string, only support ISO format.'
         };
-      }
-      else {
+      } else if (options.reflectType === BigNumber) {
+        // only assert string
+        cOption.type = 'string';
+      } else {
         cOption.type = 'number';
         if (options?.length) {
           cOption.length = { maximum: options.length as number };

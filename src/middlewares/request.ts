@@ -71,12 +71,19 @@ export function withODataRequestHandler(server: typeof ODataServer) {
         if (!res.headersSent) {
           ensureODataContentType(req, res, result.contentType || 'text/plain');
         }
-        if (typeof result.body != 'undefined') {
-          if (typeof result.body != 'object') {
-            res.send(`${result.body}`);
-          } else if (!res.headersSent) {
-            res.send(result.body);
-          }
+        switch (typeof result.body) {
+          case 'object':
+            res.json(result.body);
+            break;
+          case 'string': case 'number':
+            res.send(String(result.body));
+          default:
+            break;
+        }
+        if (typeof result.body != 'object') {
+          res.send(`${result.body}`);
+        } else if (!res.headersSent) {
+          res.send(result.body);
         }
       }
 

@@ -1,18 +1,34 @@
+import { BigNumber } from 'bignumber.js';
 import { ValueTransformer } from 'typeorm';
 import { ServerInternalError } from '../../error';
 
 export const DecimalTransformer: ValueTransformer = {
-  from: (databaseColumn: string): string => {
-    if (typeof databaseColumn == 'number') {
-      return String(databaseColumn);
+  from: (databaseColumn): BigNumber => {
+    switch (typeof databaseColumn) {
+      case 'number':
+      case 'string':
+        return new BigNumber(databaseColumn);
+      default:
+        break;
     }
-    return databaseColumn;
+    return null;
   },
-  to: (jsColumn): string => {
-    if (typeof jsColumn == 'number') {
-      return String(jsColumn);
+  to: (jsColumn): number => {
+    switch (typeof jsColumn) {
+      case 'number':
+        return jsColumn;
+      case 'string':
+        return new BigNumber(jsColumn).toNumber();
+      case 'object':
+        if (jsColumn instanceof BigNumber) {
+          return jsColumn.toNumber();
+        }
+      default:
+        break;
     }
-    return jsColumn;
+
+    return null;
+
   }
 };
 

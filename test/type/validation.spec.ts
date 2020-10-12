@@ -1,4 +1,5 @@
 import { ODataMethod } from '@odata/parser';
+import BigNumber from 'bignumber.js';
 import { ColumnOptions } from 'typeorm';
 import * as validate from 'validate.js';
 import { BaseODataModel, columnToValidateRule, EColumnOptions, KeyProperty, ODataEntityType, ODataModel, ODataNavigation, OptionalProperty, Property, UUIDKeyProperty } from '../../src';
@@ -222,19 +223,19 @@ describe('Validate Test Suite', () => {
     @ODataModel()
     class ValidationFloat {
       @UUIDKeyProperty() id: string;
-      @Property({ type: 'float' }) value: string;
+      @Property({ type: 'float' }) value: BigNumber;
     }
 
     @ODataModel()
     class ValidationDecimal {
       @UUIDKeyProperty() id: string;
-      @Property({ type: 'decimal' }) value: string;
+      @Property({ type: 'decimal' }) value: BigNumber;
     }
 
     @ODataModel()
     class ValidationInteger {
       @UUIDKeyProperty() id: string;
-      @Property({ type: 'int' }) value: number;
+      @Property({ type: 'int' }) value: BigNumber;
     }
 
     @ODataModel()
