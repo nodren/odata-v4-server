@@ -4,7 +4,7 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "Typed Example Server",
+      "name": "school-demo-server",
       "program": "${workspaceFolder}/node_modules/ts-node/dist/bin.js",
       "args": [
         "example/typed_simple_server"
