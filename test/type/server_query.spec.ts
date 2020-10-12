@@ -202,9 +202,9 @@ describe('server query result Test Suite', () => {
   it('should support decimal $filter', async () => {
 
     @ODataModel()
-    class QueryFloat {
+    class QueryDouble {
       @UUIDKeyProperty() id: string;
-      @Property({ type: 'float' }) value: BigNumber;
+      @Property({ type: 'double' }) value: BigNumber;
     }
 
     @ODataModel()
@@ -222,13 +222,13 @@ describe('server query result Test Suite', () => {
 
     const conn = await createTmpConnection({
       name: 's_query_conn_4',
-      entities: [QueryDecimal, QueryFloat, QueryInteger]
+      entities: [QueryDecimal, QueryDouble, QueryInteger]
     });
 
     const { client, shutdownServer } = await createServerAndClient(conn);
 
     try {
-      const qf = client.getEntitySet<QueryFloat>('QueryFloats');
+      const qf = client.getEntitySet<QueryDouble>('QueryDoubles');
       const qd = client.getEntitySet<QueryDecimal>('QueryDecimals');
       const qi = client.getEntitySet<QueryInteger>('QueryIntegers');
 
