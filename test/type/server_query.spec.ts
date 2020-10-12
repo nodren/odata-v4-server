@@ -216,7 +216,7 @@ describe('server query result Test Suite', () => {
     @ODataModel()
     class QueryInteger {
       @UUIDKeyProperty() id: string;
-      @Property({ type: 'integer' }) value: BigNumber;
+      @Property({ type: 'bigint' }) value: BigNumber;
     }
 
 
