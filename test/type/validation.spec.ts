@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { ODataMethod } from '@odata/parser';
 import BigNumber from 'bignumber.js';
 import { ColumnOptions } from 'typeorm';
