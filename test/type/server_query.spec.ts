@@ -204,7 +204,7 @@ describe('server query result Test Suite', () => {
     @ODataModel()
     class QueryFloat {
       @UUIDKeyProperty() id: string;
-      @Property({ type: 'float', precision: 12, scale: 2 }) value: BigNumber;
+      @Property({ type: 'float' }) value: BigNumber;
     }
 
     @ODataModel()
