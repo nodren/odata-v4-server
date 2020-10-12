@@ -6,7 +6,6 @@ import { createServerAndClient, createTmpConnection } from './utils';
 
 describe('server query result Test Suite', () => {
 
-
   it('should support $orderby', async () => {
     const conn = await createTmpConnection({
       name: 's_query_conn_1',
@@ -202,12 +201,6 @@ describe('server query result Test Suite', () => {
   it('should support decimal $filter', async () => {
 
     @ODataModel()
-    class QueryDouble {
-      @UUIDKeyProperty() id: string;
-      @Property({ type: 'double' }) value: BigNumber;
-    }
-
-    @ODataModel()
     class QueryDecimal {
       @UUIDKeyProperty() id: string;
       @Property({ type: 'decimal', precision: 12, scale: 2 }) value: BigNumber;
@@ -222,27 +215,19 @@ describe('server query result Test Suite', () => {
 
     const conn = await createTmpConnection({
       name: 's_query_conn_4',
-      entities: [QueryDecimal, QueryDouble, QueryInteger]
+      entities: [QueryDecimal, QueryInteger]
     });
 
     const { client, shutdownServer } = await createServerAndClient(conn);
 
     try {
-      const qf = client.getEntitySet<QueryDouble>('QueryDoubles');
       const qd = client.getEntitySet<QueryDecimal>('QueryDecimals');
       const qi = client.getEntitySet<QueryInteger>('QueryIntegers');
 
-      await qf.create({ value: new BigNumber('99.99') });
-      await qf.create({ value: new BigNumber('100') });
       await qd.create({ value: new BigNumber('99.99') });
       await qd.create({ value: new BigNumber('100') });
       await qi.create({ value: new BigNumber('1000000000000000') });
       await qi.create({ value: new BigNumber('1000000000000001') });
-
-      expect(await qf.query(client.newFilter().field('value').ge('99.99'))).toHaveLength(2);
-      expect(await qf.query(client.newFilter().field('value').gt('99.99'))).toHaveLength(1);
-      expect(await qf.query(client.newFilter().field('value').ge(99.99))).toHaveLength(2);
-      expect(await qf.query(client.newFilter().field('value').gt(99.99))).toHaveLength(1);
 
       expect(await qd.query(client.newFilter().field('value').ge('99.99'))).toHaveLength(2);
       expect(await qd.query(client.newFilter().field('value').gt('99.99'))).toHaveLength(1);

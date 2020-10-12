@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { sleep } from '@newdash/newdash';
 import { OData, ODataV4 } from '@odata/client';
 import '@odata/client/lib/polyfill';
 import { Server } from 'http';
@@ -175,6 +176,7 @@ export async function createServerAndClient(conn, ...items: any[]) {
     server: httpServer,
     client,
     shutdownServer: async () => {
+      await sleep(300);
       await shutdown(httpServer);
       await s.getConnection().close();
     }

@@ -4,7 +4,7 @@ import { isEmpty } from '@newdash/newdash/isEmpty';
 import toInteger from '@newdash/newdash/toInteger';
 import { BigNumber } from 'bignumber.js';
 import 'reflect-metadata';
-import { Column, ColumnOptions, Entity, EntityOptions } from 'typeorm';
+import { Column, ColumnOptions, ColumnType, Entity, EntityOptions } from 'typeorm';
 import * as Edm from '../../edm';
 import { NotImplementedError, PropertyDefinitionError, ServerInternalError, StartupError } from '../../error';
 import { ODataServer } from '../../server';
@@ -24,7 +24,13 @@ const KEY_ODATA_ENTITY_TYPE = 'odata.entity:entity_type';
 const KEY_TYPEORM_DB_TYPE = 'odata.typeorm:db_type';
 const KEY_WITH_ODATA_SERVER = 'odata:with_server';
 
-export interface EColumnOptions extends ColumnOptions {
+type ExcludedColumnType = 'float' | 'double' | 'float4' | 'float8' | 'double' | 'double precision';
+
+export interface PropertyOptions extends ColumnOptions {
+  type?: Exclude<ColumnType, ExcludedColumnType>
+}
+
+export interface EColumnOptions extends PropertyOptions {
   /**
    * reflect metadata type, could be undefined
    */
@@ -143,6 +149,7 @@ export const getODataColumns = (classOrInstance): Array<EColumnOptions> => {
 
 export const isODataEntityType = (classOrInstance): boolean => (getODataColumns(classOrInstance).length > 0);
 
+
 /**
  * ODataColumn
  *
@@ -150,7 +157,7 @@ export const isODataEntityType = (classOrInstance): boolean => (getODataColumns(
  *
  * @param options
  */
-export function ODataColumn(options: ColumnOptions = {}) {
+export function ODataColumn(options: PropertyOptions = {}) {
   return function (object: any, propertyName: string): void {
 
     const entityColumns = getODataColumns(object);
@@ -190,14 +197,13 @@ export function ODataColumn(options: ColumnOptions = {}) {
       Edm.DefaultValue(options.default)(object, propertyName);
     }
 
-
     const reflectType = Reflect.getMetadata('design:type', object, propertyName);
 
     switch (reflectType) {
       case String:
         switch (options.type) {
           case 'decimal': case 'dec': case 'float': case 'float4': case 'float8':
-          case 'int2': case 'int4': case 'int8':
+          case 'tinyint': case 'int2': case 'int4': case 'int8':
           case 'int64': case 'bigint':
             throw new StartupError(`please use 'BigNumber' to define numeric property.`);
           case 'uuid':
@@ -238,7 +244,7 @@ export function ODataColumn(options: ColumnOptions = {}) {
         break;
       case Number:
         switch (options.type) {
-          case 'int2': case 'int4': case 'int8':
+          case 'tinyint': case 'int2': case 'int4': case 'int8':
             Edm.Int16(object, propertyName);
             break;
           case 'integer':
@@ -300,8 +306,8 @@ export function getPropertyOptions(target: any, propsName: string): EColumnOptio
  *
  * @param defaultOption
  */
-export function createPropertyDecorator(defaultOption: ColumnOptions) {
-  return function (options?: ColumnOptions): PropertyDecorator {
+export function createPropertyDecorator(defaultOption: PropertyOptions) {
+  return function (options?: PropertyOptions): PropertyDecorator {
     return function (target, propName) {
       return ODataColumn({ ...defaultOption, ...options })(target, propName as string);
     };
