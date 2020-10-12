@@ -2,8 +2,38 @@ import { isClass } from '@newdash/inject/lib/utils';
 import { ODataMethod } from '@odata/parser';
 import BigNumber from 'bignumber.js';
 import 'reflect-metadata';
+import * as validate from 'validate.js';
 import { EColumnOptions } from './odata';
 
+interface BigNumberValidateOptions {
+  integerOnly?: boolean;
+  precision?: number;
+}
+
+validate.validators.bigNumber = function (value: BigNumber, options: BigNumberValidateOptions, key, attributes) {
+  switch (typeof value) {
+    case 'string':
+      if (NUMERIC_REGEX.test(value)) {
+        value = new BigNumber(value);
+      } else {
+        return 'not valid numeric string';
+      }
+      break;
+    case 'number':
+      value = new BigNumber(value);
+      break;
+  }
+  if (value !== null && value !== undefined) {
+    if (options.integerOnly && !value.isInteger()) {
+      return 'is not integer';
+    }
+    if (options.precision !== undefined && options.precision > 0 && value.precision() > options.precision) {
+      return 'precision exceed';
+    }
+  }
+  return null;
+
+};
 const KEY_PROP_CONSTRAINT = 'entity:constraint_information';
 
 export interface ConstraintOption {
@@ -57,6 +87,7 @@ export interface ConstraintOption {
     notOdd?: string;
     notEven?: string;
   },
+  bigNumber?: BigNumberValidateOptions;
   email?: { message?: string },
   /**
    * This datetime validator can be used to validate dates and times.
@@ -91,6 +122,7 @@ export function getValidateOptions(target, propertyKey): ConstraintOption {
   return Reflect.getMetadata(KEY_PROP_CONSTRAINT, target, propertyKey);
 }
 
+const NUMERIC_REGEX = /^[+\-]?(?=\.\d|\d)(?:0|[1-9]\d*)?(?:\.\d*)?(?:\d[eE][+\-]?\d+)?$/;
 const UUID_REGEX = /^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i;
 const ISO_DATE_FORMAT = /\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+([+-][0-2]\d:[0-5]\d|Z)/;
 
@@ -109,13 +141,6 @@ export function columnToValidateRule(
   }
 
   switch (options.type) {
-    case 'decimal': case 'dec': case 'float': case 'float4': case 'float8':
-      cOption.type = 'string';
-      cOption.format = {
-        pattern: /^\d*\.?\d*$/,
-        message: 'invalid numeric string.'
-      };
-      break;
     case 'date':
     case 'nvarchar':
     case 'nvarchar2':
@@ -150,14 +175,10 @@ export function columnToValidateRule(
         message: 'invalid datetime string, only support ISO format.'
       };
       break;
-    case 'int':
-    case 'integer':
-    case 'int2':
-    case 'int4':
-    case 'int8':
-    case 'int64':
-    case 'bigint':
-    case Number:
+    case 'decimal': case 'dec': case 'float': case 'float4': case 'float8':
+    case 'int': case 'integer': case 'int2': case 'int4': case 'int8': case 'int64': case 'bigint':
+    // @ts-ignore
+    case Number: case BigNumber:
       if (options.reflectType === Date) {
         cOption.type = 'string';
         cOption.format = {
@@ -165,12 +186,14 @@ export function columnToValidateRule(
           message: 'invalid datetime string, only support ISO format.'
         };
       } else if (options.reflectType === BigNumber) {
-        // only assert string
-        cOption.type = 'string';
+        cOption.bigNumber = {
+          integerOnly: ['int', 'integer', 'int2', 'int4', 'int8', 'int64', 'bigint'].includes(options.type as string),
+          precision: options.precision
+        };
       } else {
         cOption.type = 'number';
-        if (options?.length) {
-          cOption.length = { maximum: options.length as number };
+        if (options?.precision) {
+          cOption.length = { maximum: options.precision as number };
         }
         cOption.numericality = {
           onlyInteger: true

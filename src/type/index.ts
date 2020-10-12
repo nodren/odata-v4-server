@@ -1,5 +1,6 @@
 // typeorm integration
 
+export { BigNumber } from 'bignumber.js';
 export * from './connection';
 export * from './decorators';
 export * from './entity';

@@ -80,11 +80,6 @@ export function withODataRequestHandler(server: typeof ODataServer) {
           default:
             break;
         }
-        if (typeof result.body != 'object') {
-          res.send(`${result.body}`);
-        } else if (!res.headersSent) {
-          res.send(result.body);
-        }
       }
 
       await commitTransaction(txContext);

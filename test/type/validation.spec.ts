@@ -229,7 +229,7 @@ describe('Validate Test Suite', () => {
     @ODataModel()
     class ValidationDecimal {
       @UUIDKeyProperty() id: string;
-      @Property({ type: 'decimal' }) value: BigNumber;
+      @Property({ type: 'decimal', precision: 12 }) value: BigNumber;
     }
 
     @ODataModel()
@@ -271,21 +271,40 @@ describe('Validate Test Suite', () => {
       await expect(() => client.getEntitySet('ValidationStrings').create({ id: 1, value: '123' })).rejects.toThrow();
       // length exceed
       await expect(() => client.getEntitySet('ValidationStrings').create({ value: '1234567891011' })).rejects.toThrow();
-      await expect(() => client.getEntitySet('ValidationFloats').create({ value: 123 })).rejects.toThrow();
-      await expect(() => client.getEntitySet('ValidationDecimals').create({ value: 123 })).rejects.toThrow();
-      await expect(() => client.getEntitySet('ValidationIntegers').create({ value: '32' })).rejects.toThrow();
-      await expect(() => client.getEntitySet('ValidationIntegers').create({ value: 33.99 })).rejects.toThrow();
+
+      await expect(() => client.getEntitySet('ValidationFloats').create({ value: 'abc' })).rejects.toThrow();
+      await expect(() => client.getEntitySet('ValidationDecimals').create({ value: 'abc' })).rejects.toThrow();
+      // precision exceed
+      await expect(() => client.getEntitySet('ValidationDecimals').create(
+        { value: '0.123456789101112' })
+      ).rejects.toThrow('precision exceed');
+
+      await expect(() => client.getEntitySet('ValidationIntegers').create({ value: 33.99 }))
+        .rejects.toThrow('not integer');
+      await expect(() => client.getEntitySet('ValidationIntegers').create({ value: '33.99' }))
+        .rejects.toThrow('not integer');
+
       await expect(() => client.getEntitySet('ValidationDates').create({ value: 3334 })).rejects.toThrow();
       await expect(() => client.getEntitySet('ValidationBools').create({ value: 123 })).rejects.toThrow();
 
       await client.getEntitySet('ValidationStrings').create({ value: '123213' });
       // UUID check should passed
-      await client.getEntitySet('ValidationStrings').create({ id: 'a14dd2c8-6de2-46e2-b4fa-f69456c1fd10', value: '123213' });
+      await client.getEntitySet('ValidationStrings').create({
+        id: 'a14dd2c8-6de2-46e2-b4fa-f69456c1fd10',
+        value: '123213'
+      });
       await client.getEntitySet('ValidationFloats').create({ value: '33.99' });
       await client.getEntitySet('ValidationDecimals').create({ value: '3213.122' });
+
       await client.getEntitySet('ValidationIntegers').create({ value: 32 });
+      await client.getEntitySet('ValidationIntegers').create({ value: '32' });
+      const item = await client.getEntitySet('ValidationIntegers').create({ value: new BigNumber('12') });
+      expect(item.value).toBe('12');
+
       await client.getEntitySet('ValidationDates').create({ value: new Date() });
       await client.getEntitySet('ValidationBools').create({ value: true });
+      await client.getEntitySet('ValidationBools').create({ value: false });
+
 
     } finally {
       await shutdownServer();
