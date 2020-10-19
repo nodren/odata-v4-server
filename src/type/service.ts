@@ -504,25 +504,25 @@ export class ODataServiceProvider {
  */
 export class TypedViewService<T = any> extends TypedService<T> {
 
-  delete(@inject(InjectKey.RequestMethod) method: string) {
-    throw new MethodNotAllowedError(`${method} is not supported for view entity`);
+  async delete(@odata.key key: any) {
+    throw new MethodNotAllowedError();
   }
 
-  update(@inject(InjectKey.RequestMethod) method: string) {
-    throw new MethodNotAllowedError(`${method} is not supported for view entity`);
+  async update(@odata.key key: any, @odata.body body: DeepPartial<T>) {
+    throw new MethodNotAllowedError();
   }
 
-  create(@inject(InjectKey.RequestMethod) method: string) {
-    throw new MethodNotAllowedError(`${method} is not supported for view entity`);
+  async create(@odata.body body: DeepPartial<T>): Promise<T> {
+    throw new MethodNotAllowedError();
   }
 
-  findOne(@odata.key key: any) {
+  async findOne(@odata.key key: any) {
     const entityType = this._getEntityType();
     const keys = Edm.getKeyProperties(entityType) || [];
     if (keys.length > 0) {
       return super.findOne(key);
     }
-    throw new MethodNotAllowedError(`RETRIEVE is not supported for current view entity, it must define a key.`);
+    throw new MethodNotAllowedError(`RETRIEVE is not supported for view entity which key is not defined.`);
   }
 
 }
