@@ -1,4 +1,4 @@
-import { BaseODataModel, createPropertyDecorator, getODataColumns, getPropertyOptions, getValidateOptions, isODataEntityType, KeyProperty, ODataEntityType, ODataModel, OptionalProperty, Property, UUIDKeyProperty, Validate } from '../../src';
+import { BaseODataModel, createPropertyDecorator, getODataColumns, getPropertyOptions, getValidateOptions, isODataEntityType, isODataViewType, KeyProperty, ODataEntityType, ODataModel, ODataView, OptionalProperty, Property, UUIDKeyProperty, Validate } from '../../src';
 import { createServerAndClient } from './utils';
 
 
@@ -61,6 +61,7 @@ describe('Decorator Test Suite', () => {
 
   it('should support get odata columns for entities', () => {
 
+    @ODataModel()
     class A {
       @Property({}) a: number;
       @Property({}) b: string;
@@ -82,6 +83,19 @@ describe('Decorator Test Suite', () => {
     expect(isODataEntityType(new A)).toBeTruthy();
 
 
+  });
+
+  it('should support @ODataView decorator', () => {
+
+    @ODataView()
+    class AView {
+      @Property() name: string;
+      @Property() age: number;
+    }
+    expect(isODataViewType(AView)).toBeTruthy();
+    expect(isODataEntityType(AView)).toBeFalsy();
+    expect(isODataEntityType(class C { })).toBeFalsy();
+    expect(isODataViewType(new AView)).toBeTruthy();
   });
 
   it('should add @Validate to entity', () => {

@@ -81,7 +81,7 @@ const createTmpDefaultOption = () => {
 
 const createEntityPrefix = (entityPrefix = 'def') => {
   let rt = `t_${v4().slice(0, 5)}_${entityPrefix}`;
-  if (!rt.endsWith('-')) {
+  if (!rt.endsWith('_')) {
     rt += '_';
   }
   return rt;

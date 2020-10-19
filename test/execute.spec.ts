@@ -407,9 +407,9 @@ describe('OData execute', () => {
 
   describe('Non existent entity', () => {
     it('should return cannot read property node error', () => TestServer.execute('/NonExistent', 'GET')
-      .then((result) => {})
+      .then((result) => { })
       .catch((err) => {
-        expect(err.message).toEqual("Cannot read property 'node' of undefined");
+        expect(err.message).toEqual("Resource not found for '/NonExistent'.");
       }));
   });
 });

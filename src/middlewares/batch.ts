@@ -4,14 +4,14 @@ import groupBy from '@newdash/newdash/groupBy';
 import isArray from '@newdash/newdash/isArray';
 import { isArrayLike } from '@newdash/newdash/isArrayLike';
 import { map } from '@newdash/newdash/map';
-import { JsonBatchRequest, JsonBatchRequestBundle, JsonBatchResponse } from '@odata/parser';
+import { JsonBatchRequest, JsonBatchRequestBundle, JsonBatchResponse, ODataMethod } from '@odata/parser';
 import { NextFunction, Request, Response } from 'express';
 import { alg, Graph } from 'graphlib';
-import { ODataHttpContext, ODataServer } from '..';
-import { BadRequestError } from '../error';
+import { BadRequestError, MethodNotAllowedError } from '../error';
 import { createLogger } from '../logger';
 import { ERROR_BATCH_REQUEST_FAST_FAIL } from '../messages';
 import { ODataRequestMethods } from '../processor';
+import { ODataHttpContext, ODataServer } from '../server';
 import { commitTransaction, createTransactionContext, rollbackTransaction } from '../transaction';
 
 
@@ -132,6 +132,9 @@ const DEFAULT_ATOM_GROUP = 'default';
  */
 export function withODataBatchRequestHandler(server: typeof ODataServer) {
   return async (req: Request, res: Response, next: NextFunction) => {
+    if (req.method !== ODataMethod.POST) {
+      throw new MethodNotAllowedError('only support the "POST" method for $batch operation');
+    }
     try {
       const body: JsonBatchRequestBundle = req.body;
 
@@ -210,7 +213,7 @@ export function withODataBatchRequestHandler(server: typeof ODataServer) {
 
               const result = await processor.execute(batchRequest.body);
 
-              response.status = result.statusCode || 200,
+              response.status = result.statusCode || 200;
               response.body = result.body;
 
               groupResults.push(response);

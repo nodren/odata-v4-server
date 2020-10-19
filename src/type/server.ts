@@ -3,6 +3,7 @@ import { createInstanceProvider, InjectWrappedInstance } from '@newdash/inject';
 import { concat } from '@newdash/newdash';
 import { uniq } from '@newdash/newdash/uniq';
 import { Connection, ConnectionOptions, createConnection, getConnection } from 'typeorm';
+import { TypedViewService } from '.';
 import { odata } from '..';
 import { InjectKey, ServerType } from '../constants';
 import { ServerInternalError } from '../error';
@@ -10,7 +11,7 @@ import { createLogger } from '../logger';
 import { ODataServer } from '../server';
 import { createTransactionContext, TransactionContext } from '../transaction';
 import { createDBHelper } from './db_helper';
-import { getODataEntitySetName, isODataEntityType, withConnection, withDBHelper, withEntityType, withODataServerType } from './decorators';
+import { getODataEntitySetName, isODataEntityType, isODataViewType, withConnection, withDBHelper, withEntityType, withODataServerType } from './decorators';
 import { BaseODataModel, validateEntityType } from './entity';
 import { BaseHookProcessor, withHook } from './hooks';
 import { TypedService } from './service';
@@ -144,17 +145,26 @@ export async function createTypedODataServer(connection: any, ...configurations:
 
             withHook(configuration)(serverType);
 
-          } else if (isODataEntityType(configuration)) {
+          } else if (isODataEntityType(configuration) || isODataViewType(configuration)) {
 
             const entityType = configuration;
 
-            validateEntityType(entityType);
 
-            logger(`load entity %s`, configuration?.name || 'Unknown entity');
+            let controllerType;
 
-            const controllerType = class extends TypedService {
-              elementType = entityType
-            };
+            if (isODataEntityType(configuration)) {
+              logger(`load entity %s`, configuration?.name || 'Unknown entity');
+              validateEntityType(entityType);
+              controllerType = class extends TypedService {
+                elementType = entityType
+              };
+            }
+            else if (isODataViewType(configuration)) {
+              logger(`load view %s`, configuration?.name || 'Unknown entity');
+              controllerType = class extends TypedViewService {
+                elementType = entityType
+              };
+            }
 
             const entitySetName = getODataEntitySetName(configuration);
 

@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { getUnProxyTarget, inject, InjectContainer, InjectWrappedInstance, LazyRef, noWrap, required, transient, withType } from '@newdash/inject';
+import { getUnProxyTarget, inject, InjectContainer, LazyRef, noWrap, required, transient, withType } from '@newdash/inject';
 import { forEach } from '@newdash/newdash/forEach';
 import { isArray } from '@newdash/newdash/isArray';
 import { isEmpty } from '@newdash/newdash/isEmpty';
@@ -9,7 +9,7 @@ import { Connection, DeepPartial, QueryRunner, Repository } from 'typeorm';
 import { InjectKey } from '../constants';
 import { ODataController } from '../controller';
 import * as Edm from '../edm';
-import { BadRequestError, ResourceNotFoundError, ServerInternalError } from '../error';
+import { BadRequestError, MethodNotAllowedError, ResourceNotFoundError, ServerInternalError } from '../error';
 import { Literal } from '../literal';
 import { createLogger } from '../logger';
 import * as odata from '../odata';
@@ -67,11 +67,11 @@ export class TypedService<T = any> extends ODataController {
     return ic.wrap(service);
   };
 
-  private async _getEntityType(): any {
+  protected async _getEntityType(): any {
     return getUnProxyTarget(this.elementType);
   }
 
-  private async executeHooks(
+  protected async executeHooks(
     hookType: HookType,
     data?: any,
     key?: any,
@@ -499,4 +499,30 @@ export class ODataServiceProvider {
 
 }
 
-export type InjectedTypedService<T = any> = InjectWrappedInstance<TypedService<T>>
+/**
+ * Typeorm Service for view
+ */
+export class TypedViewService<T = any> extends TypedService<T> {
+
+  delete(@inject(InjectKey.RequestMethod) method: string) {
+    throw new MethodNotAllowedError(`${method} is not supported for view entity`);
+  }
+
+  update(@inject(InjectKey.RequestMethod) method: string) {
+    throw new MethodNotAllowedError(`${method} is not supported for view entity`);
+  }
+
+  create(@inject(InjectKey.RequestMethod) method: string) {
+    throw new MethodNotAllowedError(`${method} is not supported for view entity`);
+  }
+
+  findOne(@odata.key key: any) {
+    const entityType = this._getEntityType();
+    const keys = Edm.getKeyProperties(entityType) || [];
+    if (keys.length > 0) {
+      return super.findOne(key);
+    }
+    throw new MethodNotAllowedError(`RETRIEVE is not supported for current view entity, it must define a key.`);
+  }
+
+}

@@ -1,5 +1,5 @@
 import { v4 } from 'uuid';
-import { Class, RelStudentClassAssignment, SchoolEntities, Student, Teacher } from './school_model';
+import { Class, RelStudentClassAssignment, RelView, SchoolEntities, Student, Teacher } from './school_model';
 import { createServerAndClient, createTmpConnection } from './utils';
 
 describe('Typed OData Server Integration Test Suite', () => {
@@ -19,6 +19,8 @@ describe('Typed OData Server Integration Test Suite', () => {
       const classes = client.getEntitySet<Class>('Classes'); // renamed by decorator
       const teachers = client.getEntitySet<Teacher>('Teachers');
       const classRegistry = client.getEntitySet<RelStudentClassAssignment>('RelStudentClassAssignments');
+      const classRegistryView = client.getEntitySet<RelView>('RelViews');
+
 
       const t1 = await teachers.create({ name: 'turing', profile: { title: 'Professor' } });
       const t2 = await teachers.create({ name: 'issac', profile: { title: 'Associate Professor' } });
@@ -104,6 +106,15 @@ describe('Typed OData Server Integration Test Suite', () => {
           title: 'Professor'
         }
       });
+
+      // test with @ODataView
+      const viewData = await classRegistryView.query();
+
+      expect(viewData).toMatchObject([
+        { uuid: r1.uuid, studentName: s1.name, className: c1.name, teacherName: t1.name },
+        { uuid: r2.uuid, studentName: s2.name, className: c2.name, teacherName: t2.name },
+        { uuid: r3.uuid, studentName: s1.name, className: c2.name, teacherName: t2.name }
+      ]);
 
     } finally {
 

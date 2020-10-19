@@ -550,7 +550,7 @@ export class ODataProcessor extends Transform {
         this.odataContext = createODataContext(context, entitySets, server, resourcePath, this);
 
         if (resourcePath.navigation.length == 0) {
-          throw new ResourceNotFoundError();
+          throw new ResourceNotFoundError(`Resource not found for '${ast.raw}'.`);
         }
 
         this.workflow.push(...resourcePath.navigation.map((part, i) => {

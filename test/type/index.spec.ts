@@ -3,7 +3,6 @@ import { OData } from '@odata/client';
 import '@odata/client/lib/polyfill';
 import { filter } from '@odata/parser';
 import 'reflect-metadata';
-import { Entity } from 'typeorm';
 import { v4 } from 'uuid';
 import { BaseODataModel, getODataNavigation, IncKeyProperty, ODataColumn, ODataEntityType, ODataModel, ODataNavigation, Property } from '../../src';
 import { createServerAndClient, createTmpConnection } from './utils';
@@ -14,15 +13,15 @@ describe('Typeorm Test Suite', () => {
   it('should support shortcut to create a service', async () => {
 
     // define models
-    @Entity()
-    class Student extends BaseODataModel {
+    @ODataModel()
+    class Student {
       @IncKeyProperty() id: number;
       @Property() name: string;
       @Property() age: number;
     }
 
-    @Entity()
-    class Class extends BaseODataModel {
+    @ODataModel()
+    class Class {
       @IncKeyProperty() id: number;
       @Property() name: string;
       @Property() desc: string;

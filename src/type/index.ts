@@ -9,6 +9,7 @@ export * from './libraries';
 export * from './migrate';
 export * from './server';
 export * from './service';
+export { InjectedTypedService } from './types';
 export * from './visitor';
 
 

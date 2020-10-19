@@ -4,7 +4,8 @@ import { isEmpty } from '@newdash/newdash/isEmpty';
 import toInteger from '@newdash/newdash/toInteger';
 import { BigNumber } from 'bignumber.js';
 import 'reflect-metadata';
-import { Column, ColumnOptions, ColumnType, Entity, EntityOptions } from 'typeorm';
+import { Column, ColumnOptions, ColumnType, Entity, EntityOptions, ViewEntity } from 'typeorm';
+import { ViewEntityOptions } from 'typeorm/decorator/options/ViewEntityOptions';
 import * as Edm from '../../edm';
 import { NotImplementedError, PropertyDefinitionError, ServerInternalError, StartupError } from '../../error';
 import { ODataServer } from '../../server';
@@ -13,6 +14,10 @@ import { BaseODataModel } from '../entity';
 import { TypedODataServer } from '../server';
 import { TypedService } from '../service';
 import { Class } from '../types';
+
+
+const KEY_ODATA_ENTITY = 'odata:entity:is_entity';
+const KEY_ODATA_VIEW = 'odata:entity:is_view';
 
 const KEY_CONN_NAME = 'odata:controller:connection';
 const KEY_ODATA_ENTITY_PROP = 'odata.entity:entity_prop';
@@ -35,6 +40,11 @@ export interface EColumnOptions extends PropertyOptions {
    * reflect metadata type, could be undefined
    */
   reflectType?: Class;
+
+  /**
+   * `odata/server` **computed** field, not from DB but from logic
+   */
+  computed?: boolean;
 }
 
 
@@ -126,7 +136,25 @@ export function getODataEntityType(target: any): typeof BaseODataModel {
  */
 export function ODataModel(options: EntityOptions = {}, entitySetName?: string) {
   return function (target: any): void {
+    Reflect.defineMetadata(KEY_ODATA_ENTITY, true, target);
     Entity(options)(target);
+    if (entitySetName) {
+      withEntitySetName(entitySetName)(target);
+    }
+  };
+}
+
+
+/**
+ * define odata view
+ *
+ * @param options
+ * @param entitySetName
+ */
+export function ODataView(options: ViewEntityOptions = {}, entitySetName?: string) {
+  return function (target: any): void {
+    Reflect.defineMetadata(KEY_ODATA_VIEW, true, target);
+    ViewEntity(options)(target);
     if (entitySetName) {
       withEntitySetName(entitySetName)(target);
     }
@@ -147,8 +175,25 @@ export const getODataColumns = (classOrInstance): Array<EColumnOptions> => {
   return Reflect.getMetadata(KEY_ODATA_ENTITY_PROPS, classOrInstance) || [];
 };
 
-export const isODataEntityType = (classOrInstance): boolean => (getODataColumns(classOrInstance).length > 0);
+export const isODataEntityType = (classOrInstance: any): boolean => {
+  if (classOrInstance == undefined) {
+    return false;
+  }
+  if (isClass(classOrInstance)) {
+    return Boolean(Reflect.getMetadata(KEY_ODATA_ENTITY, classOrInstance));
+  }
+  return Boolean(Reflect.getMetadata(KEY_ODATA_ENTITY, classOrInstance.constructor));
+};
 
+export const isODataViewType = (classOrInstance: any): boolean => {
+  if (classOrInstance == undefined) {
+    return false;
+  }
+  if (isClass(classOrInstance)) {
+    return Boolean(Reflect.getMetadata(KEY_ODATA_VIEW, classOrInstance));
+  }
+  return Boolean(Reflect.getMetadata(KEY_ODATA_VIEW, classOrInstance.constructor));
+};
 
 /**
  * ODataColumn

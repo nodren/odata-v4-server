@@ -515,7 +515,7 @@ if (typeof describe == 'function') {
         });
       });
 
-      it('stream property with ODataStream POST', async() => {
+      it('stream property with ODataStream POST', async () => {
         const testServer = new TestServer();
 
         return new Promise((resolve, reject) => {
@@ -645,7 +645,7 @@ if (typeof describe == 'function') {
             expect(result).toEqual({ statusCode: 204 });
           })
           .catch((error) => {
-            expect(error.message).toEqual("Cannot read property 'node' of undefined");
+            expect(error.message).toEqual("Resource not found for '/NonExistent'.");
           });
       });
     });
