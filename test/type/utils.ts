@@ -28,7 +28,7 @@ export function getTestCharDataType(): ColumnType {
   }
 }
 
-const createTmpDefaultOption = () => {
+export const createTmpDefaultOption = () => {
   let defaultOpt: ConnectionOptions = undefined;
 
   if (process.env.MYSQL_USER) {

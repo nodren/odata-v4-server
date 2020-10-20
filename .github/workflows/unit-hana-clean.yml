@@ -1,12 +1,8 @@
 name: unittest-with-hana
 
 on:
-  push:
-    branches: '*'
-  pull_request:
-    branches: '*'
   schedule:
-    - cron: '0 2 * * *'
+    - cron: '0 0 * * *'
 jobs:
   test:
 
@@ -30,11 +26,8 @@ jobs:
     - name: npm install driver
       run: npm install -S hdb-pool @sap/hana-client
       
-    - name: npm build
-      run: npm run build
-
-    - name: npm test
-      run: npm run test -- -i
+    - name: clean Cloud HANA DB
+      run: npm run test:clean-hana
       env:
         CI: true
         HANA_USER: ${{ secrets.CLOUD_HANA_USER }}
