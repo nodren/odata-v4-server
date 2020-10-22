@@ -33,7 +33,7 @@ module.exports = async () => {
     let dbcapi = process.env['DBCAPI_API_DLL'] || path.join(pb_path, 'libdbcapiHDB.' + extensions[process.platform]);
 
     process.env['DBCAPI_API_DLL'] = dbcapi;
-    
+
   }
 
 
