@@ -1,4 +1,4 @@
-name: unittest-with-hana
+name: unittest-hana-clean
 
 on:
   schedule:
