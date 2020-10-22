@@ -40,11 +40,29 @@ export class ForeignKeyValidationError extends StartupError {
 
 
 export class HttpRequestError extends CustomError {
+
   statusCode: number
+  innerErrors: Array<CustomError>
+
   constructor(statusCode: number, message: string) {
     super(message);
     this.statusCode = statusCode;
+    this.innerErrors = [];
   }
+
+  addInnerError(error: CustomError): this {
+    this.innerErrors.push(error);
+    return this;
+  }
+
+  getInnerErrors() {
+    return this.innerErrors;
+  }
+
+  getStatusCode() {
+    return this.statusCode;
+  }
+
 }
 
 export class ServerInternalError extends HttpRequestError {

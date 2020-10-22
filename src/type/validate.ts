@@ -51,6 +51,7 @@ function createColumnValidationRules(entityType: Class, method: ODataMethod) {
   }, {});
   return columnMetaValidationRules;
 }
+
 function createCustomValidationRules(entityType: Class) {
 
   const entityProps = Edm.getProperties(entityType);

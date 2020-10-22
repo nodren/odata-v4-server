@@ -3,6 +3,7 @@ import { getUnProxyTarget, inject, InjectContainer, LazyRef, noWrap, required, t
 import { forEach } from '@newdash/newdash/forEach';
 import { isArray } from '@newdash/newdash/isArray';
 import { isEmpty } from '@newdash/newdash/isEmpty';
+import { closest } from '@newdash/newdash/string/distance';
 import { defaultParser, ODataFilter, ODataMethod, ODataQueryParam, param, QueryOptionsNode as ODataQuery } from '@odata/parser';
 import 'reflect-metadata';
 import { Connection, DeepPartial, QueryRunner, Repository } from 'typeorm';
@@ -435,13 +436,22 @@ export class TypedService<T = any> extends ODataController {
 
     const msgs = applyValidate(entityType, input, method);
 
+    const columns = Edm.getProperties(entityType);
+
+    // ensure client provide all keys are defined in entity type
+    for (const key of Object.keys(input)) {
+      if (!columns.includes(key)) {
+        msgs.push(`property/navigation '${key}' is not existed on EntityType(${entityName}), did you mean '${closest(key, columns)}'?`);
+      }
+    }
+
     if (msgs.length > 0) {
       throw new BadRequestError(`Entity '${entityName}': ${msgs.join(', ')}`);
     }
 
   }
 
-  // create or update
+  // create or overwrite
   @odata.PUT
   async save(@odata.key key, @odata.body body: DeepPartial<T>) {
     const repo = await this._getRepository();
