@@ -116,6 +116,9 @@ describe('Typed OData Server Integration Test Suite', () => {
         { uuid: r3.uuid, studentName: s1.name, className: c2.name, teacherName: t2.name }
       ]);
 
+      // write operations will raise error
+      await expect(classRegistryView.create({ className: 'whatever' })).rejects.toThrow('Method not allowed');
+
     } finally {
 
       await shutdownServer();
