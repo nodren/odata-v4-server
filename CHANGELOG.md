@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.45](https://github.com/Soontao/odata-v4-server/compare/v0.2.44...v0.2.45) (2020-10-28)
+
+
+### Features
+
+* [#112](https://github.com/Soontao/odata-v4-server/issues/112) exclude some column types ([50547fb](https://github.com/Soontao/odata-v4-server/commit/50547fbc987557e3e1ac10442fb3ec263ff493e8))
+* [#113](https://github.com/Soontao/odata-v4-server/issues/113) provide ui annotations ([b3de0c6](https://github.com/Soontao/odata-v4-server/commit/b3de0c604cd3321bcd5ebb647f5098a5e46731e1))
+* [#121](https://github.com/Soontao/odata-v4-server/issues/121) define odata view entity ([1f98fa9](https://github.com/Soontao/odata-v4-server/commit/1f98fa93deebddd250ea14f19b32216b7337072b))
+* [#126](https://github.com/Soontao/odata-v4-server/issues/126) move out string closest check to util lib ([903ebb6](https://github.com/Soontao/odata-v4-server/commit/903ebb6d5686c10eb39e8a623e8ded6998da7b8d))
+* add unit test for [#121](https://github.com/Soontao/odata-v4-server/issues/121) ([f6d83f6](https://github.com/Soontao/odata-v4-server/commit/f6d83f6ef1ac682358d1b81537d0e789cff7cd62))
+* update bignumber support ([a466885](https://github.com/Soontao/odata-v4-server/commit/a466885650edbf54660602d71348e47566c2efe6))
+
+
+### Bug Fixes
+
+* $expand($filter) issue ([fca8f5c](https://github.com/Soontao/odata-v4-server/commit/fca8f5cc555ea90fef98564e3b22a7d048ed4cba))
+* pg type ([ff22187](https://github.com/Soontao/odata-v4-server/commit/ff221878eb694d0a4769d22c415ef31b0080bdd9))
+* type ([8fdb176](https://github.com/Soontao/odata-v4-server/commit/8fdb1760e1034a919e9ad648ebf61b2353645070))
+* type issue ([592721e](https://github.com/Soontao/odata-v4-server/commit/592721e70c37afe38ef7240415ad851c3b2a77d6))
+* type issue for typescript ([290785d](https://github.com/Soontao/odata-v4-server/commit/290785d441fd4d0c7c33f3677708abc134928890))
+
 ### [0.2.44](https://github.com/Soontao/odata-v4-server/compare/v0.2.43...v0.2.44) (2020-10-11)
 
 
