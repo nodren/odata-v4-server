@@ -1,5 +1,5 @@
-import { isClass } from '@newdash/inject/lib/utils';
 import { isArray } from '@newdash/newdash';
+import { isClass } from '@newdash/newdash/isClass';
 import { isEmpty } from '@newdash/newdash/isEmpty';
 import toInteger from '@newdash/newdash/toInteger';
 import { BigNumber } from 'bignumber.js';

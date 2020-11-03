@@ -1,4 +1,4 @@
-import { isClass } from '@newdash/inject/lib/utils';
+import { isClass } from '@newdash/newdash/isClass';
 import { ODataMethod } from '@odata/parser';
 import BigNumber from 'bignumber.js';
 import 'reflect-metadata';

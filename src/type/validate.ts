@@ -1,4 +1,5 @@
-import { Class, getClassName } from '@newdash/inject/lib/utils';
+import { getClassName } from '@newdash/inject/lib/utils';
+import { Class } from '@newdash/newdash/types';
 import { ODataMethod } from '@odata/parser';
 import * as NodeCache from 'node-cache';
 import * as validateJs from 'validate.js';
