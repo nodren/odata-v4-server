@@ -6,7 +6,7 @@ import * as bodyParser from 'body-parser';
 import * as cors from 'cors';
 import * as express from 'express';
 import * as http from 'http';
-import { Readable, Transform, TransformOptions, Writable } from 'stream';
+import { Readable, Writable } from 'stream';
 import * as swaggerUi from 'swagger-ui-express';
 import { InjectKey, ServerType } from './constants';
 import { ODataController } from './controller';
@@ -39,7 +39,7 @@ export interface ODataHttpContext {
 /**
  * ODataServer base class to be extended by concrete OData Server data sources
  **/
-export class ODataServerBase extends Transform {
+export class ODataServerBase {
 
   public static variant = ServerType.base
 
@@ -50,8 +50,6 @@ export class ODataServerBase extends Transform {
   static connector: IODataConnector
   static validator: (odataQuery: string | Token) => null;
   static errorHandler: express.ErrorRequestHandler = withODataErrorHandler;
-
-  private serverType: typeof ODataServer
 
   static async execute<T>(url: string, body?: object): Promise<ODataResult<T>>;
   static async execute<T>(url: string, method?: string, body?: object): Promise<ODataResult<T>>;
@@ -130,36 +128,6 @@ export class ODataServerBase extends Transform {
     }
 
   }
-
-  constructor(opts?: TransformOptions) {
-    super(Object.assign(<TransformOptions>{
-      objectMode: true
-    }, opts));
-    this.serverType = Object.getPrototypeOf(this).constructor;
-  }
-
-  _transform(chunk: any, _?: string, done?: Function) {
-    if ((chunk instanceof Buffer) || typeof chunk == 'string') {
-      try {
-        chunk = JSON.parse(chunk.toString());
-      } catch (err) {
-        return done(err);
-      }
-    }
-    this.serverType.execute(chunk).then((result) => {
-      this.push(result);
-      if (typeof done == 'function') {
-        done();
-      }
-    }, <any>done);
-  }
-
-  _flush(done?: Function) {
-    if (typeof done == 'function') {
-      done();
-    }
-  }
-
 
   private static _injectContainer: InjectContainer;
 
