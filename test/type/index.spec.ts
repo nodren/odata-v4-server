@@ -1,10 +1,11 @@
 // @ts-nocheck
+import { isClass } from '@newdash/newdash/isClass';
 import { OData } from '@odata/client';
 import '@odata/client/lib/polyfill';
 import { filter } from '@odata/parser';
 import 'reflect-metadata';
 import { v4 } from 'uuid';
-import { BaseODataModel, getODataNavigation, IncKeyProperty, ODataColumn, ODataEntityType, ODataModel, ODataNavigation, Property } from '../../src';
+import { BaseODataModel, getODataNavigation, IncKeyProperty, ODataColumn, ODataEntityType, ODataModel, ODataNavigation, ODataProcessor, Property } from '../../src';
 import { createServerAndClient, createTmpConnection } from './utils';
 
 describe('Typeorm Test Suite', () => {
@@ -239,6 +240,14 @@ describe('Typeorm Test Suite', () => {
       await shutdownServer();
 
     }
+
+  });
+
+  it('should be a class of ODataProcessor', () => {
+
+    expect(typeof ODataProcessor.constructor === 'function').toBeTruthy();
+
+    expect(isClass(ODataProcessor)).toBeTruthy();
 
   });
 
