@@ -223,6 +223,7 @@ const expCalls = {
         if (prevPart.type == 'PrimitiveProperty' || prevPart.type == 'PrimitiveKeyProperty') {
           return currentResult.then((value) => value.toString());
         }
+
         return currentResult;
       }
       if (this.stream) {
@@ -246,6 +247,7 @@ const expCalls = {
       return Promise.reject(err);
     }
   },
+
   async $ref(this: any, processor) {
     try {
       const prevPart = processor.resourcePath.navigation[processor.resourcePath.navigation.length - 2];
@@ -328,6 +330,7 @@ const expCalls = {
       return Promise.reject(err);
     }
   }
+
 };
 
 const getResourcePartFunction = (type) => {
@@ -504,7 +507,6 @@ export class ODataProcessor extends Transform {
   private resultCount = 0;
 
   private container: InjectContainer;
-
 
   constructor(
     @inject(InjectKey.RequestContext) context: ODataHttpContext,

@@ -246,13 +246,13 @@ export class ODataServerBase {
       if (typeof port == 'string') {
         hostname = `${port}`;
       }
-      port = parseInt(<any>path, 10);
+      port = parseInt(path as any, 10);
       path = undefined;
     }
     if (typeof port == 'number') {
       const app = express();
-      app.use((<any>path) || '/', router);
-      return app.listen(port, <any>hostname);
+      app.use((path as any) ?? '/', router);
+      return app.listen(port, hostname);
     }
     return router;
   }

@@ -1,4 +1,4 @@
-import { inject, InstanceProvider, provider, transient } from '@newdash/inject';
+import { inject, InstanceProvider, noWrap, provider, transient } from '@newdash/inject';
 import { Connection, QueryRunner } from 'typeorm';
 import { v4 } from 'uuid';
 import { InjectKey } from './constants';
@@ -27,6 +27,7 @@ export class TransactionQueryRunnerProvider implements InstanceProvider {
 
   @transient
   @provider(InjectKey.TransactionQueryRunner)
+  @noWrap
   async provide(@inject(InjectKey.GlobalConnection) conn: Connection, @inject(InjectKey.RequestTransaction) tx: TransactionContext) {
     return await getOrCreateTransaction(conn, tx);
   }
@@ -36,6 +37,7 @@ export class TransactionConnectionProvider implements InstanceProvider {
 
   @transient
   @provider(InjectKey.TransactionConnection)
+  @noWrap
   async provide(@inject(InjectKey.TransactionQueryRunner) qr: QueryRunner) {
     return qr.manager.connection;
   }
