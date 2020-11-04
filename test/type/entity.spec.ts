@@ -1,7 +1,7 @@
 import { lazyRef } from '@newdash/inject';
 import { ODataFilter } from '@odata/parser';
 import BigNumber from 'bignumber.js';
-import { Edm, InjectedTypedService, KeyProperty, ODataAction, ODataFunction, ODataModel, oInject, Property, UUIDKeyProperty, withEntitySetName } from '../../src';
+import { Edm, InjectedTypedService, KeyProperty, ODataAction, ODataFunction, ODataModel, oInject, OptionalProperty, Property, UUIDKeyProperty, withEntitySetName } from '../../src';
 import { createServerAndClient, createTmpConnection } from './utils';
 
 
@@ -125,6 +125,52 @@ describe('Entity Type Test Suite', () => {
     }
 
 
+  });
+
+  it('should support enum types as column', async () => {
+
+    enum ValueType1 {
+      v1 = 1,
+      v2 = 3
+    }
+    enum ValueType2 {
+      v1 = '1',
+      v2 = '3'
+    }
+
+    @withEntitySetName('EnumEntities')
+    @ODataModel()
+    class EnumEntity {
+      @UUIDKeyProperty() id: string;
+      @OptionalProperty({ enum: ValueType1 }) t1: ValueType1
+      @OptionalProperty({ enum: ValueType2 }) t2: ValueType2
+      @OptionalProperty({ enum: ['v1', 'v2'] }) t3: string
+
+    }
+
+    const conn = await createTmpConnection({
+      name: 'entity_test_03',
+      entityPrefix: 'entity_test_03',
+      entities: [EnumEntity]
+    });
+
+    const { client, shutdownServer } = await createServerAndClient(conn);
+
+    try {
+
+      const set = client.getEntitySet<EnumEntity>('EnumEntities');
+      await set.create({ t1: ValueType1.v1, t2: ValueType2.v2 });
+      await set.create({ t1: ValueType1.v2, t2: ValueType2.v1 });
+
+      await expect(() => set.create({ t1: 5, t2: '124' }))
+        .rejects
+        .toThrow("property 't1' value '5' is not in enum values, property 't2' value '124' is not in enum values");
+      await expect(() => set.create({ t3: '123123' }))
+        .rejects
+        .toThrow("property 't3' value '123123' is not in enum values");
+    } finally {
+      await shutdownServer();
+    }
   });
 
 });

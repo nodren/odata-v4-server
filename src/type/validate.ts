@@ -22,7 +22,7 @@ export function applyValidate(entityType: Class, input: any, method: ODataMethod
     const errors = validateJs.validate(input, columnRules);
     if (errors != undefined) {
       Object.entries(errors).forEach(([key, value]) => {
-        msgs.push(`Property '${key}' ${value}`);
+        msgs.push(`property '${key}' ${value}`);
       });
     }
   }
@@ -30,7 +30,7 @@ export function applyValidate(entityType: Class, input: any, method: ODataMethod
     const errors = validateJs.validate(input, customRules);
     if (errors != undefined) {
       Object.entries(errors).forEach(([key, value]) => {
-        msgs.push(`Property '${key}' ${value}`);
+        msgs.push(`property '${key}' ${value}`);
       });
     }
   }

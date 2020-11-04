@@ -1,9 +1,13 @@
+import { isArray } from '@newdash/newdash';
 import { isClass } from '@newdash/newdash/isClass';
+import { isPlainObject } from '@newdash/newdash/isPlainObject';
 import { ODataMethod } from '@odata/parser';
 import BigNumber from 'bignumber.js';
 import 'reflect-metadata';
 import * as validate from 'validate.js';
+import { getEnumValues } from '../utils';
 import { EColumnOptions } from './odata';
+
 
 interface BigNumberValidateOptions {
   integerOnly?: boolean;
@@ -43,12 +47,18 @@ export interface ConstraintOption {
    * The inclusion validator is useful for validating input from a dropdown for example.
    * It checks that the given value exists in the list given by the `within` option.
    */
-  inclusion?: any[];
+  inclusion?: {
+    within: any[],
+    message?: string;
+  }
   /**
    * The exclusion validator is useful for restriction certain values.
    * It checks that the given value is not in the list given by the within option.
    */
-  exclusion?: any[];
+  exclusion?: {
+    within: any[],
+    message?: string;
+  }
   /**
    * The format validator will validate a value against a regular expression of your choosing.
    */
@@ -138,6 +148,19 @@ export function columnToValidateRule(
   }
   else if (ODataMethod.POST == method) {
     cOption.presence = {}; // mandatory
+  }
+
+  if (typeof options.enum === 'object') {
+    let enumValues = options.enum;
+    if (isPlainObject(enumValues)) {
+      enumValues = getEnumValues(enumValues);
+    }
+    if (isArray(enumValues)) {
+      cOption.inclusion = {
+        within: enumValues,
+        message: '^value \'%{value}\' is not in enum values'
+      };
+    }
   }
 
   switch (options.type) {
