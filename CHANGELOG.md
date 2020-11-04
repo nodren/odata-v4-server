@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.46](https://github.com/Soontao/odata-v4-server/compare/v0.2.45...v0.2.46) (2020-11-04)
+
+
+### Features
+
+* remove stream support ([0ed1fc7](https://github.com/Soontao/odata-v4-server/commit/0ed1fc7503ca66c1a4da78762e1d3bc2a525ed2e))
+* validate enum type ([f2abdb9](https://github.com/Soontao/odata-v4-server/commit/f2abdb9da3b205f3e63640c36708379158f2bb7d))
+
 ### [0.2.45](https://github.com/Soontao/odata-v4-server/compare/v0.2.44...v0.2.45) (2020-10-28)
 
 
