@@ -29,13 +29,13 @@ const KEY_ODATA_ENTITY_TYPE = 'odata.entity:entity_type';
 const KEY_TYPEORM_DB_TYPE = 'odata.typeorm:db_type';
 const KEY_WITH_ODATA_SERVER = 'odata:with_server';
 
-type ExcludedColumnType = 'float' | 'double' | 'float4' | 'float8' | 'double' | 'double precision';
+type ExcludedColumnType = 'float' | 'double' | 'float4' | 'float8' | 'double' | 'double precision' | 'enum';
 
 export interface PropertyOptions extends ColumnOptions {
   type?: Exclude<ColumnType, ExcludedColumnType>
 }
 
-export interface EColumnOptions extends PropertyOptions {
+export interface EColumnOptions extends Omit<PropertyOptions, 'enum'> {
   /**
    * reflect metadata type, could be undefined
    */
@@ -45,6 +45,11 @@ export interface EColumnOptions extends PropertyOptions {
    * `odata/server` **computed** field, not from DB but from logic
    */
   computed?: boolean;
+
+  /**
+   * enum values
+   */
+  enumValues?: Array<string> | Array<number> | object;
 }
 
 
@@ -242,7 +247,9 @@ export function ODataColumn(options: PropertyOptions = {}) {
       Edm.DefaultValue(options.default)(object, propertyName);
     }
 
+
     const reflectType = Reflect.getMetadata('design:type', object, propertyName);
+
 
     switch (reflectType) {
       case String:
@@ -324,7 +331,7 @@ export function ODataColumn(options: PropertyOptions = {}) {
 
     Column(options)(object, propertyName);
 
-    const eOption = Object.assign({}, options, { reflectType });
+    const eOption: EColumnOptions = Object.assign({}, options, { reflectType });
 
     entityColumns.push(eOption);
     Reflect.defineMetadata(KEY_ODATA_ENTITY_PROPS, entityColumns, object);
@@ -351,8 +358,8 @@ export function getPropertyOptions(target: any, propsName: string): EColumnOptio
  *
  * @param defaultOption
  */
-export function createPropertyDecorator(defaultOption: PropertyOptions) {
-  return function (options?: PropertyOptions): PropertyDecorator {
+export function createPropertyDecorator(defaultOption: EColumnOptions) {
+  return function (options?: EColumnOptions): PropertyDecorator {
     return function (target, propName) {
       return ODataColumn({ ...defaultOption, ...options })(target, propName as string);
     };

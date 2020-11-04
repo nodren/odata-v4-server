@@ -150,8 +150,8 @@ export function columnToValidateRule(
     cOption.presence = {}; // mandatory
   }
 
-  if (typeof options.enum === 'object') {
-    let enumValues = options.enum;
+  if (typeof options.enumValues === 'object') {
+    let enumValues = options.enumValues;
     if (isPlainObject(enumValues)) {
       enumValues = getEnumValues(enumValues);
     }

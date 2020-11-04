@@ -141,10 +141,13 @@ describe('Entity Type Test Suite', () => {
     @withEntitySetName('EnumEntities')
     @ODataModel()
     class EnumEntity {
+
       @UUIDKeyProperty() id: string;
-      @OptionalProperty({ enum: ValueType1 }) t1: ValueType1
-      @OptionalProperty({ enum: ValueType2 }) t2: ValueType2
-      @OptionalProperty({ enum: ['v1', 'v2'] }) t3: string
+      @OptionalProperty({ enumValues: ValueType1 }) t1: ValueType1
+      @OptionalProperty({ enumValues: ValueType2 }) t2: ValueType2
+
+      @OptionalProperty({ enumValues: ['v1', 'v2'] }) t3: string
+      @OptionalProperty() t4: ValueType2 // without enum parameter, will no verify
 
     }
 
@@ -161,6 +164,9 @@ describe('Entity Type Test Suite', () => {
       const set = client.getEntitySet<EnumEntity>('EnumEntities');
       await set.create({ t1: ValueType1.v1, t2: ValueType2.v2 });
       await set.create({ t1: ValueType1.v2, t2: ValueType2.v1 });
+
+      await set.create({ t4: '123' });
+      await set.create({ t4: '456' });
 
       await expect(() => set.create({ t1: 5, t2: '124' }))
         .rejects
