@@ -10,7 +10,7 @@ import { alg, Graph } from 'graphlib';
 import { BadRequestError, MethodNotAllowedError } from '../error';
 import { createLogger } from '../logger';
 import { ERROR_BATCH_REQUEST_FAST_FAIL } from '../messages';
-import { ODataRequestMethods } from '../processor';
+import { ODataProcessor, ODataRequestMethods } from '../processor';
 import { ODataHttpContext, ODataServer } from '../server';
 import { commitTransaction, createTransactionContext, rollbackTransaction } from '../transaction';
 
@@ -197,6 +197,8 @@ export function withODataBatchRequestHandler(server: typeof ODataServer) {
               tx: txContext
             };
 
+            let processor: ODataProcessor;
+
             try {
 
               logger('processing batch request with %s', batchRequestId);
@@ -209,7 +211,11 @@ export function withODataBatchRequestHandler(server: typeof ODataServer) {
                 continue;
               }
 
-              const processor = await server.createProcessor(ctx, { metadata: res['metadata'] });
+              processor = await server.createProcessor(ctx, { metadata: res['metadata'] });
+
+              processor.on('header', (ev) => {
+                response.headers = { ...response.headers, ...ev };
+              });
 
               const result = await processor.execute(batchRequest.body);
 
@@ -229,6 +235,12 @@ export function withODataBatchRequestHandler(server: typeof ODataServer) {
               response.body = { error: { code: response.status, message: err.message } };
 
               groupResults.push(response);
+
+            } finally {
+
+              if (processor !== undefined && typeof processor.removeAllListeners === 'function') {
+                processor.removeAllListeners();
+              }
 
             }
 

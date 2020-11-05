@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import { ODataHttpContext, ODataServer } from '..';
 import { createLogger } from '../logger';
-import { ODataProcessorOptions } from '../processor';
+import { ODataProcessor, ODataProcessorOptions } from '../processor';
 import { commitTransaction, createTransactionContext, rollbackTransaction } from '../transaction';
 import { ensureODataContentType, ensureODataHeaders } from './headers';
 
@@ -33,11 +33,13 @@ export function withODataRequestHandler(server: typeof ODataServer) {
 
     let hasError = false;
 
+    let processor: ODataProcessor;
+
     try {
 
       ensureODataHeaders(req, res);
 
-      const processor = await server.createProcessor(ctx, <ODataProcessorOptions>{
+      processor = await server.createProcessor(ctx, <ODataProcessorOptions>{
         metadata: res['metadata']
       });
 
@@ -94,6 +96,13 @@ export function withODataRequestHandler(server: typeof ODataServer) {
 
       next(err);
 
+    } finally {
+
+      if (processor !== undefined && typeof processor.removeAllListeners === 'function') {
+        processor.removeAllListeners();
+      }
+
     }
+
   };
 };
