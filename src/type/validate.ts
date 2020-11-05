@@ -37,6 +37,12 @@ export function applyValidate(entityType: Class, input: any, method: ODataMethod
   return msgs;
 }
 
+/**
+ * generate validation from column metadata
+ *
+ * @param entityType
+ * @param method
+ */
 function createColumnValidationRules(entityType: Class, method: ODataMethod) {
   const entityProps = Edm.getProperties(entityType);
   const columnMetaValidationRules = entityProps.reduce((allRules, entityProp) => {
@@ -53,6 +59,11 @@ function createColumnValidationRules(entityType: Class, method: ODataMethod) {
   return columnMetaValidationRules;
 }
 
+/**
+ * generate validation from decorators
+ *
+ * @param entityType
+ */
 function createCustomValidationRules(entityType: Class) {
 
   const entityProps = Edm.getProperties(entityType);

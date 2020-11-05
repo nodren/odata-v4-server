@@ -41,7 +41,7 @@ validate.validators.bigNumber = function (value: BigNumber, options: BigNumberVa
 const KEY_PROP_CONSTRAINT = 'entity:constraint_information';
 
 export interface ConstraintOption {
-  presence?: { allowEmpty?: boolean, message?: string };
+  presence?: { allowEmpty?: boolean, message?: string } | boolean;
   type?: 'array' | 'integer' | 'number' | 'string' | 'date' | 'boolean';
   /**
    * The inclusion validator is useful for validating input from a dropdown for example.

@@ -3,7 +3,7 @@ import { ODataMethod } from '@odata/parser';
 import BigNumber from 'bignumber.js';
 import { ColumnOptions } from 'typeorm';
 import * as validate from 'validate.js';
-import { BaseODataModel, columnToValidateRule, EColumnOptions, KeyProperty, ODataEntityType, ODataModel, ODataNavigation, OptionalProperty, Property, UUIDKeyProperty } from '../../src';
+import { BaseODataModel, columnToValidateRule, EColumnOptions, KeyProperty, ODataEntityType, ODataModel, ODataNavigation, OptionalProperty, Property, UUIDKeyProperty, Validate } from '../../src';
 import { createServerAndClient, createTmpConnection, getTestCharDataType } from './utils';
 
 
@@ -361,6 +361,59 @@ describe('Validate Test Suite', () => {
         columnToValidateRule(v1Meta, ODataMethod.PATCH)
       )
     ).toBeUndefined();
+
+
+  });
+
+  it('should support custom format validation', async () => {
+
+    @ODataModel()
+    class CustomValModel {
+
+      @UUIDKeyProperty() id: string;
+
+      @Validate({
+        format: {
+          pattern: /^\d{4}-\d{2}-\d{2}$/,
+          message: '^is not a valid date string'
+        },
+        // allow undefined value
+        // set true as mandatory
+        presence: false
+      })
+      @OptionalProperty()
+      value: string;
+
+    }
+
+    const conn = await createTmpConnection({
+      name: 'val_conn_10',
+      entityPrefix: 'val_test_10',
+      entities: [CustomValModel]
+    });
+
+    const { client, shutdownServer } = await createServerAndClient(conn);
+
+    try {
+
+      const es = client.getEntitySet<CustomValModel>('CustomValModels');
+
+      const d1 = '2020-11-11';
+      const v = await es.create({ value: d1 });
+      expect(v.value).toBe(d1);
+
+      const v2 = await es.create({});
+      expect(v2.value).toBeUndefined();
+
+      await expect(() => es.create({ value: 'djsa-ds-sd' }))
+        .rejects.toThrow('property \'value\' is not a valid date string');
+
+      await expect(() => es.create({ value: 'hello 2020-11-11' }))
+        .rejects.toThrow('property \'value\' is not a valid date string');
+
+    } finally {
+      await shutdownServer();
+    }
 
 
   });
