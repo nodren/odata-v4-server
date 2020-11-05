@@ -1114,7 +1114,7 @@ export class ODataProcessor extends Transform {
 
     if (this.serverType.variant == ServerType.typed && ic !== undefined) {
       const preferParams = fnCaller.getFnParam(fn, params);
-      currentResult = await ic.injectExecute(ctrlInstance, fn, ...preferParams);
+      currentResult = await ic.injectExecute(ctrlInstance, fn, undefined, ...preferParams);
     } else {
       currentResult = fnCaller(ctrlInstance, fn, params);
     }
@@ -1314,7 +1314,7 @@ export class ODataProcessor extends Transform {
         let opResult;
         if (this.serverType.variant == ServerType.typed && ic !== undefined) {
           const predefineParams = fnCaller.getFnParam(boundOp, part.params);
-          opResult = await ic.injectExecute(scope, boundOp, ...predefineParams);
+          opResult = await ic.injectExecute(scope, boundOp, undefined, ...predefineParams);
         } else {
           opResult = fnCaller(scope, boundOp, part.params);
         }
