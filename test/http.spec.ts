@@ -59,7 +59,7 @@ function createTestFactory(it) {
             if (compare.contentType) {
               expect(response.headers['content-type'].indexOf(compare.contentType)).toBeGreaterThan(-1);
             }
-            resolve();
+            resolve(null);
           } catch (err) {
             reject(err);
           }

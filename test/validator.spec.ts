@@ -42,13 +42,13 @@ describe('ODataValidation', () => {
       ValidationServer.execute('/Validation?$filter=Id eq 1').then(() => {
         reject(new Error('should throw validation error'));
       }, (err) => {
-        if (err instanceof ValidationError) { return resolve(); }
+        if (err instanceof ValidationError) { return resolve(null); }
         reject(new Error('should throw validation error'));
       }).catch((err) => {
-        resolve();
+        resolve(null);
       });
     } catch (err) {
-      if (err instanceof ValidationError) { return resolve(); }
+      if (err instanceof ValidationError) { return resolve(null); }
       reject(new Error('should throw validation error'));
     }
   }));
@@ -58,50 +58,50 @@ describe('ODataValidation', () => {
       ValidationServer.execute('/Validation(1)?$filter=Id eq 1').then(() => {
         reject(new Error('should throw validation error'));
       }, (err) => {
-        if (err instanceof ValidationError) { return resolve(); }
+        if (err instanceof ValidationError) { return resolve(null); }
         reject(new Error('should throw validation error'));
       }).catch((err) => {
-        resolve();
+        resolve(null);
       });
     } catch (err) {
-      if (err instanceof ValidationError) { return resolve(); }
+      if (err instanceof ValidationError) { return resolve(null); }
       reject(new Error('should throw validation error'));
     }
   }));
 
   it('should pass without validation error (@odata.query)', () => new Promise((resolve, reject) => {
     ValidationServer.execute('/Validation').then(() => {
-      resolve();
+      resolve(null);
     }, (err) => {
       if (err instanceof ValidationError) { return reject(new Error('should pass without validation error')); }
-      resolve();
+      resolve(null);
     });
   }));
 
   it('should pass without validation error (@odata.filter)', () => new Promise((resolve, reject) => {
     ValidationServer.execute('/Validation(1)').then(() => {
-      resolve();
+      resolve(null);
     }, (err) => {
       if (err instanceof ValidationError) { return reject(new Error('should pass without validation error')); }
-      resolve();
+      resolve(null);
     });
   }));
 
   it('should pass without validation error (@odata.query without @odata.validation)', () => new Promise((resolve, reject) => {
     ValidationServer.execute('/NoValidation?$filter=Id eq 1').then(() => {
-      resolve();
+      resolve(null);
     }, (err) => {
       if (err instanceof ValidationError) { return reject(new Error('should pass without validation error')); }
-      resolve();
+      resolve(null);
     });
   }));
 
   it('should pass without validation error (@odata.filter without @odata.validation)', () => new Promise((resolve, reject) => {
     ValidationServer.execute('/NoValidation(1)?$filter=Id eq 1').then(() => {
-      resolve();
+      resolve(null);
     }, (err) => {
       if (err instanceof ValidationError) { return reject(new Error('should pass without validation error')); }
-      resolve();
+      resolve(null);
     });
   }));
 });
