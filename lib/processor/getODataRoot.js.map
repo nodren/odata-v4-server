@@ -1,0 +1,1 @@
+{"version":3,"file":"getODataRoot.js","sourceRoot":"","sources":["../../src/processor/getODataRoot.ts"],"names":[],"mappings":";;;AAEa,QAAA,YAAY,GAAG,UAAS,OAAyB;IAC5D,OAAO,GAAG,OAAO,CAAC,QAAQ,IAAI,MAAM,MAAM,OAAO,CAAC,IAAI,IAAI,WAAW,GAAG,OAAO,CAAC,IAAI,IAAI,EAAE,EAAE,CAAC;AAC/F,CAAC,CAAC"}
