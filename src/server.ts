@@ -221,9 +221,7 @@ export class ODataServerBase {
 
     router.use(withODataHeader);
 
-    router.get('/', ensureODataHeaders, (req, _, next) => {
-      next();
-    }, server.document().requestHandler());
+    router.get('/', ensureODataHeaders, server.document().requestHandler());
 
     router.get('/\\$metadata', server.$metadata().requestHandler());
 
